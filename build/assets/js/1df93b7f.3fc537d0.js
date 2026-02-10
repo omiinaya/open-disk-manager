@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkopm_website=globalThis.webpackChunkopm_website||[]).push([[583],{6866(e,s,t){t.r(s),t.d(s,{default:()=>a});t(6540);var o=t(6347),u=t(4848);function a(){return(0,u.jsx)(o.rd,{to:"/docs/"})}}}]);

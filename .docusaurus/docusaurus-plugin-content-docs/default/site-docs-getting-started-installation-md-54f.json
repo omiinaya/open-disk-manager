@@ -1,0 +1,27 @@
+{
+  "id": "getting-started/installation",
+  "title": "Installation",
+  "description": "Quick Install",
+  "source": "@site/docs/getting-started/installation.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/installation",
+  "permalink": "/docs/getting-started/installation",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/getting-started/installation.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "System Requirements",
+    "permalink": "/docs/getting-started/requirements"
+  },
+  "next": {
+    "title": "Quick Start",
+    "permalink": "/docs/getting-started/quick-start"
+  }
+}

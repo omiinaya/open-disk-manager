@@ -229,6 +229,126 @@ disk_io.cpp.s:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/disk_io.cpp.s
 .PHONY : disk_io.cpp.s
 
+exfat_boot.o: exfat_boot.cpp.o
+.PHONY : exfat_boot.o
+
+# target to build an object file
+exfat_boot.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o
+.PHONY : exfat_boot.cpp.o
+
+exfat_boot.i: exfat_boot.cpp.i
+.PHONY : exfat_boot.i
+
+# target to preprocess a source file
+exfat_boot.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.i
+.PHONY : exfat_boot.cpp.i
+
+exfat_boot.s: exfat_boot.cpp.s
+.PHONY : exfat_boot.s
+
+# target to generate assembly for a file
+exfat_boot.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.s
+.PHONY : exfat_boot.cpp.s
+
+exfat_check.o: exfat_check.cpp.o
+.PHONY : exfat_check.o
+
+# target to build an object file
+exfat_check.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o
+.PHONY : exfat_check.cpp.o
+
+exfat_check.i: exfat_check.cpp.i
+.PHONY : exfat_check.i
+
+# target to preprocess a source file
+exfat_check.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.i
+.PHONY : exfat_check.cpp.i
+
+exfat_check.s: exfat_check.cpp.s
+.PHONY : exfat_check.s
+
+# target to generate assembly for a file
+exfat_check.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.s
+.PHONY : exfat_check.cpp.s
+
+exfat_format.o: exfat_format.cpp.o
+.PHONY : exfat_format.o
+
+# target to build an object file
+exfat_format.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o
+.PHONY : exfat_format.cpp.o
+
+exfat_format.i: exfat_format.cpp.i
+.PHONY : exfat_format.i
+
+# target to preprocess a source file
+exfat_format.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.i
+.PHONY : exfat_format.cpp.i
+
+exfat_format.s: exfat_format.cpp.s
+.PHONY : exfat_format.s
+
+# target to generate assembly for a file
+exfat_format.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.s
+.PHONY : exfat_format.cpp.s
+
+exfat_impl.o: exfat_impl.cpp.o
+.PHONY : exfat_impl.o
+
+# target to build an object file
+exfat_impl.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o
+.PHONY : exfat_impl.cpp.o
+
+exfat_impl.i: exfat_impl.cpp.i
+.PHONY : exfat_impl.i
+
+# target to preprocess a source file
+exfat_impl.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.i
+.PHONY : exfat_impl.cpp.i
+
+exfat_impl.s: exfat_impl.cpp.s
+.PHONY : exfat_impl.s
+
+# target to generate assembly for a file
+exfat_impl.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.s
+.PHONY : exfat_impl.cpp.s
+
+exfat_resize.o: exfat_resize.cpp.o
+.PHONY : exfat_resize.o
+
+# target to build an object file
+exfat_resize.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o
+.PHONY : exfat_resize.cpp.o
+
+exfat_resize.i: exfat_resize.cpp.i
+.PHONY : exfat_resize.i
+
+# target to preprocess a source file
+exfat_resize.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.i
+.PHONY : exfat_resize.cpp.i
+
+exfat_resize.s: exfat_resize.cpp.s
+.PHONY : exfat_resize.s
+
+# target to generate assembly for a file
+exfat_resize.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.s
+.PHONY : exfat_resize.cpp.s
+
 ext4_boot.o: ext4_boot.cpp.o
 .PHONY : ext4_boot.o
 
@@ -613,6 +733,78 @@ mbr.cpp.s:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/mbr.cpp.s
 .PHONY : mbr.cpp.s
 
+ntfs_boot.o: ntfs_boot.cpp.o
+.PHONY : ntfs_boot.o
+
+# target to build an object file
+ntfs_boot.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o
+.PHONY : ntfs_boot.cpp.o
+
+ntfs_boot.i: ntfs_boot.cpp.i
+.PHONY : ntfs_boot.i
+
+# target to preprocess a source file
+ntfs_boot.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.i
+.PHONY : ntfs_boot.cpp.i
+
+ntfs_boot.s: ntfs_boot.cpp.s
+.PHONY : ntfs_boot.s
+
+# target to generate assembly for a file
+ntfs_boot.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.s
+.PHONY : ntfs_boot.cpp.s
+
+ntfs_check.o: ntfs_check.cpp.o
+.PHONY : ntfs_check.o
+
+# target to build an object file
+ntfs_check.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o
+.PHONY : ntfs_check.cpp.o
+
+ntfs_check.i: ntfs_check.cpp.i
+.PHONY : ntfs_check.i
+
+# target to preprocess a source file
+ntfs_check.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.i
+.PHONY : ntfs_check.cpp.i
+
+ntfs_check.s: ntfs_check.cpp.s
+.PHONY : ntfs_check.s
+
+# target to generate assembly for a file
+ntfs_check.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.s
+.PHONY : ntfs_check.cpp.s
+
+ntfs_format.o: ntfs_format.cpp.o
+.PHONY : ntfs_format.o
+
+# target to build an object file
+ntfs_format.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o
+.PHONY : ntfs_format.cpp.o
+
+ntfs_format.i: ntfs_format.cpp.i
+.PHONY : ntfs_format.i
+
+# target to preprocess a source file
+ntfs_format.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.i
+.PHONY : ntfs_format.cpp.i
+
+ntfs_format.s: ntfs_format.cpp.s
+.PHONY : ntfs_format.s
+
+# target to generate assembly for a file
+ntfs_format.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.s
+.PHONY : ntfs_format.cpp.s
+
 ntfs_impl.o: ntfs_impl.cpp.o
 .PHONY : ntfs_impl.o
 
@@ -636,6 +828,30 @@ ntfs_impl.s: ntfs_impl.cpp.s
 ntfs_impl.cpp.s:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.s
 .PHONY : ntfs_impl.cpp.s
+
+ntfs_resize.o: ntfs_resize.cpp.o
+.PHONY : ntfs_resize.o
+
+# target to build an object file
+ntfs_resize.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o
+.PHONY : ntfs_resize.cpp.o
+
+ntfs_resize.i: ntfs_resize.cpp.i
+.PHONY : ntfs_resize.i
+
+# target to preprocess a source file
+ntfs_resize.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.i
+.PHONY : ntfs_resize.cpp.i
+
+ntfs_resize.s: ntfs_resize.cpp.s
+.PHONY : ntfs_resize.s
+
+# target to generate assembly for a file
+ntfs_resize.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.s
+.PHONY : ntfs_resize.cpp.s
 
 operation.o: operation.cpp.o
 .PHONY : operation.o
@@ -752,6 +968,21 @@ help:
 	@echo "... disk_io.o"
 	@echo "... disk_io.i"
 	@echo "... disk_io.s"
+	@echo "... exfat_boot.o"
+	@echo "... exfat_boot.i"
+	@echo "... exfat_boot.s"
+	@echo "... exfat_check.o"
+	@echo "... exfat_check.i"
+	@echo "... exfat_check.s"
+	@echo "... exfat_format.o"
+	@echo "... exfat_format.i"
+	@echo "... exfat_format.s"
+	@echo "... exfat_impl.o"
+	@echo "... exfat_impl.i"
+	@echo "... exfat_impl.s"
+	@echo "... exfat_resize.o"
+	@echo "... exfat_resize.i"
+	@echo "... exfat_resize.s"
 	@echo "... ext4_boot.o"
 	@echo "... ext4_boot.i"
 	@echo "... ext4_boot.s"
@@ -800,9 +1031,21 @@ help:
 	@echo "... mbr.o"
 	@echo "... mbr.i"
 	@echo "... mbr.s"
+	@echo "... ntfs_boot.o"
+	@echo "... ntfs_boot.i"
+	@echo "... ntfs_boot.s"
+	@echo "... ntfs_check.o"
+	@echo "... ntfs_check.i"
+	@echo "... ntfs_check.s"
+	@echo "... ntfs_format.o"
+	@echo "... ntfs_format.i"
+	@echo "... ntfs_format.s"
 	@echo "... ntfs_impl.o"
 	@echo "... ntfs_impl.i"
 	@echo "... ntfs_impl.s"
+	@echo "... ntfs_resize.o"
+	@echo "... ntfs_resize.i"
+	@echo "... ntfs_resize.s"
 	@echo "... operation.o"
 	@echo "... operation.i"
 	@echo "... operation.s"

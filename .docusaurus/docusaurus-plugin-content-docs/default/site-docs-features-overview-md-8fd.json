@@ -1,0 +1,27 @@
+{
+  "id": "features/overview",
+  "title": "Features Overview",
+  "description": "Core Features",
+  "source": "@site/docs/features/overview.md",
+  "sourceDirName": "features",
+  "slug": "/features/overview",
+  "permalink": "/docs/features/overview",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/features/overview.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Build from Source",
+    "permalink": "/docs/getting-started/build-from-source"
+  },
+  "next": {
+    "title": "What's Left To Do",
+    "permalink": "/docs/features/what-is-left"
+  }
+}

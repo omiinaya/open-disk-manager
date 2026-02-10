@@ -1,0 +1,27 @@
+{
+  "id": "getting-started/requirements",
+  "title": "System Requirements",
+  "description": "Supported Operating Systems",
+  "source": "@site/docs/getting-started/requirements.md",
+  "sourceDirName": "getting-started",
+  "slug": "/getting-started/requirements",
+  "permalink": "/docs/getting-started/requirements",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/getting-started/requirements.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Open Partition Manager",
+    "permalink": "/docs/"
+  },
+  "next": {
+    "title": "Installation",
+    "permalink": "/docs/getting-started/installation"
+  }
+}

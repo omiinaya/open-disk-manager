@@ -1,0 +1,27 @@
+{
+  "id": "roadmap",
+  "title": "Development Roadmap",
+  "description": "Phase Overview",
+  "source": "@site/docs/roadmap.md",
+  "sourceDirName": ".",
+  "slug": "/roadmap",
+  "permalink": "/docs/roadmap",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/roadmap.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 99,
+  "frontMatter": {
+    "sidebar_position": 99
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Technology Stack",
+    "permalink": "/docs/development/tech-stack"
+  },
+  "next": {
+    "title": "Frequently Asked Questions",
+    "permalink": "/docs/faq"
+  }
+}

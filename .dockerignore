@@ -1,0 +1,39 @@
+# Ignore C++ build files
+build/
+CMakeFiles/
+*.cmake
+Makefile
+
+# Ignore C++ source (not needed for docs site)
+src/core/
+src/cli/
+src/gui/
+include/
+tests/
+Testing/
+scripts/
+project-docs/
+
+# Ignore git
+.git/
+.gitignore
+
+# Ignore node_modules (will be installed fresh)
+node_modules/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore docusaurus cache
+.docusaurus/
+
+# Ignore nixpacks
+nixpacks.toml

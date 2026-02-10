@@ -23,6 +23,15 @@ set(CORE_SOURCES
     ext4_check.cpp
     ext4_resize.cpp
     ntfs_impl.cpp
+    ntfs_boot.cpp
+    ntfs_format.cpp
+    ntfs_check.cpp
+    ntfs_resize.cpp
+    exfat_impl.cpp
+    exfat_boot.cpp
+    exfat_format.cpp
+    exfat_check.cpp
+    exfat_resize.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
@@ -38,6 +47,7 @@ set(CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/opm/fat32_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/ext4_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/ntfs_impl.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/exfat_impl.hpp
 )
 
 add_library(opm-core STATIC ${CORE_SOURCES})

@@ -1,0 +1,23 @@
+{
+  "id": "faq",
+  "title": "Frequently Asked Questions",
+  "description": "General",
+  "source": "@site/docs/faq.md",
+  "sourceDirName": ".",
+  "slug": "/faq",
+  "permalink": "/docs/faq",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/faq.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 100,
+  "frontMatter": {
+    "sidebar_position": 100
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Development Roadmap",
+    "permalink": "/docs/roadmap"
+  }
+}

@@ -710,8 +710,6 @@ _Python_EXECUTABLE:INTERNAL=/root/.pyenv/shims/python3
 //Python Properties
 _Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;13;64;;cpython-310-x86_64-linux-gnu;/root/.pyenv/versions/3.10.13/lib/python3.10;/root/.pyenv/versions/3.10.13/lib/python3.10;/root/.pyenv/versions/3.10.13/lib/python3.10/site-packages;/root/.pyenv/versions/3.10.13/lib/python3.10/site-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=7cf66d183446745294a2419738039384
-//Interpreter reason failure
-_Python_Interpreter_REASON_FAILURE:INTERNAL=
 //NumPy reason failure
 _Python_NumPy_REASON_FAILURE:INTERNAL=
 cmake_package_name:INTERNAL=GTest

@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkopm_website=globalThis.webpackChunkopm_website||[]).push([[35],{2003(s){s.exports=JSON.parse('{"label":"opm","permalink":"/blog/tags/opm","allTagsPath":"/blog/tags","count":1,"unlisted":false}')}}]);

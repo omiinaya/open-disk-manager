@@ -203,12 +203,12 @@ tests/integration/clean: tests/integration/CMakeFiles/test_disk_detection.dir/cl
 src/core/CMakeFiles/opm-core.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 "Built target opm-core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43 "Built target opm-core"
 .PHONY : src/core/CMakeFiles/opm-core.dir/all
 
 # Build rule for subdir invocation for target.
 src/core/CMakeFiles/opm-core.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 23
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 32
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/core/CMakeFiles/opm-core.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 0
 .PHONY : src/core/CMakeFiles/opm-core.dir/rule
@@ -234,7 +234,7 @@ src/cli/CMakeFiles/opm.dir/all: src/core/CMakeFiles/opm-core.dir/all
 
 # Build rule for subdir invocation for target.
 src/cli/CMakeFiles/opm.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 26
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 35
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/cli/CMakeFiles/opm.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 0
 .PHONY : src/cli/CMakeFiles/opm.dir/rule
@@ -257,12 +257,12 @@ tests/CMakeFiles/opm_tests.dir/all: _deps/googletest-build/googletest/CMakeFiles
 tests/CMakeFiles/opm_tests.dir/all: _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=35,36,37,38,39 "Built target opm_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=44,45,46,47,48 "Built target opm_tests"
 .PHONY : tests/CMakeFiles/opm_tests.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/opm_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 32
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 41
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/opm_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 0
 .PHONY : tests/CMakeFiles/opm_tests.dir/rule
@@ -388,12 +388,12 @@ _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/clean:
 tests/integration/CMakeFiles/test_disk_detection.dir/all: src/core/CMakeFiles/opm-core.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/integration/CMakeFiles/test_disk_detection.dir/build.make tests/integration/CMakeFiles/test_disk_detection.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/integration/CMakeFiles/test_disk_detection.dir/build.make tests/integration/CMakeFiles/test_disk_detection.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=40,41 "Built target test_disk_detection"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=49,50 "Built target test_disk_detection"
 .PHONY : tests/integration/CMakeFiles/test_disk_detection.dir/all
 
 # Build rule for subdir invocation for target.
 tests/integration/CMakeFiles/test_disk_detection.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 25
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 34
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/integration/CMakeFiles/test_disk_detection.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /root/projects/opm/build/CMakeFiles 0
 .PHONY : tests/integration/CMakeFiles/test_disk_detection.dir/rule

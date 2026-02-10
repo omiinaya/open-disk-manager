@@ -1,0 +1,27 @@
+{
+  "id": "development/tech-stack",
+  "title": "Technology Stack",
+  "description": "Core Technologies",
+  "source": "@site/docs/development/tech-stack.md",
+  "sourceDirName": "development",
+  "slug": "/development/tech-stack",
+  "permalink": "/docs/development/tech-stack",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/openpartitionmanager/opm/tree/main/website/docs/development/tech-stack.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Architecture Overview",
+    "permalink": "/docs/development/architecture"
+  },
+  "next": {
+    "title": "Development Roadmap",
+    "permalink": "/docs/roadmap"
+  }
+}

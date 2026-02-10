@@ -1,117 +1,105 @@
-# Open Partition Manager
+# Open Partition Manager Documentation
 
-A comprehensive, open-source partition management tool for Windows, Linux, and macOS.
-
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Build Status](https://github.com/opencode/partition-manager/workflows/CI/badge.svg)](https://github.com/opencode/partition-manager/actions)
-
-## Philosophy
-
-**All features are free and open-source.** No paid editions, no restrictions, no artificial limitations.
-
-Unlike commercial tools that lock features behind paywalls ($50-$800), this tool provides complete functionality to all users:
-- ✅ **100% Free** - No cost, ever
-- ✅ **Open Source** - GPL-3.0 licensed
-- ✅ **Complete Feature Set** - Everything included
-- ✅ **No Restrictions** - Use on unlimited machines
-- ✅ **Cross-Platform** - Windows, Linux, macOS
-
-## Features
-
-### Core Partition Management
-- Create, delete, resize, move, merge, split partitions
-- Support for MBR and GPT partition tables
-- File system support: NTFS, FAT32, exFAT, ext2/3/4, ReFS
-- Format and check file systems
-
-### Advanced Operations
-- Clone disks and partitions
-- Migrate OS to SSD without reinstallation
-- Convert MBR ↔ GPT without data loss
-- Dynamic disk and LVM support
-- RAID support (0, 1, 5, 10)
-
-### Data Protection
-- Partition recovery
-- Boot repair (MBR, GPT, GRUB, BCD)
-- Password reset
-- 4K alignment optimization
-- Secure disk wiping
-
-### Bootable Environment
-- Create bootable USB/CD for recovery
-- Standalone bootable ISO
-- Portable version (run from USB)
-- Hardware diagnostics
-
-### Encryption Support
-- BitLocker (read, write, resize)
-- LUKS (Linux Unified Key Setup)
-- VeraCrypt containers
+This is the Docusaurus-powered documentation website for Open Partition Manager (OPM).
 
 ## Quick Start
 
-### Requirements
-- C++17 compiler (GCC 7+, Clang 5+, MSVC 2017+)
-- CMake 3.16+
-- 100MB disk space
+### Development
+
+```bash
+npm install
+npm start
+```
+
+Visit `http://localhost:3000`
 
 ### Build
 
 ```bash
-# Clone the repository
-git clone https://github.com/opencode/partition-manager.git
-cd partition-manager
-
-# Create build directory
-mkdir build && cd build
-
-# Configure and build
-cmake ..
-make -j$(nproc)
-
-# Run tests
-make test
+npm run build
 ```
 
-### Usage
+Static files are generated in `build/` directory.
+
+## Deployment
+
+### Coolify Deployment
+
+This project is configured for easy deployment to Coolify.
+
+#### Option 1: Using Nixpacks (Recommended)
+
+Coolify will automatically detect `nixpacks.toml` and use it for deployment.
+
+1. Connect your GitHub repository to Coolify
+2. Select "Nixpacks" as the build method
+3. Deploy
+
+The site will be served at the configured domain.
+
+#### Option 2: Using Dockerfile
+
+If you prefer Docker:
+
+1. Connect your GitHub repository to Coolify
+2. Select "Dockerfile" as the build method
+3. Deploy
+
+The Dockerfile is optimized for production with multi-stage builds.
+
+### Manual Deployment
+
+#### Static Hosting (Netlify, Vercel, etc.)
 
 ```bash
-# List partitions
-sudo ./opm list
+npm run build
+# Upload build/ directory to your host
+```
 
-# Create partition
-sudo ./opm create /dev/sda --size 100G --type ntfs
+#### Docker
 
-# Resize partition
-sudo ./opm resize /dev/sda1 --size +50G
+```bash
+# Build image
+docker build -t opm-docs .
 
-# Clone disk
-sudo ./opm clone /dev/sda /dev/sdb
+# Run container
+docker run -p 80:80 opm-docs
+```
+
+## Project Structure
+
+```
+├── blog/              # Blog posts
+├── docs/              # Documentation
+│   ├── intro.md       # Introduction
+│   ├── getting-started/
+│   ├── features/
+│   ├── development/
+│   ├── roadmap.md
+│   └── faq.md
+├── src/               # Source files
+│   ├── css/           # Custom styles
+│   └── pages/         # React pages
+├── static/            # Static assets
+│   └── img/           # Images
+├── docusaurus.config.ts  # Configuration
+├── sidebars.ts        # Sidebar config
+└── package.json       # Dependencies
 ```
 
 ## Documentation
 
-- [User Guide](docs/user-guide.md)
-- [API Documentation](docs/api.md)
-- [Contributing](CONTRIBUTING.md)
-- [Roadmap](docs/ROADMAP.md)
-
-## Safety First
-
-⚠️ **Warning**: Partition operations can result in data loss. Always:
-- Backup important data before operations
-- Verify operations in the preview before applying
-- Use the bootable environment for system disk operations
-
-## License
-
-GPL-3.0 - See [LICENSE](LICENSE) for details.
+- **Introduction**: Overview of OPM
+- **Getting Started**: Installation and setup
+- **Features**: Feature documentation
+- **Development**: Architecture and contributing
+- **Roadmap**: Development timeline
+- **FAQ**: Common questions
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See the main OPM repository for contribution guidelines.
 
-## Acknowledgments
+## License
 
-This project is inspired by the need for a truly free, comprehensive partition management solution.
+GPL-3.0
