@@ -1,0 +1,42 @@
+# Tests
+
+# Find Google Test
+find_package(GTest QUIET)
+if(NOT GTest_FOUND)
+    # Fetch Google Test
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+    )
+    FetchContent_MakeAvailable(googletest)
+endif()
+
+# Test files
+set(TEST_SOURCES
+    test_main.cpp
+    test_mbr.cpp
+    test_gpt.cpp
+    test_utils.cpp
+)
+
+add_executable(opm_tests ${TEST_SOURCES})
+
+target_include_directories(opm_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(opm_tests
+    PRIVATE
+        opm-core
+        GTest::gtest
+        GTest::gtest_main
+)
+
+# Add test
+add_test(NAME opm_unit_tests COMMAND opm_tests)
+
+# Integration tests
+add_subdirectory(integration)

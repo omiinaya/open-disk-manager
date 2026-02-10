@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/opm_tests.dir/test_main.cpp.o CMakeFiles/opm_tests.dir/test_mbr.cpp.o CMakeFiles/opm_tests.dir/test_gpt.cpp.o CMakeFiles/opm_tests.dir/test_utils.cpp.o -o opm_tests  ../src/core/libopm-core.a ../lib/libgtest.a ../lib/libgtest_main.a -lblkid ../lib/libgtest.a 
