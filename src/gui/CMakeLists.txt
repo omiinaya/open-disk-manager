@@ -15,30 +15,34 @@ set(CMAKE_AUTOUIC ON)
 
 # GUI source files
 set(GUI_SOURCES
-    main.cpp
-    main_window.cpp
-    disk_tree_widget.cpp
-    partition_view_widget.cpp
-    operation_panel_widget.cpp
-    status_bar_widget.cpp
-    dialogs/create_partition_dialog.cpp
-    dialogs/format_dialog.cpp
-    dialogs/clone_dialog.cpp
-    dialogs/secure_erase_dialog.cpp
-    dialogs/benchmark_dialog.cpp
+main.cpp
+main_window.cpp
+disk_tree_widget.cpp
+partition_view_widget.cpp
+operation_panel_widget.cpp
+status_bar_widget.cpp
+dialogs/create_partition_dialog.cpp
+dialogs/delete_partition_dialog.cpp
+dialogs/resize_partition_dialog.cpp
+dialogs/format_dialog.cpp
+dialogs/clone_dialog.cpp
+dialogs/secure_erase_dialog.cpp
+dialogs/benchmark_dialog.cpp
 )
 
 set(GUI_HEADERS
-    main_window.hpp
-    disk_tree_widget.hpp
-    partition_view_widget.hpp
-    operation_panel_widget.hpp
-    status_bar_widget.hpp
-    dialogs/create_partition_dialog.hpp
-    dialogs/format_dialog.hpp
-    dialogs/clone_dialog.hpp
-    dialogs/secure_erase_dialog.hpp
-    dialogs/benchmark_dialog.hpp
+main_window.hpp
+disk_tree_widget.hpp
+partition_view_widget.hpp
+operation_panel_widget.hpp
+status_bar_widget.hpp
+dialogs/create_partition_dialog.hpp
+dialogs/delete_partition_dialog.hpp
+dialogs/resize_partition_dialog.hpp
+dialogs/format_dialog.hpp
+dialogs/clone_dialog.hpp
+dialogs/secure_erase_dialog.hpp
+dialogs/benchmark_dialog.hpp
 )
 
 # Create executable

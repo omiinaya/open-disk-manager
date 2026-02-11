@@ -27,6 +27,17 @@
 /root/projects/opm/build/src/cli/CMakeFiles/install.dir
 /root/projects/opm/build/src/cli/CMakeFiles/install/local.dir
 /root/projects/opm/build/src/cli/CMakeFiles/install/strip.dir
+/root/projects/opm/build/src/gui/CMakeFiles/opm-gui.dir
+/root/projects/opm/build/src/gui/CMakeFiles/package.dir
+/root/projects/opm/build/src/gui/CMakeFiles/package_source.dir
+/root/projects/opm/build/src/gui/CMakeFiles/test.dir
+/root/projects/opm/build/src/gui/CMakeFiles/edit_cache.dir
+/root/projects/opm/build/src/gui/CMakeFiles/rebuild_cache.dir
+/root/projects/opm/build/src/gui/CMakeFiles/list_install_components.dir
+/root/projects/opm/build/src/gui/CMakeFiles/install.dir
+/root/projects/opm/build/src/gui/CMakeFiles/install/local.dir
+/root/projects/opm/build/src/gui/CMakeFiles/install/strip.dir
+/root/projects/opm/build/src/gui/CMakeFiles/opm-gui_autogen.dir
 /root/projects/opm/build/tests/CMakeFiles/opm_tests.dir
 /root/projects/opm/build/tests/CMakeFiles/package.dir
 /root/projects/opm/build/tests/CMakeFiles/package_source.dir

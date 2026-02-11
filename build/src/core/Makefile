@@ -973,6 +973,30 @@ partition_table.cpp.s:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/partition_table.cpp.s
 .PHONY : partition_table.cpp.s
 
+platform.o: platform.cpp.o
+.PHONY : platform.o
+
+# target to build an object file
+platform.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/platform.cpp.o
+.PHONY : platform.cpp.o
+
+platform.i: platform.cpp.i
+.PHONY : platform.i
+
+# target to preprocess a source file
+platform.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/platform.cpp.i
+.PHONY : platform.cpp.i
+
+platform.s: platform.cpp.s
+.PHONY : platform.s
+
+# target to generate assembly for a file
+platform.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/platform.cpp.s
+.PHONY : platform.cpp.s
+
 utils.o: utils.cpp.o
 .PHONY : utils.o
 
@@ -1109,6 +1133,9 @@ help:
 	@echo "... partition_table.o"
 	@echo "... partition_table.i"
 	@echo "... partition_table.s"
+	@echo "... platform.o"
+	@echo "... platform.i"
+	@echo "... platform.s"
 	@echo "... utils.o"
 	@echo "... utils.i"
 	@echo "... utils.s"

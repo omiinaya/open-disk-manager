@@ -10,6 +10,8 @@ set(CORE_SOURCES
     operation.cpp
     filesystem.cpp
     clone.cpp
+    boot.cpp
+    platform.cpp
     fat32_impl.cpp
     fat32_create.cpp
     fat32_fat.cpp
@@ -33,7 +35,6 @@ set(CORE_SOURCES
     exfat_format.cpp
     exfat_check.cpp
     exfat_resize.cpp
-    boot.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
@@ -48,6 +49,9 @@ set(CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/opm/filesystem.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/clone.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/boot.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/platform.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/raid.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/lvm.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/fat32_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/ext4_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/ntfs_impl.hpp

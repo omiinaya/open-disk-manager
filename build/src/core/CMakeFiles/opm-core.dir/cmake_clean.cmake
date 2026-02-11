@@ -63,6 +63,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/opm-core.dir/partition.cpp.o.d"
   "CMakeFiles/opm-core.dir/partition_table.cpp.o"
   "CMakeFiles/opm-core.dir/partition_table.cpp.o.d"
+  "CMakeFiles/opm-core.dir/platform.cpp.o"
+  "CMakeFiles/opm-core.dir/platform.cpp.o.d"
   "CMakeFiles/opm-core.dir/utils.cpp.o"
   "CMakeFiles/opm-core.dir/utils.cpp.o.d"
   "libopm-core.a"

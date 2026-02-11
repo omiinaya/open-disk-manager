@@ -21,7 +21,7 @@ BUILD_DOCS:BOOL=OFF
 BUILD_GMOCK:BOOL=ON
 
 //Build GUI application
-BUILD_GUI:BOOL=OFF
+BUILD_GUI:BOOL=ON
 
 //Build tests
 BUILD_TESTS:BOOL=ON
@@ -404,6 +404,21 @@ OpenPartitionManager_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 OpenPartitionManager_SOURCE_DIR:STATIC=/root/projects/opm
 
+//The directory containing a CMake configuration file for Qt5Core.
+Qt5Core_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Core
+
+//The directory containing a CMake configuration file for Qt5Gui.
+Qt5Gui_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Gui
+
+//The directory containing a CMake configuration file for Qt5Widgets.
+Qt5Widgets_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5Widgets
+
+//The directory containing a CMake configuration file for Qt5.
+Qt5_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5
+
+//The directory containing a CMake configuration file for Qt6.
+Qt6_DIR:PATH=Qt6_DIR-NOTFOUND
+
 //Value Computed by CMake
 gmock_BINARY_DIR:STATIC=/root/projects/opm/build/_deps/googletest-build/googlemock
 
@@ -598,7 +613,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=8
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=9
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

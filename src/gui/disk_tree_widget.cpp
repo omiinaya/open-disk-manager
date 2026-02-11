@@ -47,7 +47,7 @@ void DiskTreeWidget::populateTree() {
     
     for (size_t i = 0; i < disks_.size(); ++i) {
         auto* item = new QTreeWidgetItem(this);
-        item->setText(0, QString("/dev/sd%1").arg(QChar('a' + i)));
+        item->setText(0, QString("/dev/sd%1").arg(QChar(static_cast<ushort>('a' + i))));
         item->setText(1, QString("%1 GB").arg(100 + i * 50)); // Placeholder
         item->setText(2, "HDD");
         item->setData(0, Qt::UserRole, static_cast<int>(i));

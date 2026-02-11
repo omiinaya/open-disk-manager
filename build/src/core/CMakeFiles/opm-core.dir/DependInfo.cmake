@@ -40,6 +40,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/root/projects/opm/src/core/operation.cpp" "src/core/CMakeFiles/opm-core.dir/operation.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/operation.cpp.o.d"
   "/root/projects/opm/src/core/partition.cpp" "src/core/CMakeFiles/opm-core.dir/partition.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/partition.cpp.o.d"
   "/root/projects/opm/src/core/partition_table.cpp" "src/core/CMakeFiles/opm-core.dir/partition_table.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/partition_table.cpp.o.d"
+  "/root/projects/opm/src/core/platform.cpp" "src/core/CMakeFiles/opm-core.dir/platform.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/platform.cpp.o.d"
   "/root/projects/opm/src/core/utils.cpp" "src/core/CMakeFiles/opm-core.dir/utils.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/utils.cpp.o.d"
   )
 

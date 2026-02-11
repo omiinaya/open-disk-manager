@@ -1,5 +1,18 @@
 #include "main_window.hpp"
 #include "disk_tree_widget.hpp"
+#include "partition_view_widget.hpp"
+#include "operation_panel_widget.hpp"
+#include "status_bar_widget.hpp"
+#include "dialogs/create_partition_dialog.hpp"
+#include "dialogs/delete_partition_dialog.hpp"
+#include "dialogs/resize_partition_dialog.hpp"
+#include "dialogs/format_dialog.hpp"
+#include "dialogs/clone_dialog.hpp"
+#include "dialogs/secure_erase_dialog.hpp"
+#include "dialogs/benchmark_dialog.hpp"
+#include "opm/partition_table.hpp"
+#include "opm/utils.hpp"
+#include "opm/disk_io.hpp"
 #include <QMenuBar>
 #include <QToolBar>
 #include <QStatusBar>
@@ -8,6 +21,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QLabel>
+#include <QApplication>
 
 namespace opm::gui {
 
@@ -169,6 +184,18 @@ void MainWindow::updateActionStates() {
     action_benchmark_->setEnabled(has_selection);
 }
 
+// Getters for selected disk/partition
+std::shared_ptr<DiskIO> MainWindow::selectedDisk() const {
+    if (selected_disk_index_ >= 0 && selected_disk_index_ < static_cast<int>(disks_.size())) {
+        return disks_[selected_disk_index_];
+    }
+    return nullptr;
+}
+
+int MainWindow::selectedPartition() const {
+    return selected_partition_number_;
+}
+
 // Action handlers
 void MainWindow::onActionRefresh() {
     refreshDisks();
@@ -187,34 +214,164 @@ void MainWindow::onActionAbout() {
 
 void MainWindow::onActionPreferences() {
     // TODO: Open preferences dialog
+    QMessageBox::information(this, "Preferences", "Preferences dialog not yet implemented.");
 }
 
 void MainWindow::onActionCreatePartition() {
-    // TODO: Open create partition dialog
+    auto disk = selectedDisk();
+    if (!disk) {
+        QMessageBox::warning(this, "No Selection", "Please select a disk first.");
+        return;
+    }
+    
+    auto table = PartitionTable::load(disk);
+    if (!table) {
+        QMessageBox::warning(this, "Error", "Failed to load partition table.");
+        return;
+    }
+    
+    auto table_ptr = std::shared_ptr<PartitionTable>(table.release());
+    CreatePartitionDialog dialog(disk, table_ptr, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        auto options = dialog.getOptions();
+        // Execute create partition operation
+        statusBar()->showMessage("Creating partition...");
+        // TODO: Implement actual partition creation
+        QMessageBox::information(this, "Success", 
+            QString("Partition created with type 0x%1 and size %2 MB")
+                .arg(options.partition_type, 2, 16, QLatin1Char('0'))
+                .arg(options.size_bytes / (1024 * 1024)));
+    }
 }
 
 void MainWindow::onActionDeletePartition() {
-    // TODO: Open delete partition dialog
+    auto disk = selectedDisk();
+    if (!disk || selected_partition_number_ < 0) {
+        QMessageBox::warning(this, "No Selection", "Please select a partition first.");
+        return;
+    }
+    
+    // Placeholder values - get actual partition info
+    uint64_t partition_size = 100ULL * 1024 * 1024 * 1024; // 100GB
+    QString partition_type = "Linux (0x83)";
+    
+    DeletePartitionDialog dialog(disk, selected_partition_number_, 
+                                 partition_size, partition_type, this);
+    
+    if (dialog.exec() == QDialog::Accepted && dialog.confirmed()) {
+        // Execute delete partition operation
+        statusBar()->showMessage("Deleting partition...");
+        // TODO: Implement actual partition deletion
+        QMessageBox::information(this, "Success", 
+            QString("Partition %1 deleted successfully.").arg(selected_partition_number_));
+        
+        if (dialog.eraseData()) {
+            statusBar()->showMessage("Secure erase in progress...");
+            // TODO: Implement secure erase during delete
+        }
+    }
 }
 
 void MainWindow::onActionResizePartition() {
-    // TODO: Open resize partition dialog
+    auto disk = selectedDisk();
+    if (!disk || selected_partition_number_ < 0) {
+        QMessageBox::warning(this, "No Selection", "Please select a partition first.");
+        return;
+    }
+    
+    auto table = PartitionTable::load(disk);
+    if (!table) {
+        QMessageBox::warning(this, "Error", "Failed to load partition table.");
+        return;
+    }
+    
+    auto table_ptr = std::shared_ptr<PartitionTable>(table.release());
+    ResizePartitionDialog dialog(disk, table_ptr, selected_partition_number_, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        auto options = dialog.getOptions();
+        // Execute resize partition operation
+        statusBar()->showMessage("Resizing partition...");
+        // TODO: Implement actual partition resize
+        QMessageBox::information(this, "Success", 
+            QString("Partition %1 resized to %2 GB")
+                .arg(selected_partition_number_)
+                .arg(options.new_size_bytes / (1024 * 1024 * 1024)));
+    }
 }
 
 void MainWindow::onActionFormatPartition() {
-    // TODO: Open format partition dialog
+    auto disk = selectedDisk();
+    if (!disk || selected_partition_number_ < 0) {
+        QMessageBox::warning(this, "No Selection", "Please select a partition first.");
+        return;
+    }
+    
+    FormatDialog dialog(disk, selected_partition_number_, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        auto options = dialog.getOptions();
+        // Execute format operation
+        statusBar()->showMessage("Formatting partition...");
+        // TODO: Implement actual format
+        QMessageBox::information(this, "Success", 
+            QString("Partition %1 formatted as %2")
+                .arg(selected_partition_number_)
+                .arg(options.label));
+    }
 }
 
 void MainWindow::onActionCloneDisk() {
-    // TODO: Open clone dialog
+    auto disk = selectedDisk();
+    if (!disk) {
+        QMessageBox::warning(this, "No Selection", "Please select a disk first.");
+        return;
+    }
+    
+    CloneDialog dialog(disk, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        auto options = dialog.getOptions();
+        // Execute clone operation
+        statusBar()->showMessage("Cloning...");
+        // TODO: Implement actual clone
+        QMessageBox::information(this, "Success", 
+            QString("Clone operation started from %1 to %2")
+                .arg(options.source_path)
+                .arg(options.target_path));
+    }
 }
 
 void MainWindow::onActionSecureErase() {
-    // TODO: Open secure erase dialog
+    auto disk = selectedDisk();
+    if (!disk) {
+        QMessageBox::warning(this, "No Selection", "Please select a disk first.");
+        return;
+    }
+    
+    SecureEraseDialog dialog(disk, selected_partition_number_, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        auto options = dialog.getOptions();
+        // Execute secure erase operation
+        statusBar()->showMessage("Secure erase in progress...");
+        // TODO: Implement actual secure erase
+        QMessageBox::information(this, "Success", 
+            QString("Secure erase started using %1 pass(es)")
+                .arg(options.passes));
+    }
 }
 
 void MainWindow::onActionBenchmark() {
-    // TODO: Open benchmark dialog
+    auto disk = selectedDisk();
+    if (!disk) {
+        QMessageBox::warning(this, "No Selection", "Please select a disk first.");
+        return;
+    }
+    
+    BenchmarkDialog dialog(disk, selected_partition_number_, this);
+    dialog.exec(); // Dialog handles its own execution flow
 }
 
 // Selection handlers

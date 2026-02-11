@@ -195,10 +195,38 @@ src/core/CMakeFiles/opm-core.dir/clone.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm-core.dir/clone.cpp.s"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/src/core/clone.cpp -o CMakeFiles/opm-core.dir/clone.cpp.s
 
+src/core/CMakeFiles/opm-core.dir/boot.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
+src/core/CMakeFiles/opm-core.dir/boot.cpp.o: /root/projects/opm/src/core/boot.cpp
+src/core/CMakeFiles/opm-core.dir/boot.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/core/CMakeFiles/opm-core.dir/boot.cpp.o"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/boot.cpp.o -MF CMakeFiles/opm-core.dir/boot.cpp.o.d -o CMakeFiles/opm-core.dir/boot.cpp.o -c /root/projects/opm/src/core/boot.cpp
+
+src/core/CMakeFiles/opm-core.dir/boot.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm-core.dir/boot.cpp.i"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/src/core/boot.cpp > CMakeFiles/opm-core.dir/boot.cpp.i
+
+src/core/CMakeFiles/opm-core.dir/boot.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm-core.dir/boot.cpp.s"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/src/core/boot.cpp -o CMakeFiles/opm-core.dir/boot.cpp.s
+
+src/core/CMakeFiles/opm-core.dir/platform.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
+src/core/CMakeFiles/opm-core.dir/platform.cpp.o: /root/projects/opm/src/core/platform.cpp
+src/core/CMakeFiles/opm-core.dir/platform.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/core/CMakeFiles/opm-core.dir/platform.cpp.o"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/platform.cpp.o -MF CMakeFiles/opm-core.dir/platform.cpp.o.d -o CMakeFiles/opm-core.dir/platform.cpp.o -c /root/projects/opm/src/core/platform.cpp
+
+src/core/CMakeFiles/opm-core.dir/platform.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm-core.dir/platform.cpp.i"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/src/core/platform.cpp > CMakeFiles/opm-core.dir/platform.cpp.i
+
+src/core/CMakeFiles/opm-core.dir/platform.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm-core.dir/platform.cpp.s"
+	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/src/core/platform.cpp -o CMakeFiles/opm-core.dir/platform.cpp.s
+
 src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o: /root/projects/opm/src/core/fat32_impl.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o -MF CMakeFiles/opm-core.dir/fat32_impl.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_impl.cpp.o -c /root/projects/opm/src/core/fat32_impl.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.i: cmake_force
@@ -212,7 +240,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o: /root/projects/opm/src/core/fat32_create.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o -MF CMakeFiles/opm-core.dir/fat32_create.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_create.cpp.o -c /root/projects/opm/src/core/fat32_create.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.i: cmake_force
@@ -226,7 +254,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o: /root/projects/opm/src/core/fat32_fat.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o -MF CMakeFiles/opm-core.dir/fat32_fat.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_fat.cpp.o -c /root/projects/opm/src/core/fat32_fat.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.i: cmake_force
@@ -240,7 +268,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o: /root/projects/opm/src/core/fat32_root.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.o -MF CMakeFiles/opm-core.dir/fat32_root.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_root.cpp.o -c /root/projects/opm/src/core/fat32_root.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.i: cmake_force
@@ -254,7 +282,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_root.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o: /root/projects/opm/src/core/fat32_check.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.o -MF CMakeFiles/opm-core.dir/fat32_check.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_check.cpp.o -c /root/projects/opm/src/core/fat32_check.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.i: cmake_force
@@ -268,7 +296,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_check.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o: /root/projects/opm/src/core/fat32_resize.cpp
 src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.o -MF CMakeFiles/opm-core.dir/fat32_resize.cpp.o.d -o CMakeFiles/opm-core.dir/fat32_resize.cpp.o -c /root/projects/opm/src/core/fat32_resize.cpp
 
 src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.i: cmake_force
@@ -282,7 +310,7 @@ src/core/CMakeFiles/opm-core.dir/fat32_resize.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o: /root/projects/opm/src/core/ext4_impl.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.o -MF CMakeFiles/opm-core.dir/ext4_impl.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_impl.cpp.o -c /root/projects/opm/src/core/ext4_impl.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.i: cmake_force
@@ -296,7 +324,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_impl.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o: /root/projects/opm/src/core/ext4_boot.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.o -MF CMakeFiles/opm-core.dir/ext4_boot.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_boot.cpp.o -c /root/projects/opm/src/core/ext4_boot.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.i: cmake_force
@@ -310,7 +338,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_boot.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o: /root/projects/opm/src/core/ext4_root.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.o -MF CMakeFiles/opm-core.dir/ext4_root.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_root.cpp.o -c /root/projects/opm/src/core/ext4_root.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.i: cmake_force
@@ -324,7 +352,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_root.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o: /root/projects/opm/src/core/ext4_format.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.o -MF CMakeFiles/opm-core.dir/ext4_format.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_format.cpp.o -c /root/projects/opm/src/core/ext4_format.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.i: cmake_force
@@ -338,7 +366,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_format.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o: /root/projects/opm/src/core/ext4_journal.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.o -MF CMakeFiles/opm-core.dir/ext4_journal.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_journal.cpp.o -c /root/projects/opm/src/core/ext4_journal.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.i: cmake_force
@@ -352,7 +380,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_journal.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o: /root/projects/opm/src/core/ext4_check.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.o -MF CMakeFiles/opm-core.dir/ext4_check.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_check.cpp.o -c /root/projects/opm/src/core/ext4_check.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.i: cmake_force
@@ -366,7 +394,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_check.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o: /root/projects/opm/src/core/ext4_resize.cpp
 src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.o -MF CMakeFiles/opm-core.dir/ext4_resize.cpp.o.d -o CMakeFiles/opm-core.dir/ext4_resize.cpp.o -c /root/projects/opm/src/core/ext4_resize.cpp
 
 src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.i: cmake_force
@@ -380,7 +408,7 @@ src/core/CMakeFiles/opm-core.dir/ext4_resize.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o: /root/projects/opm/src/core/ntfs_impl.cpp
 src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.o -MF CMakeFiles/opm-core.dir/ntfs_impl.cpp.o.d -o CMakeFiles/opm-core.dir/ntfs_impl.cpp.o -c /root/projects/opm/src/core/ntfs_impl.cpp
 
 src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.i: cmake_force
@@ -394,7 +422,7 @@ src/core/CMakeFiles/opm-core.dir/ntfs_impl.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o: /root/projects/opm/src/core/ntfs_boot.cpp
 src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.o -MF CMakeFiles/opm-core.dir/ntfs_boot.cpp.o.d -o CMakeFiles/opm-core.dir/ntfs_boot.cpp.o -c /root/projects/opm/src/core/ntfs_boot.cpp
 
 src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.i: cmake_force
@@ -408,7 +436,7 @@ src/core/CMakeFiles/opm-core.dir/ntfs_boot.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o: /root/projects/opm/src/core/ntfs_format.cpp
 src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.o -MF CMakeFiles/opm-core.dir/ntfs_format.cpp.o.d -o CMakeFiles/opm-core.dir/ntfs_format.cpp.o -c /root/projects/opm/src/core/ntfs_format.cpp
 
 src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.i: cmake_force
@@ -422,7 +450,7 @@ src/core/CMakeFiles/opm-core.dir/ntfs_format.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o: /root/projects/opm/src/core/ntfs_check.cpp
 src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.o -MF CMakeFiles/opm-core.dir/ntfs_check.cpp.o.d -o CMakeFiles/opm-core.dir/ntfs_check.cpp.o -c /root/projects/opm/src/core/ntfs_check.cpp
 
 src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.i: cmake_force
@@ -436,7 +464,7 @@ src/core/CMakeFiles/opm-core.dir/ntfs_check.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o: /root/projects/opm/src/core/ntfs_resize.cpp
 src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.o -MF CMakeFiles/opm-core.dir/ntfs_resize.cpp.o.d -o CMakeFiles/opm-core.dir/ntfs_resize.cpp.o -c /root/projects/opm/src/core/ntfs_resize.cpp
 
 src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.i: cmake_force
@@ -450,7 +478,7 @@ src/core/CMakeFiles/opm-core.dir/ntfs_resize.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o: /root/projects/opm/src/core/exfat_impl.cpp
 src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.o -MF CMakeFiles/opm-core.dir/exfat_impl.cpp.o.d -o CMakeFiles/opm-core.dir/exfat_impl.cpp.o -c /root/projects/opm/src/core/exfat_impl.cpp
 
 src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.i: cmake_force
@@ -464,7 +492,7 @@ src/core/CMakeFiles/opm-core.dir/exfat_impl.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o: /root/projects/opm/src/core/exfat_boot.cpp
 src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o -MF CMakeFiles/opm-core.dir/exfat_boot.cpp.o.d -o CMakeFiles/opm-core.dir/exfat_boot.cpp.o -c /root/projects/opm/src/core/exfat_boot.cpp
 
 src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.i: cmake_force
@@ -478,7 +506,7 @@ src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o: /root/projects/opm/src/core/exfat_format.cpp
 src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o -MF CMakeFiles/opm-core.dir/exfat_format.cpp.o.d -o CMakeFiles/opm-core.dir/exfat_format.cpp.o -c /root/projects/opm/src/core/exfat_format.cpp
 
 src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.i: cmake_force
@@ -492,7 +520,7 @@ src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o: /root/projects/opm/src/core/exfat_check.cpp
 src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o -MF CMakeFiles/opm-core.dir/exfat_check.cpp.o.d -o CMakeFiles/opm-core.dir/exfat_check.cpp.o -c /root/projects/opm/src/core/exfat_check.cpp
 
 src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.i: cmake_force
@@ -506,7 +534,7 @@ src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.s: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
 src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o: /root/projects/opm/src/core/exfat_resize.cpp
 src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building CXX object src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o -MF CMakeFiles/opm-core.dir/exfat_resize.cpp.o.d -o CMakeFiles/opm-core.dir/exfat_resize.cpp.o -c /root/projects/opm/src/core/exfat_resize.cpp
 
 src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.i: cmake_force
@@ -516,20 +544,6 @@ src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.i: cmake_force
 src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm-core.dir/exfat_resize.cpp.s"
 	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/src/core/exfat_resize.cpp -o CMakeFiles/opm-core.dir/exfat_resize.cpp.s
-
-src/core/CMakeFiles/opm-core.dir/boot.cpp.o: src/core/CMakeFiles/opm-core.dir/flags.make
-src/core/CMakeFiles/opm-core.dir/boot.cpp.o: /root/projects/opm/src/core/boot.cpp
-src/core/CMakeFiles/opm-core.dir/boot.cpp.o: src/core/CMakeFiles/opm-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building CXX object src/core/CMakeFiles/opm-core.dir/boot.cpp.o"
-	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/core/CMakeFiles/opm-core.dir/boot.cpp.o -MF CMakeFiles/opm-core.dir/boot.cpp.o.d -o CMakeFiles/opm-core.dir/boot.cpp.o -c /root/projects/opm/src/core/boot.cpp
-
-src/core/CMakeFiles/opm-core.dir/boot.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm-core.dir/boot.cpp.i"
-	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/src/core/boot.cpp > CMakeFiles/opm-core.dir/boot.cpp.i
-
-src/core/CMakeFiles/opm-core.dir/boot.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm-core.dir/boot.cpp.s"
-	cd /root/projects/opm/build/src/core && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/src/core/boot.cpp -o CMakeFiles/opm-core.dir/boot.cpp.s
 
 # Object files for target opm-core
 opm__core_OBJECTS = \
@@ -542,6 +556,8 @@ opm__core_OBJECTS = \
 "CMakeFiles/opm-core.dir/operation.cpp.o" \
 "CMakeFiles/opm-core.dir/filesystem.cpp.o" \
 "CMakeFiles/opm-core.dir/clone.cpp.o" \
+"CMakeFiles/opm-core.dir/boot.cpp.o" \
+"CMakeFiles/opm-core.dir/platform.cpp.o" \
 "CMakeFiles/opm-core.dir/fat32_impl.cpp.o" \
 "CMakeFiles/opm-core.dir/fat32_create.cpp.o" \
 "CMakeFiles/opm-core.dir/fat32_fat.cpp.o" \
@@ -564,8 +580,7 @@ opm__core_OBJECTS = \
 "CMakeFiles/opm-core.dir/exfat_boot.cpp.o" \
 "CMakeFiles/opm-core.dir/exfat_format.cpp.o" \
 "CMakeFiles/opm-core.dir/exfat_check.cpp.o" \
-"CMakeFiles/opm-core.dir/exfat_resize.cpp.o" \
-"CMakeFiles/opm-core.dir/boot.cpp.o"
+"CMakeFiles/opm-core.dir/exfat_resize.cpp.o"
 
 # External object files for target opm-core
 opm__core_EXTERNAL_OBJECTS =
@@ -579,6 +594,8 @@ src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/utils.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/operation.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/filesystem.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/clone.cpp.o
+src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/boot.cpp.o
+src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/platform.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/fat32_impl.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/fat32_create.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/fat32_fat.cpp.o
@@ -602,10 +619,9 @@ src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/exfat_format.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/exfat_resize.cpp.o
-src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/boot.cpp.o
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/build.make
 src/core/libopm-core.a: src/core/CMakeFiles/opm-core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Linking CXX static library libopm-core.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Linking CXX static library libopm-core.a"
 	cd /root/projects/opm/build/src/core && $(CMAKE_COMMAND) -P CMakeFiles/opm-core.dir/cmake_clean_target.cmake
 	cd /root/projects/opm/build/src/core && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/opm-core.dir/link.txt --verbose=$(VERBOSE)
 

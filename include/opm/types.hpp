@@ -105,6 +105,14 @@ constexpr size_t ALIGNMENT_1MB = 2048;      // 1MB / 512B
 constexpr size_t ALIGNMENT_4K = 8;          // 4K / 512B
 constexpr size_t ALIGNMENT_1MB_4K = 256;    // 1MB / 4K
 
+// Device types for enumeration
+enum class DeviceType {
+    Disk,
+    Partition,
+    Loop,
+    Unknown
+};
+
 // Result type for operations
 enum class ResultCode {
     Success = 0,

@@ -218,6 +218,32 @@ opm/fast:
 .PHONY : opm/fast
 
 #=============================================================================
+# Target rules for targets named opm-gui
+
+# Build rule for target.
+opm-gui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 opm-gui
+.PHONY : opm-gui
+
+# fast build rule for target.
+opm-gui/fast:
+	$(MAKE) $(MAKESILENT) -f src/gui/CMakeFiles/opm-gui.dir/build.make src/gui/CMakeFiles/opm-gui.dir/build
+.PHONY : opm-gui/fast
+
+#=============================================================================
+# Target rules for targets named opm-gui_autogen
+
+# Build rule for target.
+opm-gui_autogen: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 opm-gui_autogen
+.PHONY : opm-gui_autogen
+
+# fast build rule for target.
+opm-gui_autogen/fast:
+	$(MAKE) $(MAKESILENT) -f src/gui/CMakeFiles/opm-gui_autogen.dir/build.make src/gui/CMakeFiles/opm-gui_autogen.dir/build
+.PHONY : opm-gui_autogen/fast
+
+#=============================================================================
 # Target rules for targets named opm_tests
 
 # Build rule for target.
@@ -310,12 +336,14 @@ help:
 	@echo "... package_source"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... opm-gui_autogen"
 	@echo "... gmock"
 	@echo "... gmock_main"
 	@echo "... gtest"
 	@echo "... gtest_main"
 	@echo "... opm"
 	@echo "... opm-core"
+	@echo "... opm-gui"
 	@echo "... opm_tests"
 	@echo "... test_disk_detection"
 .PHONY : help
