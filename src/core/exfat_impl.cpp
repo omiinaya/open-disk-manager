@@ -217,7 +217,8 @@ bool ExFATLayout::validate() const {
         return false;
     }
     
-    if (cluster_heap_offset <= fat_offset + fat_length) {
+    // Cluster heap must start at or after FAT (not before)
+    if (cluster_heap_offset < fat_offset + fat_length) {
         return false;
     }
     

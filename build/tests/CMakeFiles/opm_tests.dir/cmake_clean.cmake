@@ -1,4 +1,10 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/opm_tests.dir/test_boot.cpp.o"
+  "CMakeFiles/opm_tests.dir/test_boot.cpp.o.d"
+  "CMakeFiles/opm_tests.dir/test_clone.cpp.o"
+  "CMakeFiles/opm_tests.dir/test_clone.cpp.o.d"
+  "CMakeFiles/opm_tests.dir/test_exfat.cpp.o"
+  "CMakeFiles/opm_tests.dir/test_exfat.cpp.o.d"
   "CMakeFiles/opm_tests.dir/test_gpt.cpp.o"
   "CMakeFiles/opm_tests.dir/test_gpt.cpp.o.d"
   "CMakeFiles/opm_tests.dir/test_main.cpp.o"

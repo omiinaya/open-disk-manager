@@ -8,6 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/root/projects/opm/src/core/boot.cpp" "src/core/CMakeFiles/opm-core.dir/boot.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/boot.cpp.o.d"
+  "/root/projects/opm/src/core/clone.cpp" "src/core/CMakeFiles/opm-core.dir/clone.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/clone.cpp.o.d"
   "/root/projects/opm/src/core/disk_io.cpp" "src/core/CMakeFiles/opm-core.dir/disk_io.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/disk_io.cpp.o.d"
   "/root/projects/opm/src/core/exfat_boot.cpp" "src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/exfat_boot.cpp.o.d"
   "/root/projects/opm/src/core/exfat_check.cpp" "src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o" "gcc" "src/core/CMakeFiles/opm-core.dir/exfat_check.cpp.o.d"

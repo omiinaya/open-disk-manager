@@ -111,10 +111,52 @@ tests/CMakeFiles/opm_tests.dir/test_gpt.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm_tests.dir/test_gpt.cpp.s"
 	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/tests/test_gpt.cpp -o CMakeFiles/opm_tests.dir/test_gpt.cpp.s
 
+tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o: tests/CMakeFiles/opm_tests.dir/flags.make
+tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o: /root/projects/opm/tests/test_exfat.cpp
+tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o: tests/CMakeFiles/opm_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o -MF CMakeFiles/opm_tests.dir/test_exfat.cpp.o.d -o CMakeFiles/opm_tests.dir/test_exfat.cpp.o -c /root/projects/opm/tests/test_exfat.cpp
+
+tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm_tests.dir/test_exfat.cpp.i"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/tests/test_exfat.cpp > CMakeFiles/opm_tests.dir/test_exfat.cpp.i
+
+tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm_tests.dir/test_exfat.cpp.s"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/tests/test_exfat.cpp -o CMakeFiles/opm_tests.dir/test_exfat.cpp.s
+
+tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o: tests/CMakeFiles/opm_tests.dir/flags.make
+tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o: /root/projects/opm/tests/test_clone.cpp
+tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o: tests/CMakeFiles/opm_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o -MF CMakeFiles/opm_tests.dir/test_clone.cpp.o.d -o CMakeFiles/opm_tests.dir/test_clone.cpp.o -c /root/projects/opm/tests/test_clone.cpp
+
+tests/CMakeFiles/opm_tests.dir/test_clone.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm_tests.dir/test_clone.cpp.i"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/tests/test_clone.cpp > CMakeFiles/opm_tests.dir/test_clone.cpp.i
+
+tests/CMakeFiles/opm_tests.dir/test_clone.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm_tests.dir/test_clone.cpp.s"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/tests/test_clone.cpp -o CMakeFiles/opm_tests.dir/test_clone.cpp.s
+
+tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o: tests/CMakeFiles/opm_tests.dir/flags.make
+tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o: /root/projects/opm/tests/test_boot.cpp
+tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o: tests/CMakeFiles/opm_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o -MF CMakeFiles/opm_tests.dir/test_boot.cpp.o.d -o CMakeFiles/opm_tests.dir/test_boot.cpp.o -c /root/projects/opm/tests/test_boot.cpp
+
+tests/CMakeFiles/opm_tests.dir/test_boot.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/opm_tests.dir/test_boot.cpp.i"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /root/projects/opm/tests/test_boot.cpp > CMakeFiles/opm_tests.dir/test_boot.cpp.i
+
+tests/CMakeFiles/opm_tests.dir/test_boot.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/opm_tests.dir/test_boot.cpp.s"
+	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /root/projects/opm/tests/test_boot.cpp -o CMakeFiles/opm_tests.dir/test_boot.cpp.s
+
 tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o: tests/CMakeFiles/opm_tests.dir/flags.make
 tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o: /root/projects/opm/tests/test_utils.cpp
 tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o: tests/CMakeFiles/opm_tests.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o"
 	cd /root/projects/opm/build/tests && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o -MF CMakeFiles/opm_tests.dir/test_utils.cpp.o.d -o CMakeFiles/opm_tests.dir/test_utils.cpp.o -c /root/projects/opm/tests/test_utils.cpp
 
 tests/CMakeFiles/opm_tests.dir/test_utils.cpp.i: cmake_force
@@ -130,6 +172,9 @@ opm_tests_OBJECTS = \
 "CMakeFiles/opm_tests.dir/test_main.cpp.o" \
 "CMakeFiles/opm_tests.dir/test_mbr.cpp.o" \
 "CMakeFiles/opm_tests.dir/test_gpt.cpp.o" \
+"CMakeFiles/opm_tests.dir/test_exfat.cpp.o" \
+"CMakeFiles/opm_tests.dir/test_clone.cpp.o" \
+"CMakeFiles/opm_tests.dir/test_boot.cpp.o" \
 "CMakeFiles/opm_tests.dir/test_utils.cpp.o"
 
 # External object files for target opm_tests
@@ -138,6 +183,9 @@ opm_tests_EXTERNAL_OBJECTS =
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_main.cpp.o
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_mbr.cpp.o
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_gpt.cpp.o
+tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o
+tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o
+tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/test_utils.cpp.o
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/build.make
 tests/opm_tests: src/core/libopm-core.a
@@ -145,7 +193,7 @@ tests/opm_tests: lib/libgtest.a
 tests/opm_tests: lib/libgtest_main.a
 tests/opm_tests: lib/libgtest.a
 tests/opm_tests: tests/CMakeFiles/opm_tests.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable opm_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/root/projects/opm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable opm_tests"
 	cd /root/projects/opm/build/tests && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/opm_tests.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

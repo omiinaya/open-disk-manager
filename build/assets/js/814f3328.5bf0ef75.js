@@ -1,1 +1,0 @@
-"use strict";(globalThis.webpackChunkopm_website=globalThis.webpackChunkopm_website||[]).push([[472],{5513(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Hello Open Partition Manager","permalink":"/blog/hello-opm","unlisted":false}]}')}}]);

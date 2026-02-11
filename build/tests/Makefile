@@ -205,6 +205,78 @@ opm_tests/fast:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/build
 .PHONY : opm_tests/fast
 
+test_boot.o: test_boot.cpp.o
+.PHONY : test_boot.o
+
+# target to build an object file
+test_boot.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o
+.PHONY : test_boot.cpp.o
+
+test_boot.i: test_boot.cpp.i
+.PHONY : test_boot.i
+
+# target to preprocess a source file
+test_boot.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_boot.cpp.i
+.PHONY : test_boot.cpp.i
+
+test_boot.s: test_boot.cpp.s
+.PHONY : test_boot.s
+
+# target to generate assembly for a file
+test_boot.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_boot.cpp.s
+.PHONY : test_boot.cpp.s
+
+test_clone.o: test_clone.cpp.o
+.PHONY : test_clone.o
+
+# target to build an object file
+test_clone.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o
+.PHONY : test_clone.cpp.o
+
+test_clone.i: test_clone.cpp.i
+.PHONY : test_clone.i
+
+# target to preprocess a source file
+test_clone.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_clone.cpp.i
+.PHONY : test_clone.cpp.i
+
+test_clone.s: test_clone.cpp.s
+.PHONY : test_clone.s
+
+# target to generate assembly for a file
+test_clone.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_clone.cpp.s
+.PHONY : test_clone.cpp.s
+
+test_exfat.o: test_exfat.cpp.o
+.PHONY : test_exfat.o
+
+# target to build an object file
+test_exfat.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o
+.PHONY : test_exfat.cpp.o
+
+test_exfat.i: test_exfat.cpp.i
+.PHONY : test_exfat.i
+
+# target to preprocess a source file
+test_exfat.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.i
+.PHONY : test_exfat.cpp.i
+
+test_exfat.s: test_exfat.cpp.s
+.PHONY : test_exfat.s
+
+# target to generate assembly for a file
+test_exfat.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/opm_tests.dir/build.make tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.s
+.PHONY : test_exfat.cpp.s
+
 test_gpt.o: test_gpt.cpp.o
 .PHONY : test_gpt.o
 
@@ -317,6 +389,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... opm_tests"
+	@echo "... test_boot.o"
+	@echo "... test_boot.i"
+	@echo "... test_boot.s"
+	@echo "... test_clone.o"
+	@echo "... test_clone.i"
+	@echo "... test_clone.s"
+	@echo "... test_exfat.o"
+	@echo "... test_exfat.i"
+	@echo "... test_exfat.s"
 	@echo "... test_gpt.o"
 	@echo "... test_gpt.i"
 	@echo "... test_gpt.s"

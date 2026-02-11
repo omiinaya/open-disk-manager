@@ -205,6 +205,54 @@ opm-core/fast:
 	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/build
 .PHONY : opm-core/fast
 
+boot.o: boot.cpp.o
+.PHONY : boot.o
+
+# target to build an object file
+boot.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/boot.cpp.o
+.PHONY : boot.cpp.o
+
+boot.i: boot.cpp.i
+.PHONY : boot.i
+
+# target to preprocess a source file
+boot.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/boot.cpp.i
+.PHONY : boot.cpp.i
+
+boot.s: boot.cpp.s
+.PHONY : boot.s
+
+# target to generate assembly for a file
+boot.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/boot.cpp.s
+.PHONY : boot.cpp.s
+
+clone.o: clone.cpp.o
+.PHONY : clone.o
+
+# target to build an object file
+clone.cpp.o:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/clone.cpp.o
+.PHONY : clone.cpp.o
+
+clone.i: clone.cpp.i
+.PHONY : clone.i
+
+# target to preprocess a source file
+clone.cpp.i:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/clone.cpp.i
+.PHONY : clone.cpp.i
+
+clone.s: clone.cpp.s
+.PHONY : clone.s
+
+# target to generate assembly for a file
+clone.cpp.s:
+	cd /root/projects/opm/build && $(MAKE) $(MAKESILENT) -f src/core/CMakeFiles/opm-core.dir/build.make src/core/CMakeFiles/opm-core.dir/clone.cpp.s
+.PHONY : clone.cpp.s
+
 disk_io.o: disk_io.cpp.o
 .PHONY : disk_io.o
 
@@ -965,6 +1013,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... opm-core"
+	@echo "... boot.o"
+	@echo "... boot.i"
+	@echo "... boot.s"
+	@echo "... clone.o"
+	@echo "... clone.i"
+	@echo "... clone.s"
 	@echo "... disk_io.o"
 	@echo "... disk_io.i"
 	@echo "... disk_io.s"

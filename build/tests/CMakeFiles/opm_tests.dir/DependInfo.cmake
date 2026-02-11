@@ -8,6 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/root/projects/opm/tests/test_boot.cpp" "tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_boot.cpp.o.d"
+  "/root/projects/opm/tests/test_clone.cpp" "tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_clone.cpp.o.d"
+  "/root/projects/opm/tests/test_exfat.cpp" "tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_exfat.cpp.o.d"
   "/root/projects/opm/tests/test_gpt.cpp" "tests/CMakeFiles/opm_tests.dir/test_gpt.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_gpt.cpp.o.d"
   "/root/projects/opm/tests/test_main.cpp" "tests/CMakeFiles/opm_tests.dir/test_main.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_main.cpp.o.d"
   "/root/projects/opm/tests/test_mbr.cpp" "tests/CMakeFiles/opm_tests.dir/test_mbr.cpp.o" "gcc" "tests/CMakeFiles/opm_tests.dir/test_mbr.cpp.o.d"

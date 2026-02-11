@@ -1,4 +1,8 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/opm-core.dir/boot.cpp.o"
+  "CMakeFiles/opm-core.dir/boot.cpp.o.d"
+  "CMakeFiles/opm-core.dir/clone.cpp.o"
+  "CMakeFiles/opm-core.dir/clone.cpp.o.d"
   "CMakeFiles/opm-core.dir/disk_io.cpp.o"
   "CMakeFiles/opm-core.dir/disk_io.cpp.o.d"
   "CMakeFiles/opm-core.dir/exfat_boot.cpp.o"

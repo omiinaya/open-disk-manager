@@ -18,6 +18,9 @@ set(TEST_SOURCES
     test_main.cpp
     test_mbr.cpp
     test_gpt.cpp
+    test_exfat.cpp
+    test_clone.cpp
+    test_boot.cpp
     test_utils.cpp
 )
 
