@@ -1,5 +1,6 @@
 # Secrets
 agents/*/auth-profiles.json
+agents/*/models.json
 .env
 *.key
 *.pem
