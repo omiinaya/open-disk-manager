@@ -7,11 +7,11 @@
       "name": "Nightly Roci audit reminder",
       "enabled": true,
       "createdAtMs": 1770946972249,
-      "updatedAtMs": 1770948244889,
+      "updatedAtMs": 1770950890059,
       "schedule": {
         "kind": "cron",
         "expr": "0 2 * * *",
-        "tz": "UTC"
+        "tz": "America/New_York"
       },
       "sessionTarget": "isolated",
       "wakeMode": "now",
@@ -24,7 +24,7 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1771034400000,
+        "nextRunAtMs": 1770966000000,
         "lastRunAtMs": 1770948000003,
         "lastStatus": "ok",
         "lastDurationMs": 244886,
@@ -37,11 +37,11 @@
       "name": "Nightly Hiron qmd indexing",
       "enabled": true,
       "createdAtMs": 1770949234468,
-      "updatedAtMs": 1770949234468,
+      "updatedAtMs": 1770950903777,
       "schedule": {
         "kind": "cron",
         "expr": "0 3 * * *",
-        "tz": "UTC"
+        "tz": "America/New_York"
       },
       "sessionTarget": "isolated",
       "wakeMode": "now",
@@ -54,7 +54,33 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770951600000
+        "nextRunAtMs": 1770969600000
+      }
+    },
+    {
+      "id": "07bd5a6c-30fe-4444-97a3-ec2d64a59121",
+      "agentId": "roll",
+      "name": "Nightly Roll backup",
+      "enabled": true,
+      "createdAtMs": 1770950476518,
+      "updatedAtMs": 1770950924896,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 4 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "It's time to backup the OpenClaw instance."
+      },
+      "delivery": {
+        "mode": "none",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1770973200000
       }
     }
   ]
