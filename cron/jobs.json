@@ -84,7 +84,8 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770973200000
+        "nextRunAtMs": 1770973200000,
+        "runningAtMs": 1770973200003
       }
     },
     {
