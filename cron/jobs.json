@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "86db7311-80e7-4709-a07f-582a06e67e4a",
+      "agentId": "roci",
+      "name": "Nightly Roci audit reminder",
+      "enabled": true,
+      "createdAtMs": 1770946972249,
+      "updatedAtMs": 1770948244889,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2 * * *",
+        "tz": "UTC"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Audit every file that loads into your context each message (AGENTS.md, TOOLS.md, USER.md, MEMORY.md, HEARTBEAT.md, SOUL.md). For each one: (1) What's in here that should be a skill instead of always-loaded context? (2) What's outdated or redundant? (3) What's too verbose and could say the same thing in fewer words? Give me the current size, projected size after cleanup, and estimated token savings.\n\nDo it. Develop skills for the items that should be relegated to skills. Delete the outdated stuff. Tighten anything verbose. Show me a before/after summary when you're done."
+      },
+      "delivery": {
+        "mode": "none",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1771034400000,
+        "lastRunAtMs": 1770948000003,
+        "lastStatus": "ok",
+        "lastDurationMs": 244886,
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "ee6ffb62-522f-404a-887a-32c4879ad9ec",
+      "agentId": "hiron",
+      "name": "Nightly Hiron qmd indexing",
+      "enabled": true,
+      "createdAtMs": 1770949234468,
+      "updatedAtMs": 1770949234468,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 3 * * *",
+        "tz": "UTC"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "It's time to update and embed the qmd index."
+      },
+      "delivery": {
+        "mode": "none",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1770951600000
+      }
+    }
+  ]
+}

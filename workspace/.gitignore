@@ -1,0 +1,34 @@
+# Secrets
+agents/*/auth-profiles.json
+.env
+*.key
+*.pem
+
+# Local state
+memory/
+MEMORY.md
+
+# Build artifacts
+dashboard/
+public/
+node_modules/
+dist/
+
+# Test/development scripts
+test_*.py
+*_checkin.py
+fetch_*.py
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Temporary
+tmp/
+temp/

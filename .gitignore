@@ -1,0 +1,44 @@
+# Sensitive top-level configuration - exclude to prevent secret leak
+/openclaw.json
+/models.json
+/credentials/
+
+# Agent-specific secrets (API keys, auth profiles)
+/agents/*/agent/auth-profiles.json
+/agents/*/agent/models.json
+
+# Runtime state that can be regenerated
+/exec-approvals.json
+/subagents/
+/devices/
+/identity/
+/canvas/
+/completions/
+
+# Logs anywhere
+/logs/
+*.log
+
+# Temporary and cache
+/tmp/
+/temp/
+node_modules/
+dist/
+public/
+dashboard/
+
+# OpenClaw config backups (contain secrets)
+openclaw.json.bak*
+openclaw_*.json
+
+# Editor/OS artifacts
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Nested git repositories (agent workspaces) - include their files but not their .git
+**/.git/
+
+# Note: Workspace-specific ignores are handled by workspace/.gitignore
+# They include: memory/, MEMORY.md, etc.

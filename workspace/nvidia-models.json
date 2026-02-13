@@ -1,0 +1,41 @@
+{
+  "models": {
+    "providers": {
+      "nvidia": {
+        "baseUrl": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "apiKey": "__OPENCLAW_REDACTED__",
+        "auth": "api-key",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "moonshotai/kimi-k2.5",
+            "name": "Kimi K2.5",
+            "contextWindow": 8192,
+            "maxTokens": 4096,
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+          },
+          {
+            "id": "stepfun-ai/step-3.5-flash",
+            "name": "Step-3.5-Flash",
+            "contextWindow": 8192,
+            "maxTokens": 16384,
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+          },
+          {
+            "id": "z-ai/glm4.7",
+            "name": "GLM-4.7",
+            "contextWindow": 8192,
+            "maxTokens": 16384,
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0}
+          }
+        ]
+      }
+    }
+  }
+}
