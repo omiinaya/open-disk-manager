@@ -17,7 +17,9 @@ import json, time, re, sys, os
 HOME = os.path.expanduser('~')
 OPENCLAW_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(HOME, '.openclaw'))
 CONFIG_PATH = os.path.join(OPENCLAW_HOME, 'openclaw.json')
+EXTENDED_PATH = os.path.join(OPENCLAW_HOME, 'config-extended.json')
 SANITIZED_PATH = os.path.join(OPENCLAW_HOME, 'sanitized-config.json')
+SANITIZED_EXTENDED_PATH = os.path.join(OPENCLAW_HOME, 'sanitized-config-extended.json')
 
 SENSITIVE_KEYS = {
     'token', 'tokens', 'password', 'passwd', 'secret', 'secrets',
@@ -53,18 +55,31 @@ def ensure_docs_dir():
 def main():
     dry_run = '--dry-run' in sys.argv
     try:
+        # Process main openclaw.json
         cfg = load_config()
         sanitized = sanitize_config(cfg)
         if dry_run:
             print(f"Would write sanitized config to: {SANITIZED_PATH}")
-            print("Would stage file for commit.")
+            if os.path.exists(EXTENDED_PATH):
+                print(f"Would write sanitized extended config to: {SANITIZED_EXTENDED_PATH}")
+            print("Would stage files for commit.")
             return 0
         ensure_docs_dir()
         with open(SANITIZED_PATH, 'w') as f:
             json.dump(sanitized, f, indent=2)
-        # Stage the sanitized file
         os.system(f'git -C "{OPENCLAW_HOME}" add "{SANITIZED_PATH}"')
         print(f"Sanitized config written and staged: {SANITIZED_PATH}")
+
+        # Process config-extended.json if exists
+        if os.path.exists(EXTENDED_PATH):
+            with open(EXTENDED_PATH, 'r') as f:
+                ext_cfg = json.load(f)
+            sanitized_ext = sanitize_config(ext_cfg)
+            with open(SANITIZED_EXTENDED_PATH, 'w') as f:
+                json.dump(sanitized_ext, f, indent=2)
+            os.system(f'git -C "{OPENCLAW_HOME}" add "{SANITIZED_EXTENDED_PATH}"')
+            print(f"Sanitized extended config written and staged: {SANITIZED_EXTENDED_PATH}")
+
         return 0
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
