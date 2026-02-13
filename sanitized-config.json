@@ -182,7 +182,7 @@
     }
   },
   "_meta": {
-    "sanitizedAt": "2026-02-13T20:35:55Z",
+    "sanitizedAt": "2026-02-13T20:41:28Z",
     "purpose": "Configuration structure reference \u2013 secrets removed",
     "note": "Use this as a template. Never commit real secrets."
   }

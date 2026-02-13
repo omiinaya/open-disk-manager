@@ -17,7 +17,7 @@ import json, time, re, sys, os
 HOME = os.path.expanduser('~')
 OPENCLAW_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(HOME, '.openclaw'))
 CONFIG_PATH = os.path.join(OPENCLAW_HOME, 'openclaw.json')
-SANITIZED_PATH = os.path.join(OPENCLAW_HOME, 'docs', 'openclaw', 'sanitized-config.json')
+SANITIZED_PATH = os.path.join(OPENCLAW_HOME, 'sanitized-config.json')
 
 SENSITIVE_KEYS = {
     'token', 'tokens', 'password', 'passwd', 'secret', 'secrets',

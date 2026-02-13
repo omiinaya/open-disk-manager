@@ -13,7 +13,7 @@ Use this skill when the user says "save config" or "save configuration" or any v
 2. Check `git status` to see what will be committed
 3. **Generate and stage a sanitized config backup:**
    - Run `skills/config-save/guardian` (a Python script)
-   - This creates `docs/openclaw/sanitized-config.json` with all secrets redacted
+   - This creates `~/.openclaw/sanitized-config.json` with all secrets redacted
    - The file is automatically staged for commit
 4. Stage all other changes: `git add -A`
 5. Commit with a clear message like "Save configuration" or include the user's specific request
