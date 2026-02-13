@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""
+Config Save Guardian – sanitize and back up openclaw.json before commit.
+
+Usage: guardian [--dry-run]
+
+Without flags:
+- Creates ~/.openclaw/docs/openclaw/sanitized-config.json with secrets redacted
+- Stages the sanitized file for commit
+- Exits 0 on success, non-zero on error
+
+--dry-run: only print what would happen, no file writes
+"""
+
+import json, time, re, sys, os
+
+HOME = os.path.expanduser('~')
+OPENCLAW_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(HOME, '.openclaw'))
+CONFIG_PATH = os.path.join(OPENCLAW_HOME, 'openclaw.json')
+SANITIZED_PATH = os.path.join(OPENCLAW_HOME, 'docs', 'openclaw', 'sanitized-config.json')
+
+SENSITIVE_KEYS = {
+    'token', 'tokens', 'password', 'passwd', 'secret', 'secrets',
+    'apiKey', 'apikey', 'key', 'privateKey', 'credentials',
+    'auth', 'oauth', 'clientSecret', 'secretKey', 'bearer'
+}
+
+def load_config():
+    with open(CONFIG_PATH, 'r') as f:
+        return json.load(f)
+
+def sanitize_config(cfg):
+    REDACTED = 'REDACTED'
+    def walk(obj):
+        if isinstance(obj, dict):
+            return {k: (REDACTED if any(sens in k.lower() for sens in SENSITIVE_KEYS) else walk(v))
+                    for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [walk(v) for v in obj]
+        else:
+            return obj
+    sanitized = walk(cfg)
+    sanitized['_meta'] = {
+        'sanitizedAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        'purpose': 'Configuration structure reference – secrets removed',
+        'note': 'Use this as a template. Never commit real secrets.'
+    }
+    return sanitized
+
+def ensure_docs_dir():
+    os.makedirs(os.path.dirname(SANITIZED_PATH), exist_ok=True)
+
+def main():
+    dry_run = '--dry-run' in sys.argv
+    try:
+        cfg = load_config()
+        sanitized = sanitize_config(cfg)
+        if dry_run:
+            print(f"Would write sanitized config to: {SANITIZED_PATH}")
+            print("Would stage file for commit.")
+            return 0
+        ensure_docs_dir()
+        with open(SANITIZED_PATH, 'w') as f:
+            json.dump(sanitized, f, indent=2)
+        # Stage the sanitized file
+        os.system(f'git -C "{OPENCLAW_HOME}" add "{SANITIZED_PATH}"')
+        print(f"Sanitized config written and staged: {SANITIZED_PATH}")
+        return 0
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+if __name__ == '__main__':
+    sys.exit(main())
