@@ -11,5 +11,8 @@
       "max_size": 1000
     },
     "owner_ids": ["536216501901066263"]
+  },
+  "subagents": {
+    "allowAgents": ["archy", "smith"]
   }
 }

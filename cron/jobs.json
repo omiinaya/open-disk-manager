@@ -7,7 +7,7 @@
       "name": "Nightly Roci audit reminder",
       "enabled": true,
       "createdAtMs": 1770946972249,
-      "updatedAtMs": 1770950890059,
+      "updatedAtMs": 1770966007160,
       "schedule": {
         "kind": "cron",
         "expr": "0 2 * * *",
@@ -24,10 +24,10 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770966000000,
-        "lastRunAtMs": 1770948000003,
+        "nextRunAtMs": 1771052400000,
+        "lastRunAtMs": 1770966000004,
         "lastStatus": "ok",
-        "lastDurationMs": 244886,
+        "lastDurationMs": 7156,
         "consecutiveErrors": 0
       }
     },
@@ -89,7 +89,7 @@
       "name": "Nightly Dande cleanup",
       "enabled": true,
       "createdAtMs": 1770954755255,
-      "updatedAtMs": 1770954755255,
+      "updatedAtMs": 1770962457214,
       "schedule": {
         "kind": "cron",
         "expr": "0 1 * * *",
@@ -106,7 +106,11 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770962400000
+        "nextRunAtMs": 1771048800000,
+        "lastRunAtMs": 1770962400006,
+        "lastStatus": "ok",
+        "lastDurationMs": 57208,
+        "consecutiveErrors": 0
       }
     },
     {
