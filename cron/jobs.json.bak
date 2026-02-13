@@ -37,7 +37,7 @@
       "name": "Nightly Hiron qmd indexing",
       "enabled": true,
       "createdAtMs": 1770949234468,
-      "updatedAtMs": 1770950903777,
+      "updatedAtMs": 1770969842270,
       "schedule": {
         "kind": "cron",
         "expr": "0 3 * * *",
@@ -54,7 +54,11 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770969600000
+        "nextRunAtMs": 1771056000000,
+        "lastRunAtMs": 1770969600002,
+        "lastStatus": "ok",
+        "lastDurationMs": 242268,
+        "consecutiveErrors": 0
       }
     },
     {
@@ -119,7 +123,7 @@
       "name": "harpy:nightly-updates",
       "enabled": true,
       "createdAtMs": 1770956059626,
-      "updatedAtMs": 1770956059626,
+      "updatedAtMs": 1770969977431,
       "schedule": {
         "kind": "cron",
         "expr": "0 3 * * *",
@@ -136,7 +140,12 @@
         "channel": "webchat"
       },
       "state": {
-        "nextRunAtMs": 1770969600000
+        "nextRunAtMs": 1771056000000,
+        "lastRunAtMs": 1770969842270,
+        "lastStatus": "error",
+        "lastDurationMs": 135161,
+        "lastError": "cron delivery target is missing",
+        "consecutiveErrors": 1
       }
     }
   ]
