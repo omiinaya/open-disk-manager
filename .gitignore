@@ -4,6 +4,9 @@
 /credentials/
 
 # Agent-specific secrets (API keys, auth profiles)
+# These files contain provider API keys and credentials
+/agents/*/auth-profiles.json
+/agents/*/models.json
 /agents/*/agent/auth-profiles.json
 /agents/*/agent/models.json
 
@@ -14,6 +17,8 @@
 /identity/
 /canvas/
 /completions/
+/agents/*/sessions/
+/cron/runs/
 
 # Logs anywhere
 /logs/
