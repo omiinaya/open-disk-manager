@@ -41,7 +41,7 @@ Usage: `guardian [--dry-run]` (dry-run shows actions without writing)
 - If there's nothing to commit, report that the workspace is already up to date.
 - If push fails due to network/auth, report the error and ask for credentials.
 - Use the user-provided context for the commit message if given; otherwise default to "Update workspace configuration".
-- The sanitized config backup is created every time you run "save config" – it's your versioned template.
+- The sanitized config backup is created every time you run "save config" — it's your versioned template.
 
 ## Extended Config
 
