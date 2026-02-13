@@ -108,6 +108,32 @@
       "state": {
         "nextRunAtMs": 1770962400000
       }
+    },
+    {
+      "id": "b6ecb66e-30e9-413a-8a18-8ae8a95a137d",
+      "agentId": "harpy",
+      "name": "harpy:nightly-updates",
+      "enabled": true,
+      "createdAtMs": 1770956059626,
+      "updatedAtMs": 1770956059626,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 3 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Perform nightly updates: check and apply all available updates for Linux packages, OpenClaw core, skills, and plugins. Restart services only if necessary. Provide a detailed summary of actions taken and any issues requiring manual attention."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "webchat"
+      },
+      "state": {
+        "nextRunAtMs": 1770969600000
+      }
     }
   ]
 }

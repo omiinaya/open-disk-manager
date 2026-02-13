@@ -1,8 +1,0 @@
-Read all documents in the docs/ folder (ROADMAP.md, PHASE1_COMPLETION_SUMMARY.md, CRITICAL_BUGS.md, OPTIMIZATION_GUIDE.md, CODEBASE_ANALYSIS.md). Then:
-
-1) Summarize current project status
-2) List completed phases/features
-3) State immediate next step to implement
-4) Enumerate critical improvements left (bugs, performance, testing)
-
-Be specific and cite documents.
