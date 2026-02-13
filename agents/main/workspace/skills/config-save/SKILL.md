@@ -1,11 +1,11 @@
 ---
-name: workspace-save
-description: Save workspace configuration by committing and pushing changes to the git remote.
+name: config-save
+description: Save configuration by committing and pushing changes in ~/.openclaw to the git remote.
 ---
 
-# Workspace Save Skill
+# Config Save Skill
 
-Use this skill when the user says "save your configuration" or "save workspace" or any variant that means: commit all changes in `/root/.openclaw` and push to the remote.
+Use this skill when the user says "save config" or "save configuration" or any variant that means: commit all changes in `/root/.openclaw` and push to the remote.
 
 ## Procedure
 
