@@ -45,5 +45,8 @@ openclaw_*.json
 # Nested git repositories (agent workspaces) - include their files but not their .git
 **/.git/
 
+# Built/runtime workspaces
+/workspace-harpy/
+
 # Note: Workspace-specific ignores are handled by workspace/.gitignore
 # They include: memory/, MEMORY.md, etc.
