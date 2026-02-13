@@ -82,6 +82,32 @@
       "state": {
         "nextRunAtMs": 1770973200000
       }
+    },
+    {
+      "id": "1b4de8ca-f7aa-4a19-96de-37d00c64cc3f",
+      "agentId": "dande",
+      "name": "Nightly Dande cleanup",
+      "enabled": true,
+      "createdAtMs": 1770954755255,
+      "updatedAtMs": 1770954755255,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 1 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "It's time to clean up old sessions, logs, and temp files."
+      },
+      "delivery": {
+        "mode": "none",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1770962400000
+      }
     }
   ]
 }
