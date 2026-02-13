@@ -127,7 +127,7 @@
       "name": "harpy:nightly-updates",
       "enabled": true,
       "createdAtMs": 1770956059626,
-      "updatedAtMs": 1770969977431,
+      "updatedAtMs": 1770995290828,
       "schedule": {
         "kind": "cron",
         "expr": "0 3 * * *",
@@ -145,11 +145,11 @@
       },
       "state": {
         "nextRunAtMs": 1771056000000,
-        "lastRunAtMs": 1770969842270,
+        "lastRunAtMs": 1770995265755,
         "lastStatus": "error",
-        "lastDurationMs": 135161,
+        "lastDurationMs": 25073,
         "lastError": "cron delivery target is missing",
-        "consecutiveErrors": 1
+        "consecutiveErrors": 2
       }
     }
   ]
