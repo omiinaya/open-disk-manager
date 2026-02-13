@@ -42,3 +42,19 @@ Usage: `guardian [--dry-run]` (dry-run shows actions without writing)
 - If push fails due to network/auth, report the error and ask for credentials.
 - Use the user-provided context for the commit message if given; otherwise default to "Update workspace configuration".
 - The sanitized config backup is created every time you run "save config" – it's your versioned template.
+
+## Extended Config
+
+OpenClaw's main config (`openclaw.json`) has a strict schema. For experimental agent properties, use `~/.openclaw/config-extended.json` (trackable, not gitignored). Structure:
+
+```json
+{
+  "agents": {
+    "<agentId>": {
+      "trainingMode": true
+    }
+  }
+}
+```
+
+Agents can read this file at runtime to enable non-standard features without breaking config validation. Changes to `config-extended.json` should be included in normal commits (it's not secret).
