@@ -1,6 +1,5 @@
 # Sensitive top-level configuration - exclude to prevent secret leak
 /openclaw.json
-/config-extended.json
 /models.json
 /credentials/
 
