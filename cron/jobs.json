@@ -67,7 +67,7 @@
       "name": "Nightly Roll backup",
       "enabled": true,
       "createdAtMs": 1770950476518,
-      "updatedAtMs": 1770950924896,
+      "updatedAtMs": 1770973216061,
       "schedule": {
         "kind": "cron",
         "expr": "0 4 * * *",
@@ -84,8 +84,11 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1770973200000,
-        "runningAtMs": 1770973200003
+        "nextRunAtMs": 1771059600000,
+        "lastRunAtMs": 1770973200004,
+        "lastStatus": "ok",
+        "lastDurationMs": 16057,
+        "consecutiveErrors": 0
       }
     },
     {
