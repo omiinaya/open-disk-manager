@@ -7,7 +7,7 @@
       "name": "Nightly Roci audit reminder",
       "enabled": true,
       "createdAtMs": 1770946972249,
-      "updatedAtMs": 1770966007160,
+      "updatedAtMs": 1771047428143,
       "schedule": {
         "kind": "cron",
         "expr": "0 2 * * *",
@@ -29,7 +29,8 @@
         "lastStatus": "ok",
         "lastDurationMs": 7156,
         "consecutiveErrors": 0
-      }
+      },
+      "deleteAfterRun": true
     },
     {
       "id": "ee6ffb62-522f-404a-887a-32c4879ad9ec",
@@ -37,7 +38,7 @@
       "name": "Nightly Hiron qmd indexing",
       "enabled": true,
       "createdAtMs": 1770949234468,
-      "updatedAtMs": 1770969842270,
+      "updatedAtMs": 1771047428160,
       "schedule": {
         "kind": "cron",
         "expr": "0 3 * * *",
@@ -59,7 +60,8 @@
         "lastStatus": "ok",
         "lastDurationMs": 242268,
         "consecutiveErrors": 0
-      }
+      },
+      "deleteAfterRun": true
     },
     {
       "id": "07bd5a6c-30fe-4444-97a3-ec2d64a59121",
@@ -67,10 +69,10 @@
       "name": "Nightly Roll backup",
       "enabled": true,
       "createdAtMs": 1770950476518,
-      "updatedAtMs": 1771045902647,
+      "updatedAtMs": 1771047428191,
       "schedule": {
+        "expr": "0 5 * * *",
         "kind": "cron",
-        "expr": "0 4 * * *",
         "tz": "America/New_York"
       },
       "sessionTarget": "isolated",
@@ -84,12 +86,13 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1771059600000,
+        "nextRunAtMs": 1771063200000,
         "lastRunAtMs": 1771045559168,
         "lastStatus": "ok",
         "lastDurationMs": 93657,
         "consecutiveErrors": 0
-      }
+      },
+      "deleteAfterRun": true
     },
     {
       "id": "1b4de8ca-f7aa-4a19-96de-37d00c64cc3f",
@@ -97,7 +100,7 @@
       "name": "Nightly Dande cleanup",
       "enabled": true,
       "createdAtMs": 1770954755255,
-      "updatedAtMs": 1770962457214,
+      "updatedAtMs": 1771048956995,
       "schedule": {
         "kind": "cron",
         "expr": "0 1 * * *",
@@ -114,12 +117,13 @@
         "channel": "last"
       },
       "state": {
-        "nextRunAtMs": 1771048800000,
-        "lastRunAtMs": 1770962400006,
+        "nextRunAtMs": 1771135200000,
+        "lastRunAtMs": 1771048800007,
         "lastStatus": "ok",
-        "lastDurationMs": 57208,
+        "lastDurationMs": 156988,
         "consecutiveErrors": 0
-      }
+      },
+      "deleteAfterRun": true
     },
     {
       "id": "b6ecb66e-30e9-413a-8a18-8ae8a95a137d",
@@ -127,10 +131,10 @@
       "name": "harpy:nightly-updates",
       "enabled": true,
       "createdAtMs": 1770956059626,
-      "updatedAtMs": 1770995290828,
+      "updatedAtMs": 1771047428176,
       "schedule": {
+        "expr": "0 4 * * *",
         "kind": "cron",
-        "expr": "0 3 * * *",
         "tz": "America/New_York"
       },
       "sessionTarget": "isolated",
@@ -144,12 +148,39 @@
         "channel": "webchat"
       },
       "state": {
-        "nextRunAtMs": 1771056000000,
+        "nextRunAtMs": 1771059600000,
         "lastRunAtMs": 1770995265755,
         "lastStatus": "error",
         "lastDurationMs": 25073,
         "lastError": "cron delivery target is missing",
         "consecutiveErrors": 2
+      },
+      "deleteAfterRun": true
+    },
+    {
+      "id": "8ea2c613-b2bb-41c3-9f0c-71a79c57725c",
+      "agentId": "dande",
+      "name": "Session cleanup",
+      "enabled": true,
+      "deleteAfterRun": true,
+      "createdAtMs": 1771047584781,
+      "updatedAtMs": 1771047584781,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "tz": "America/New_York"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Clean up idle sessions: for each agent's sessions.json in /root/.openclaw/agents/*/sessions/, remove entries where updatedAt is older than 72 hours (3 days). Keep entries with labels containing 'main' or 'keep'. Save the pruned files."
+      },
+      "delivery": {
+        "mode": "none"
+      },
+      "state": {
+        "nextRunAtMs": 1771066800000
       }
     }
   ]

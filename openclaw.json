@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.13",
-    "lastTouchedAt": "2026-02-14T03:49:46.936Z"
+    "lastTouchedAt": "2026-02-14T06:31:39.915Z"
   },
   "env": {
     "vars": {}
@@ -240,7 +240,7 @@
     "list": [
       {
         "id": "main",
-        "workspace": "~/.openclaw/agents/main/workspace",
+        "workspace": "/root/.openclaw/agents/main/workspace",
         "subagents": {
           "allowAgents": [
             "archy",
@@ -250,42 +250,42 @@
       },
       {
         "id": "roci",
-        "workspace": "~/.openclaw/agents/roci/workspace",
+        "workspace": "/root/.openclaw/agents/roci/workspace",
         "subagents": {
           "allowAgents": []
         }
       },
       {
         "id": "hiron",
-        "workspace": "~/.openclaw/agents/hiron/workspace",
+        "workspace": "/root/.openclaw/agents/hiron/workspace",
         "subagents": {
           "allowAgents": []
         }
       },
       {
         "id": "roll",
-        "workspace": "~/.openclaw/agents/roll/workspace",
+        "workspace": "/root/.openclaw/agents/roll/workspace",
         "subagents": {
           "allowAgents": []
         }
       },
       {
         "id": "dande",
-        "workspace": "~/.openclaw/agents/dande/workspace",
+        "workspace": "/root/.openclaw/agents/dande/workspace",
         "subagents": {
           "allowAgents": []
         }
       },
       {
         "id": "harpy",
-        "workspace": "~/.openclaw/agents/harpy/workspace",
+        "workspace": "/root/.openclaw/agents/harpy/workspace",
         "subagents": {
           "allowAgents": []
         }
       },
       {
         "id": "archy",
-        "workspace": "~/.openclaw/agents/archy/workspace",
+        "workspace": "/root/.openclaw/agents/archy/workspace",
         "subagents": {
           "allowAgents": [
             "smith"
@@ -294,7 +294,19 @@
       },
       {
         "id": "smith",
-        "workspace": "~/.openclaw/agents/smith/workspace"
+        "workspace": "/root/.openclaw/agents/smith/workspace"
+      },
+      {
+        "id": "zero",
+        "name": "zero",
+        "workspace": "/root/.openclaw/agents/zero/workspace",
+        "agentDir": "/root/.openclaw/agents/zero/agent",
+        "model": "opencode/minimax-m2.5-free",
+        "identity": {
+          "name": "Zero",
+          "theme": "Autonomous coding agent",
+          "emoji": "🤖"
+        }
       }
     ]
   },
@@ -353,14 +365,22 @@
     "auth": {
       "mode": "token",
       "token": "${GATEWAY_TOKEN}"
-    }
+    },
+    "trustedProxies": [
+      "127.0.0.1",
+      "::1",
+      "172.16.0.0/12",
+      "192.168.0.0/16",
+      "10.0.0.0/8"
+    ]
   },
   "skills": {
     "load": {
       "extraDirs": [
         "/root/.openclaw/agents/main/workspace/skills"
       ]
-    }
+    },
+    "entries": {}
   },
   "plugins": {
     "slots": {

@@ -40,6 +40,14 @@ You have tools. Use them judiciously.
 - 7am morning briefing: cron job reports.
 - 12pm end-of-day summary: tasks completed.
 
+## CRITICAL SECURITY RULES
+
+**NEVER install skills flagged as suspicious.**
+- If VirusTotal or ClawdHub flags a skill as anything other than "Benign", STOP.
+- Do NOT use `--force` to bypass warnings.
+- Do NOT "review the code" and decide it's safe.
+- ASK THE USER FIRST. Always.
+
 ## When Shit Goes Wrong
 
 Task complete template:
