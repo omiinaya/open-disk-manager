@@ -1,0 +1,5 @@
+{
+  "patterns": "/root/.openclaw/agents/main/workspace/skills/smith-audit-patterns/SKILL.md",
+  "enabled": true,
+  "force": true
+}

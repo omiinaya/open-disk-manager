@@ -72,9 +72,13 @@
       },
       "deleteAfterRun": true,
       "state": {
-        "nextRunAtMs": 1771059600000
+        "nextRunAtMs": 1771146000000,
+        "lastRunAtMs": 1771059600004,
+        "lastStatus": "ok",
+        "lastDurationMs": 337276,
+        "consecutiveErrors": 0
       },
-      "updatedAtMs": 1771058145881
+      "updatedAtMs": 1771059937280
     },
     {
       "id": "07bd5a6c-30fe-4444-97a3-ec2d64a59121",
@@ -127,27 +131,33 @@
       }
     },
     {
-      "id": "8ea2c613-b2bb-41c3-9f0c-71a79c57725c",
-      "agentId": "dande",
-      "name": "Session cleanup",
-      "enabled": true,
-      "deleteAfterRun": true,
+      "id": "28eea1a4-1d8e-48b7-a1fb-ef3780d901bf",
+      "agentId": "main",
+      "name": "zero-health-check-smith",
+      "enabled": false,
+      "createdAtMs": 1771063189045,
+      "updatedAtMs": 1771065825013,
       "schedule": {
-        "kind": "cron",
-        "expr": "0 6 * * *",
-        "tz": "America/New_York"
+        "everyMs": 600000,
+        "kind": "every",
+        "anchorMs": 1771064477210
       },
       "sessionTarget": "isolated",
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "Remove session entries older than 72 hours from all agents."
+        "message": "⏰ Zero Health Check (10-min interval)\n\nCheck all active zero agents (zero, zero-2 through zero-8). Verify they are:\n1. Active and responsive\n2. Using the smith-audit-patterns skill for security scanning\n3. Reporting progress on their assigned repos\n\nIf any agent has gone silent or is not using smith patterns, alert main.\n\nAudit patterns location: /root/.openclaw/agents/main/workspace/skills/smith-audit-patterns/SKILL.md"
       },
       "delivery": {
-        "mode": "none"
+        "mode": "announce",
+        "to": "1471005448948813874",
+        "channel": "discord"
       },
       "state": {
-        "nextRunAtMs": 1771149600000
+        "lastRunAtMs": 1771065677215,
+        "lastStatus": "ok",
+        "lastDurationMs": 86849,
+        "consecutiveErrors": 0
       }
     }
   ]

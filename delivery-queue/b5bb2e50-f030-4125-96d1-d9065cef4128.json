@@ -1,0 +1,17 @@
+{
+  "id": "b5bb2e50-f030-4125-96d1-d9065cef4128",
+  "enqueuedAt": 1771065764043,
+  "channel": "discord",
+  "to": "1471005448948813874",
+  "payloads": [
+    {
+      "text": "Upstream error from Minimax: unknown error, 500 (1000)",
+      "mediaUrls": []
+    }
+  ],
+  "threadId": null,
+  "replyToId": null,
+  "bestEffort": true,
+  "retryCount": 1,
+  "lastError": "partial delivery failure (bestEffort)"
+}

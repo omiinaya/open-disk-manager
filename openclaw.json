@@ -1,10 +1,12 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.13",
-    "lastTouchedAt": "2026-02-14T08:44:00.078Z"
+    "lastTouchedAt": "2026-02-14T11:04:41.461Z"
   },
   "env": {
-    "vars": {}
+    "vars": {
+      "GITHUB_API_KEY": "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"
+    }
   },
   "wizard": {
     "lastRunAt": "2026-02-14T07:46:37.767Z",
@@ -182,6 +184,31 @@
             "maxTokens": 16384
           }
         ]
+      },
+      "github": {
+        "baseUrl": "https://models.inference.ai.azure.com",
+        "apiKey": "${GITHUB_API_KEY}",
+        "auth": "api-key",
+        "api": "github-copilot",
+        "models": [
+          {
+            "id": "github/openai/gpt-5",
+            "name": "GPT-5 (GitHub)",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          }
+        ]
       }
     }
   },
@@ -224,13 +251,17 @@
         },
         "openrouter/stepfun/step-3.5-flash:free": {
           "alias": "Step-3.5-Flash (OpenRouter)"
+        },
+        "github/openai/gpt-5": {
+          "alias": "GPT-5 (GitHub)"
         }
       },
       "compaction": {
         "mode": "safeguard"
       },
       "heartbeat": {
-        "every": "4h"
+        "every": "4h",
+        "model": "openrouter/stepfun/step-3.5-flash:free"
       },
       "maxConcurrent": 4,
       "subagents": {
@@ -241,10 +272,29 @@
       {
         "id": "main",
         "workspace": "/root/.openclaw/agents/main/workspace",
+        "model": {
+          "primary": "opencode/minimax-m2.5-free",
+          "fallbacks": [
+            "opencode/minimax-m2.5-free",
+            "nvidia/moonshotai/kimi-k2.5",
+            "opencode/kimi-k2.5-free",
+            "nvidia/z-ai/glm4.7",
+            "opencode/minimax-m2.1-free",
+            "github/openai/gpt-5"
+          ]
+        },
         "subagents": {
           "allowAgents": [
             "archy",
-            "smith"
+            "smith",
+            "zero",
+            "zero-2",
+            "zero-3",
+            "zero-4",
+            "zero-5",
+            "zero-6",
+            "zero-7",
+            "zero-8"
           ]
         }
       },
@@ -300,50 +350,49 @@
         "id": "zero",
         "name": "zero",
         "workspace": "/root/.openclaw/agents/zero/workspace",
-        "agentDir": "/root/.openclaw/agents/zero/agent",
-        "model": "opencode/minimax-m2.5-free"
+        "agentDir": "/root/.openclaw/agents/zero/agent"
       },
       {
         "id": "zero-2",
         "name": "zero-2",
         "workspace": "/root/.openclaw/agents/zero-2/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-2/agent",
-        "model": "opencode/kimi-k2.5-free"
+        "agentDir": "/root/.openclaw/agents/zero-2/agent"
       },
       {
         "id": "zero-3",
         "name": "zero-3",
         "workspace": "/root/.openclaw/agents/zero-3/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-3/agent",
-        "model": "nvidia/moonshotai/kimi-k2.5"
+        "agentDir": "/root/.openclaw/agents/zero-3/agent"
       },
       {
         "id": "zero-4",
         "name": "zero-4",
         "workspace": "/root/.openclaw/agents/zero-4/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-4/agent",
-        "model": "nvidia/z-ai/glm5"
+        "agentDir": "/root/.openclaw/agents/zero-4/agent"
       },
       {
         "id": "zero-5",
         "name": "zero-5",
         "workspace": "/root/.openclaw/agents/zero-5/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-5/agent",
-        "model": "opencode/minimax-m2.5-free"
+        "agentDir": "/root/.openclaw/agents/zero-5/agent"
       },
       {
         "id": "zero-6",
         "name": "zero-6",
         "workspace": "/root/.openclaw/agents/zero-6/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-6/agent",
-        "model": "nvidia/moonshotai/kimi-k2.5"
+        "agentDir": "/root/.openclaw/agents/zero-6/agent"
       },
       {
         "id": "zero-7",
         "name": "zero-7",
         "workspace": "/root/.openclaw/agents/zero-7/workspace",
-        "agentDir": "/root/.openclaw/agents/zero-7/agent",
-        "model": "opencode/kimi-k2.5-free"
+        "agentDir": "/root/.openclaw/agents/zero-7/agent"
+      },
+      {
+        "id": "zero-8",
+        "name": "zero-8",
+        "workspace": "/root/.openclaw/agents/zero-8/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-8/agent"
       }
     ]
   },
@@ -392,7 +441,7 @@
         "enabled": true,
         "policy": "allowlist",
         "allowFrom": [
-          "536216501901066263"
+          536216501901066240
         ]
       },
       "guilds": {
@@ -420,7 +469,8 @@
       "::1",
       "172.16.0.0/12",
       "192.168.0.0/16",
-      "10.0.0.0/8"
+      "10.0.0.0/8",
+      "192.168.1.5"
     ]
   },
   "skills": {
@@ -429,7 +479,26 @@
         "/root/.openclaw/agents/main/workspace/skills"
       ]
     },
-    "entries": {}
+    "entries": {
+      "health-check": {
+        "enabled": false
+      },
+      "agent-lock": {
+        "enabled": false
+      },
+      "morning-briefing": {
+        "enabled": false
+      },
+      "smith-audit-patterns": {
+        "enabled": true
+      },
+      "opencode-session": {
+        "enabled": false
+      },
+      "silent-worker": {
+        "enabled": false
+      }
+    }
   },
   "plugins": {
     "slots": {

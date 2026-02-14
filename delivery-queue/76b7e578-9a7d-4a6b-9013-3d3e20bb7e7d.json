@@ -1,0 +1,17 @@
+{
+  "id": "76b7e578-9a7d-4a6b-9013-3d3e20bb7e7d",
+  "enqueuedAt": 1771064595552,
+  "channel": "discord",
+  "to": "1471005448948813874",
+  "payloads": [
+    {
+      "text": "Zero-4 silent — restarting. Other zeros aren't using smith-audit-patterns; only zero-5 did proper security scanning.",
+      "mediaUrls": []
+    }
+  ],
+  "threadId": null,
+  "replyToId": null,
+  "bestEffort": true,
+  "retryCount": 1,
+  "lastError": "partial delivery failure (bestEffort)"
+}

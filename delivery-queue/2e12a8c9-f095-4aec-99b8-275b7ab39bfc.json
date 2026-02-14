@@ -1,0 +1,17 @@
+{
+  "id": "2e12a8c9-f095-4aec-99b8-275b7ab39bfc",
+  "enqueuedAt": 1771062843638,
+  "channel": "whatsapp",
+  "to": "heartbeat",
+  "payloads": [
+    {
+      "text": "Zero starting on schizo — checking repo registry.",
+      "mediaUrls": []
+    }
+  ],
+  "threadId": null,
+  "replyToId": null,
+  "bestEffort": true,
+  "retryCount": 2,
+  "lastError": "Outbound not configured for channel: whatsapp"
+}

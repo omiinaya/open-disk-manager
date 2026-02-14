@@ -1,3 +1,11 @@
 {
-  "repos": []
+  "repos": [
+    {
+      "name": "zero-re",
+      "url": "https://github.com/omiinaya/zero-re",
+      "path": "/root/.openclaw/agents/zero-2/workspace/repos/zero-re",
+      "cloned": "2026-02-14T07:22:00Z",
+      "lastActivity": "2026-02-14T09:06:00Z"
+    }
+  ]
 }
