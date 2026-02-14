@@ -51,3 +51,8 @@ openclaw_*.json
 # Note: Workspace-specific ignores are handled by workspace/.gitignore
 # They include: memory/, MEMORY.md, etc.
 /.env
+
+# Legacy workspace directories (migrated to agents/)
+/workspace-archy/
+/workspace-ciel/
+/workspace-main/
