@@ -98,12 +98,12 @@ Result checkSuperblock(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     }
     
     // Check block size
-    if (sb.s_log_block_size < 0 || sb.s_log_block_size > 6) {
+    if (sb.s_log_block_size > 6) {
         errors->push_back("Invalid block size");
     }
     
     // Check revision
-    if (sb.s_rev_level < 0 || sb.s_rev_level > 1) {
+    if (sb.s_rev_level > 1) {
         errors->push_back("Unknown revision level: " + std::to_string(sb.s_rev_level));
     }
     
@@ -115,7 +115,7 @@ Result checkSuperblock(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 // ============================================================================
 
 Result checkGroupDescriptors(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                               const EXT4Layout& layout, bool repair,
+                               const EXT4Layout& layout, [[maybe_unused]] bool repair,
                                std::vector<std::string>* errors) {
     
     uint64_t gdt_start_block = (layout.block_size == 1024) ? 2 : 1;
@@ -163,7 +163,7 @@ Result checkGroupDescriptors(std::shared_ptr<DiskIO> disk, uint64_t start_sector
 // ============================================================================
 
 Result checkBlockBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                          const EXT4Layout& layout, bool repair,
+                          const EXT4Layout& layout, [[maybe_unused]] bool repair,
                           std::vector<std::string>* errors) {
     
     // Check first group only for now
@@ -197,7 +197,7 @@ Result checkBlockBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 // ============================================================================
 
 Result checkInodeBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                          const EXT4Layout& layout, bool repair,
+                          const EXT4Layout& layout, [[maybe_unused]] bool repair,
                           std::vector<std::string>* errors) {
     
     uint64_t group_start = 0;
@@ -231,11 +231,10 @@ Result checkInodeBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 // ============================================================================
 
 Result checkRootInode(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                        const EXT4Layout& layout, bool repair,
+                        const EXT4Layout& layout, [[maybe_unused]] bool repair,
                         std::vector<std::string>* errors) {
-    
+
     // Read root inode (inode 2)
-    uint32_t group = getInodeGroup(EXT4_ROOT_INO, layout.inodes_per_group);
     uint32_t offset = getInodeOffset(EXT4_ROOT_INO, layout.inodes_per_group);
     
     uint64_t inode_table_block = 5;

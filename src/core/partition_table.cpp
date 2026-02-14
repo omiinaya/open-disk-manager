@@ -82,11 +82,11 @@ uint64_t PartitionTable::getUsedSpace() const {
     return used;
 }
 
-bool PartitionTable::canConvertTo(TableType type) const {
+bool PartitionTable::canConvertTo([[maybe_unused]] TableType type) const {
     return false; // Base implementation
 }
 
-Result PartitionTable::convertTo(TableType type) {
+Result PartitionTable::convertTo([[maybe_unused]] TableType type) {
     return Result::error("Conversion not supported");
 }
 

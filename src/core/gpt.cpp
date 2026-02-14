@@ -316,19 +316,19 @@ Result GPTTable::createBackup() {
     return Result::error("Not implemented");
 }
 
-Result GPTTable::createPartition(uint64_t start, uint64_t size,
-                                  PartitionType type,
-                                  const std::string& name) {
+Result GPTTable::createPartition([[maybe_unused]] uint64_t start, [[maybe_unused]] uint64_t size,
+                                  [[maybe_unused]] PartitionType type,
+                                  [[maybe_unused]] const std::string& name) {
     modified_ = true;
     return Result::error("Not implemented");
 }
 
-Result GPTTable::deletePartition(int number) {
+Result GPTTable::deletePartition([[maybe_unused]] int number) {
     modified_ = true;
     return Result::error("Not implemented");
 }
 
-Result GPTTable::resizePartition(int number, uint64_t new_size) {
+Result GPTTable::resizePartition([[maybe_unused]] int number, [[maybe_unused]] uint64_t new_size) {
     modified_ = true;
     return Result::error("Not implemented");
 }

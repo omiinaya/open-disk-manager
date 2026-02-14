@@ -267,7 +267,7 @@ Result checkFATTables(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 // ============================================================================
 
 Result checkRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                          const FAT32Layout& layout, bool repair,
+                          const FAT32Layout& layout, [[maybe_unused]] bool repair,
                           std::vector<std::string>* errors) {
     
     // Read root directory cluster

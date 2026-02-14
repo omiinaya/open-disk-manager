@@ -11,7 +11,7 @@ namespace ext4 {
 // ============================================================================
 
 Result createRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                            const EXT4Layout& layout, const std::string& label) {
+                            const EXT4Layout& layout, [[maybe_unused]] const std::string& label) {
     
     // Group 0, inode 2 is root
     uint32_t root_inode_num = EXT4_ROOT_INO;

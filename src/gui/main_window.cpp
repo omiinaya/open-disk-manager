@@ -10,9 +10,12 @@
 #include "dialogs/clone_dialog.hpp"
 #include "dialogs/secure_erase_dialog.hpp"
 #include "dialogs/benchmark_dialog.hpp"
+#include "dialogs/preferences_dialog.hpp"
+#include "dialogs/partition_properties_dialog.hpp"
 #include "opm/partition_table.hpp"
 #include "opm/utils.hpp"
 #include "opm/disk_io.hpp"
+#include "opm/operation.hpp"
 #include <QMenuBar>
 #include <QToolBar>
 #include <QStatusBar>
@@ -23,6 +26,8 @@
 #include <QWidget>
 #include <QLabel>
 #include <QApplication>
+#include <QInputDialog>
+#include <QSettings>
 
 namespace opm::gui {
 
@@ -213,8 +218,12 @@ void MainWindow::onActionAbout() {
 }
 
 void MainWindow::onActionPreferences() {
-    // TODO: Open preferences dialog
-    QMessageBox::information(this, "Preferences", "Preferences dialog not yet implemented.");
+    PreferencesDialog dialog(this);
+    connect(&dialog, &PreferencesDialog::settingsChanged, [this]() {
+        updateWindowTitle();
+        refreshDisks();
+    });
+    dialog.exec();
 }
 
 void MainWindow::onActionCreatePartition() {

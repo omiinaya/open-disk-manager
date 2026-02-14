@@ -95,7 +95,7 @@ Result checkExFATBootSector(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 }
 
 Result checkExFATFAT(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                    const ExFATLayout& layout, bool repair,
+                    const ExFATLayout& layout, [[maybe_unused]] bool repair,
                     std::vector<std::string>* errors) {
     uint64_t fat_sector = start_sector + layout.fat_offset;
     uint64_t fat_offset = fat_sector * layout.bytes_per_sector;
@@ -189,7 +189,7 @@ Result checkExFATAllocationBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_s
 }
 
 Result checkExFATRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                               const ExFATLayout& layout, bool repair,
+                               const ExFATLayout& layout, [[maybe_unused]] bool repair,
                                std::vector<std::string>* errors) {
     uint64_t root_sector = start_sector + layout.clusterToSector(layout.root_cluster);
     uint64_t root_offset = root_sector * layout.bytes_per_sector;
