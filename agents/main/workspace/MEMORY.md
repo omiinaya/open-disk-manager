@@ -1,72 +1,135 @@
-# Long-term Memory
+# SearXNG Integration
 
-## API Keys & Tokens
+## Primary Web Search Method
 
-**NEVER** put secrets directly in `openclaw.json`. Use this pattern:
+**SearXNG is configured as the primary web search method.**
 
-1. Add key to `~/.openclaw/.env`:
-   ```
-   NEW_API_KEY=sk-xxx
-   ```
+- **Endpoint**: `http://localhost:8888/search?q=<query>&format=json`
+- **Location**: `/opt/searxng-docker/`
+- **Port**: 8888
 
-2. Reference in `openclaw.json` using `${VAR}` syntax:
-   ```json
-   {
-     "models": {
-       "providers": {
-         "myprovider": {
-           "apiKey": "${NEW_API_KEY}"
-         }
-       }
-     }
-   }
-   ```
+### Usage
 
-3. The `.env` file is gitignored — safe to add new env vars anytime
+Query SearXNG via curl:
+```bash
+curl -s "http://localhost:8888/search?q=URL_ENCODED_QUERY&format=json" | jq '.results'
+```
 
-4. Restart gateway after changes: `openclaw gateway restart`
+### Fallback
 
-Current keys in `.env`: NVIDIA_API_KEY, OPENCODE_API_KEY, OPENROUTER_API_KEY, DISCORD_TOKEN, GATEWAY_TOKEN
+If SearXNG is unavailable, fall back to the `web_search` tool (Brave Search API).
 
-## Model Preferences
+### Management Commands
 
-Easily switch between:
-- nvidia/stepfun-ai/step-3.5-flash
-- nvidia/moonshotai/kimi-k2.5
-- nvidia/z-ai/glm4.7
+```bash
+# Check status
+sudo docker ps | grep searxng
 
-For full configuration, use the `config` skill.
+# View logs
+sudo docker logs searxng
 
-## Extended Configuration
+# Restart
+cd /opt/searxng-docker && sudo docker compose restart
 
-When needing custom agent properties that aren't in the official `openclaw.json` schema:
-- Use `~/.openclaw/config-extended.json`
-- Structure: top-level keys, typically `{ "agents": { "<agentId>": { ... } } }`
-- This file is tracked in git (no secrets) and read by agents via the `read` tool
-- Agents check this file at runtime to enable experimental features (e.g., `trainingMode`)
-- Keep it small and focused; merge into main config if it becomes stable
+# Stop
+cd /opt/searxng-docker && sudo docker compose down
 
-Current use:
-- `agents.archy.trainingMode = true` — enables self-reflection learning loop for Archy
+# Start
+cd /opt/searxng-docker && sudo docker compose up -d
+```
 
-Never add unknown properties to `openclaw.json`; they will break validation.
+### Configuration
 
-## Project Knowledge
+- Settings: `/opt/searxng-docker/searxng/settings.yml`
+- JSON API enabled
+- Limiter disabled (private instance)
+- Multiple search engines: Google, Bing, DuckDuckGo, Brave, Startpage, Wikipedia, etc.
 
-### Active Projects
-- (Add your active projects here)
+## Installed: 2026-02-14
 
-### Key Contacts
-- (Add important contacts, APIs, services)
+---
 
-### Preferences
-- (Add user preferences discovered over time)
+# QMD - Local Markdown Knowledge Base Search
 
-## Session Stats
+**QMD is configured for searching the local markdown knowledge base.**
 
-| Date | Sessions | Notes |
-|------|----------|-------|
-| | | |
+- **Location**: `/opt/qmd/`
+- **Index**: `~/.cache/qmd/index.sqlite`
+- **Documents**: 224 markdown files indexed
+- **Vectors**: 263 chunks embedded
 
-## Last Updated
-Last updated: 2026-02-14
+### What It Does
+
+QMD provides **95% token savings** by indexing markdown files locally and only sending relevant chunks to the LLM, instead of entire documents.
+
+### Search Methods
+
+| Command | Description | Use Case |
+|---------|-------------|----------|
+| `qmd search "query"` | BM25 keyword search | Fast, exact matches |
+| `qmd vsearch "query"` | Vector semantic search | Meaning-based search |
+| `qmd query "query"` | Hybrid + reranking | Best quality results |
+
+### Collections
+
+| Collection | Files | Context |
+|------------|-------|---------|
+| `workspace` | 19 | Workspace files and project code |
+| `docs` | 19 | Documentation files |
+| `memory-dir` | 14 | Memory and knowledge base |
+| `openclaw` | 171 | OpenClaw agent system |
+| `memory-root` | 1 | Root MEMORY.md |
+
+### GGUF Models (auto-downloaded)
+
+| Model | Purpose | Size |
+|-------|---------|------|
+| `embeddinggemma-300M-Q8_0` | Vector embeddings | 314MB |
+| `qmd-query-expansion-1.7B-q4_k_m` | Query expansion | 1.2GB |
+
+### Usage Examples
+
+```bash
+# Keyword search
+qmd search "docker" -n 5
+
+# Semantic search
+qmd vsearch "how to deploy applications" -n 5
+
+# Hybrid search (best quality)
+qmd query "authentication flow" -n 5
+
+# Get full document
+qmd get "path/to/file.md" --full
+
+# JSON output for agents
+qmd query "API" --json -n 10
+
+# Search within collection
+qmd search "config" -c openclaw
+```
+
+### Management Commands
+
+```bash
+# Status
+qmd status
+
+# Update index
+qmd update
+
+# Regenerate embeddings
+qmd embed
+
+# Add new collection
+qmd collection add ~/path/to/markdown --name mydocs
+```
+
+### Integration with Memory
+
+When searching for prior work, decisions, or knowledge:
+1. Use `qmd query "search terms"` for best results
+2. Use `qmd get "filepath"` to retrieve full documents
+3. This avoids feeding entire docs to LLM, saving ~95% tokens
+
+## Installed: 2026-02-14
