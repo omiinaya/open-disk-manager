@@ -8,12 +8,15 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/root/projects/opm/tests/integration/test_disk_detection.cpp" "tests/integration/CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o" "gcc" "tests/integration/CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o.d"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/tests/integration/test_disk_detection.cpp" "tests/integration/CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o" "gcc" "tests/integration/CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/root/projects/opm/build/src/core/CMakeFiles/opm-core.dir/DependInfo.cmake"
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

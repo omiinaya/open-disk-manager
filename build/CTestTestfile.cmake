@@ -1,10 +1,9 @@
 # CMake generated Testfile for 
-# Source directory: /root/projects/opm
-# Build directory: /root/projects/opm/build
+# Source directory: /root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager
+# Build directory: /root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("src/core")
 subdirs("src/cli")
-subdirs("src/gui")
 subdirs("tests")

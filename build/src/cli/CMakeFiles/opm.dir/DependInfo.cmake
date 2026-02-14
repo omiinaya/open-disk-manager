@@ -8,13 +8,16 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/root/projects/opm/src/cli/commands.cpp" "src/cli/CMakeFiles/opm.dir/commands.cpp.o" "gcc" "src/cli/CMakeFiles/opm.dir/commands.cpp.o.d"
-  "/root/projects/opm/src/cli/main.cpp" "src/cli/CMakeFiles/opm.dir/main.cpp.o" "gcc" "src/cli/CMakeFiles/opm.dir/main.cpp.o.d"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/src/cli/commands.cpp" "src/cli/CMakeFiles/opm.dir/commands.cpp.o" "gcc" "src/cli/CMakeFiles/opm.dir/commands.cpp.o.d"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/src/cli/main.cpp" "src/cli/CMakeFiles/opm.dir/main.cpp.o" "gcc" "src/cli/CMakeFiles/opm.dir/main.cpp.o.d"
   )
 
-# Targets to which this target links.
-set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/root/projects/opm/build/src/core/CMakeFiles/opm-core.dir/DependInfo.cmake"
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

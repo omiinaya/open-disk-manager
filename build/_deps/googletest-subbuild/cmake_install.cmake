@@ -1,4 +1,4 @@
-# Install script for directory: /root/projects/opm/build/_deps/googletest-subbuild
+# Install script for directory: /root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/root/projects/opm/build/_deps/googletest-subbuild/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

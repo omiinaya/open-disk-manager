@@ -4,19 +4,19 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(MAKE_DIRECTORY
-  "/root/projects/opm/build/_deps/googletest-src"
-  "/root/projects/opm/build/_deps/googletest-build"
-  "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix"
-  "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/tmp"
-  "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp"
-  "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/src"
-  "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-src"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-build"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/tmp"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/src"
+  "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "/root/projects/opm/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "/root/.openclaw/agents/zero-3/workspace/repos/open-disk-manager/build/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp${cfgdir}") # cfgdir has leading slash
 endif()

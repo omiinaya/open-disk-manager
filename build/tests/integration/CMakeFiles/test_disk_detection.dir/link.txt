@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o -o test_disk_detection  ../../src/core/libopm-core.a -lblkid 
+/usr/bin/c++ -g -fsanitize=address,undefined CMakeFiles/test_disk_detection.dir/test_disk_detection.cpp.o -o test_disk_detection  ../../src/core/libopm-core.a -lblkid 
