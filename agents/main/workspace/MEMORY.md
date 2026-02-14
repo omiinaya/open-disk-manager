@@ -1,5 +1,33 @@
 # Long-term Memory
 
+## API Keys & Tokens
+
+**NEVER** put secrets directly in `openclaw.json`. Use this pattern:
+
+1. Add key to `~/.openclaw/.env`:
+   ```
+   NEW_API_KEY=sk-xxx
+   ```
+
+2. Reference in `openclaw.json` using `${VAR}` syntax:
+   ```json
+   {
+     "models": {
+       "providers": {
+         "myprovider": {
+           "apiKey": "${NEW_API_KEY}"
+         }
+       }
+     }
+   }
+   ```
+
+3. The `.env` file is gitignored — safe to add new env vars anytime
+
+4. Restart gateway after changes: `openclaw gateway restart`
+
+Current keys in `.env`: NVIDIA_API_KEY, OPENCODE_API_KEY, OPENROUTER_API_KEY, DISCORD_TOKEN, GATEWAY_TOKEN
+
 ## Model Preferences
 
 Easily switch between:
