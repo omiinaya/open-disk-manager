@@ -1,24 +1,232 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.13",
-    "lastTouchedAt": "2026-02-13T20:10:48.548Z"
+    "lastTouchedAt": "2026-02-14T03:35:41.688Z"
   },
   "env": {
     "vars": {
-      "SUPERMEMORY_OPENCLAW_API_KEY": "REDACTED",
-      "CLAWHUB_TOKEN": "REDACTED"
+      "SUPERMEMORY_OPENCLAW_API_KEY": "REDACTED"
     }
   },
   "wizard": {
-    "lastRunAt": "2026-02-13T20:10:48.533Z",
+    "lastRunAt": "2026-02-14T07:46:37.767Z",
     "lastRunVersion": "2026.2.13",
     "lastRunCommand": "doctor",
     "lastRunMode": "local"
   },
+  "models": {
+    "providers": {
+      "nvidia": {
+        "baseUrl": "https://integrate.api.nvidia.com/v1",
+        "apiKey": "REDACTED",
+        "auth": "REDACTED",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "moonshotai/kimi-k2.5",
+            "name": "Kimi K2.5",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 256000,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "stepfun-ai/step-3.5-flash",
+            "name": "Step-3.5-Flash",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 8192,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "z-ai/glm4.7",
+            "name": "GLM-4.7",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 8192,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "z-ai/glm5",
+            "name": "GLM-5",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 202752,
+            "maxTokens": "REDACTED"
+          }
+        ]
+      },
+      "opencode": {
+        "baseUrl": "https://opencode.ai/zen/v1",
+        "apiKey": "REDACTED",
+        "auth": "REDACTED",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "minimax-m2.5-free",
+            "name": "Minimax M2.5 (OpenCode Free)",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "minimax-m2.1-free",
+            "name": "Minimax M2.1 (OpenCode Free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "glm-4.7-free",
+            "name": "GLM-4.7 (OpenCode Free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": "REDACTED"
+          },
+          {
+            "id": "kimi-k2.5-free",
+            "name": "Kimi K2.5 (OpenCode Free)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": "REDACTED"
+          }
+        ]
+      },
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKey": "REDACTED",
+        "auth": "REDACTED",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "stepfun/step-3.5-flash:free",
+            "name": "Step-3.5-Flash (OpenRouter)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": "REDACTED"
+          }
+        ]
+      }
+    }
+  },
   "agents": {
     "defaults": {
       "model": {
-        "primary": "openrouter/stepfun/step-3.5-flash:free"
+        "primary": "nvidia/z-ai/glm5",
+        "fallbacks": [
+          "opencode/minimax-m2.5-free",
+          "nvidia/moonshotai/kimi-k2.5",
+          "opencode/kimi-k2.5-free",
+          "nvidia/stepfun-ai/step-3.5-flash",
+          "openrouter/stepfun/step-3.5-flash:free"
+        ]
+      },
+      "models": {
+        "nvidia/z-ai/glm5": {
+          "alias": "GLM-5 (NVIDIA)"
+        },
+        "nvidia/z-ai/glm4.7": {
+          "alias": "GLM-4.7 (NVIDIA)"
+        },
+        "nvidia/stepfun-ai/step-3.5-flash": {
+          "alias": "Step-3.5-Flash (NVIDIA)"
+        },
+        "nvidia/moonshotai/kimi-k2.5": {
+          "alias": "Kimi-K2.5 (NVIDIA)"
+        },
+        "opencode/minimax-m2.5-free": {
+          "alias": "Minimax M2.5 (OpenCode)"
+        },
+        "opencode/minimax-m2.1-free": {
+          "alias": "Minimax M2.1 (OpenCode)"
+        },
+        "opencode/glm-4.7-free": {
+          "alias": "GLM-4.7 (OpenCode)"
+        },
+        "opencode/kimi-k2.5-free": {
+          "alias": "Kimi-K2.5 (OpenCode)"
+        },
+        "openrouter/stepfun/step-3.5-flash:free": {
+          "alias": "Step-3.5-Flash (OpenRouter)"
+        }
       },
       "compaction": {
         "mode": "safeguard"
@@ -182,7 +390,7 @@
     }
   },
   "_meta": {
-    "sanitizedAt": "2026-02-13T21:08:25Z",
+    "sanitizedAt": "2026-02-14T03:46:36Z",
     "purpose": "Configuration structure reference \u2013 secrets removed",
     "note": "Use this as a template. Never commit real secrets."
   }
