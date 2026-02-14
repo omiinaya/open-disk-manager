@@ -1,5 +1,5 @@
 # Sensitive top-level configuration - exclude to prevent secret leak
-/openclaw.json
+# openclaw.json is now safe to commit (uses ${ENV_VAR} references)
 /models.json
 /credentials/
 
@@ -50,3 +50,4 @@ openclaw_*.json
 
 # Note: Workspace-specific ignores are handled by workspace/.gitignore
 # They include: memory/, MEMORY.md, etc.
+/.env
