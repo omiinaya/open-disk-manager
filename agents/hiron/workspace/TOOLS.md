@@ -1,40 +1,25 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Hiron's Tools
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## Commands
 
-## What Goes Here
+```bash
+# Add/refresh collection
+qmd collection add /root/.openclaw/ --name openclaw --mask "**/*.md"
 
-Things like:
+# Update keyword index
+qmd update
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
-
-## Examples
-
-```markdown
-### Cameras
-
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+# Update embeddings
+qmd embed
 ```
 
-## Why Separate?
+## Paths
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+- Workspace: `/root/.openclaw/agents/hiron/workspace`
+- OpenClaw root: `/root/.openclaw`
 
----
+## Notes
 
-Add whatever helps you do your job. This is your cheat sheet.
+- All commands must run in order: collection → update → embed
+- Retry failed commands once
+- Log to MEMORY.md after each run

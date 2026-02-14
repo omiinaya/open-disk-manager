@@ -1,40 +1,48 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Harpy's Tools
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## Commands
 
-## What Goes Here
+```bash
+# Disk space check
+df -h
 
-Things like:
+# Linux packages
+apt-get update
+apt-get upgrade -y
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+# Check reboot
+[ -f /var/run/reboot-required ] && echo "REBOOT_REQUIRED"
 
-## Examples
+# Clean git cache
+cd /root/openclaw && git clean -fdX .clawhub agents || true
 
-```markdown
-### Cameras
+# OpenClaw update
+openclaw update
 
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
+# Gateway restart
+openclaw gateway restart
 
-### SSH
+# Skills sync
+clawhub whoami
+clawhub sync
 
-- home-server → 192.168.1.100, user: admin
+# Plugin updates (detect package manager)
+pnpm update -r  # if pnpm-workspace.yaml exists
+# or: npm update -g / yarn upgrade
 
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+# Health check
+openclaw status
 ```
 
-## Why Separate?
+## Paths
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+- Workspace: `/root/.openclaw/agents/harpy/workspace`
+- OpenClaw: `/root/openclaw`
+- Gateway: port 18789
 
----
+## Notes
 
-Add whatever helps you do your job. This is your cheat sheet.
+- Retry failed commands once
+- Check disk before updates — abort if <10% free
+- Restart gateway after openclaw update
+- Use clawhub whoami to verify auth before sync

@@ -1,40 +1,29 @@
-# TOOLS.md - Local Notes
+# TOOLS.md - Roll's Tools
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## Commands
 
-## What Goes Here
+```bash
+# Check for changes
+cd /root/.openclaw && git status
 
-Things like:
+# Stage and commit
+cd /root/.openclaw && git add -A
+cd /root/.openclaw && git commit -m "Nightly backup $(date -u +%Y-%m-%d)"
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+# Tag
+git tag backup-$(date -u +%Y-%m-%d)
 
-## Examples
-
-```markdown
-### Cameras
-
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+# Push
+git push --follow-tags
 ```
 
-## Why Separate?
+## Paths
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+- Workspace: `/root/.openclaw/agents/roll/workspace`
+- Git repo: `/root/.openclaw`
 
----
+## Notes
 
-Add whatever helps you do your job. This is your cheat sheet.
+- If commit fails (no changes), exit silently — that's OK
+- If push fails, report error
+- Use --follow-tags to push tags with commits
