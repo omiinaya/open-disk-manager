@@ -67,7 +67,7 @@
       "name": "Nightly Roll backup",
       "enabled": true,
       "createdAtMs": 1770950476518,
-      "updatedAtMs": 1770973216061,
+      "updatedAtMs": 1771045902647,
       "schedule": {
         "kind": "cron",
         "expr": "0 4 * * *",
@@ -77,7 +77,7 @@
       "wakeMode": "now",
       "payload": {
         "kind": "agentTurn",
-        "message": "It's time to backup the OpenClaw instance."
+        "message": "Read your SOUL.md and execute the backup procedure: git add -A, commit with today's date, tag, and push to remote in /root/.openclaw. Report completion with file count and tag name."
       },
       "delivery": {
         "mode": "none",
@@ -85,9 +85,9 @@
       },
       "state": {
         "nextRunAtMs": 1771059600000,
-        "lastRunAtMs": 1770973200004,
+        "lastRunAtMs": 1771045559168,
         "lastStatus": "ok",
-        "lastDurationMs": 16057,
+        "lastDurationMs": 93657,
         "consecutiveErrors": 0
       }
     },
