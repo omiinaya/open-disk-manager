@@ -52,7 +52,7 @@ export default function ProvidersPage() {
   const addProvider = async () => {
     if (!newProvider.name || !newProvider.baseUrl) return
     
-    const updatedProviders: Record<string, Provider> = {
+    const updatedProviders: Record<string, any> = {
       ...providers,
       [newProvider.name]: {
         baseUrl: newProvider.baseUrl,

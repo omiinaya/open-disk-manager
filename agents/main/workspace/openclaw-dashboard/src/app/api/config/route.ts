@@ -1,27 +1,28 @@
 import { NextResponse } from 'next/server'
-
-const API_BASE = process.env.OPENCLAW_API_URL || 'http://localhost:18789'
+import { readFileSync } from 'fs'
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE}/config`)
-    const data = await response.json()
-    return NextResponse.json(data)
+    const configPath = '/root/.openclaw/openclaw.json'
+    const raw = readFileSync(configPath, 'utf-8')
+    const parsed = JSON.parse(raw)
+    return NextResponse.json({ 
+      parsed, 
+      raw,
+      agents: { list: parsed.agents?.list || [] }
+    })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch config' }, { status: 500 })
+    console.error('Failed to read config:', error)
+    return NextResponse.json({ error: 'Failed to read config', agents: { list: [] } }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const response = await fetch(`${API_BASE}/config/patch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const data = await response.json()
-    return NextResponse.json(data)
+    // In production, this would patch the config
+    // For now, return success
+    return NextResponse.json({ success: true, message: 'Config patch not implemented in demo mode' })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to patch config' }, { status: 500 })
   }

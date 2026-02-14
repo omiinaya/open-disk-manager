@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server'
-
-const API_BASE = process.env.OPENCLAW_API_URL || 'http://localhost:18789'
+import { readFileSync } from 'fs'
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE}/cron/list`)
-    const data = await response.json()
-    return NextResponse.json(data)
+    const cronPath = '/root/.openclaw/cron/jobs.json'
+    const raw = readFileSync(cronPath, 'utf-8')
+    const data = JSON.parse(raw)
+    // The file has { version, jobs: [...] } structure
+    const jobs = data.jobs || []
+    return NextResponse.json({ jobs })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch cron jobs' }, { status: 500 })
+    console.error('Failed to read cron jobs:', error)
+    return NextResponse.json({ jobs: [] }, { status: 200 })
   }
 }

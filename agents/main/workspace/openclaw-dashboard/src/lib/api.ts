@@ -72,7 +72,7 @@ export interface Skill {
 // API Functions
 export async function getAgents(): Promise<Agent[]> {
   try {
-    const result = await fetchApi<{ agents?: Agent[] }>('/agents')
+    const result = await fetchApi<{ agents: Agent[] }>('/agents')
     return result.agents || []
   } catch {
     return []

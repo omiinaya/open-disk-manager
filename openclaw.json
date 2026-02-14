@@ -1,7 +1,7 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.2.13",
-    "lastTouchedAt": "2026-02-14T06:31:39.915Z"
+    "lastTouchedAt": "2026-02-14T08:44:00.078Z"
   },
   "env": {
     "vars": {}
@@ -35,7 +35,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 256000,
-            "maxTokens": 8192
+            "maxTokens": 16384
           },
           {
             "id": "stepfun-ai/step-3.5-flash",
@@ -50,8 +50,8 @@
               "cacheRead": 0,
               "cacheWrite": 0
             },
-            "contextWindow": 8192,
-            "maxTokens": 8192
+            "contextWindow": 262144,
+            "maxTokens": 16384
           },
           {
             "id": "z-ai/glm4.7",
@@ -66,8 +66,8 @@
               "cacheRead": 0,
               "cacheWrite": 0
             },
-            "contextWindow": 8192,
-            "maxTokens": 8192
+            "contextWindow": 131072,
+            "maxTokens": 16384
           },
           {
             "id": "z-ai/glm5",
@@ -83,7 +83,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 202752,
-            "maxTokens": 8192
+            "maxTokens": 16384
           }
         ]
       },
@@ -107,7 +107,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 128000,
-            "maxTokens": 8192
+            "maxTokens": 16384
           },
           {
             "id": "minimax-m2.1-free",
@@ -123,7 +123,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 128000,
-            "maxTokens": 8192
+            "maxTokens": 16384
           },
           {
             "id": "glm-4.7-free",
@@ -139,7 +139,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 128000,
-            "maxTokens": 8192
+            "maxTokens": 16384
           },
           {
             "id": "kimi-k2.5-free",
@@ -155,7 +155,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 128000,
-            "maxTokens": 8192
+            "maxTokens": 16384
           }
         ]
       },
@@ -179,7 +179,7 @@
               "cacheWrite": 0
             },
             "contextWindow": 128000,
-            "maxTokens": 4096
+            "maxTokens": 16384
           }
         ]
       }
@@ -301,12 +301,49 @@
         "name": "zero",
         "workspace": "/root/.openclaw/agents/zero/workspace",
         "agentDir": "/root/.openclaw/agents/zero/agent",
-        "model": "opencode/minimax-m2.5-free",
-        "identity": {
-          "name": "Zero",
-          "theme": "Autonomous coding agent",
-          "emoji": "🤖"
-        }
+        "model": "opencode/minimax-m2.5-free"
+      },
+      {
+        "id": "zero-2",
+        "name": "zero-2",
+        "workspace": "/root/.openclaw/agents/zero-2/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-2/agent",
+        "model": "opencode/kimi-k2.5-free"
+      },
+      {
+        "id": "zero-3",
+        "name": "zero-3",
+        "workspace": "/root/.openclaw/agents/zero-3/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-3/agent",
+        "model": "nvidia/moonshotai/kimi-k2.5"
+      },
+      {
+        "id": "zero-4",
+        "name": "zero-4",
+        "workspace": "/root/.openclaw/agents/zero-4/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-4/agent",
+        "model": "nvidia/z-ai/glm5"
+      },
+      {
+        "id": "zero-5",
+        "name": "zero-5",
+        "workspace": "/root/.openclaw/agents/zero-5/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-5/agent",
+        "model": "opencode/minimax-m2.5-free"
+      },
+      {
+        "id": "zero-6",
+        "name": "zero-6",
+        "workspace": "/root/.openclaw/agents/zero-6/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-6/agent",
+        "model": "nvidia/moonshotai/kimi-k2.5"
+      },
+      {
+        "id": "zero-7",
+        "name": "zero-7",
+        "workspace": "/root/.openclaw/agents/zero-7/workspace",
+        "agentDir": "/root/.openclaw/agents/zero-7/agent",
+        "model": "opencode/kimi-k2.5-free"
       }
     ]
   },
@@ -321,6 +358,18 @@
       "ask": "off"
     }
   },
+  "bindings": [
+    {
+      "agentId": "main",
+      "match": {
+        "channel": "discord",
+        "peer": {
+          "kind": "direct",
+          "id": "536216501901066263"
+        }
+      }
+    }
+  ],
   "messages": {
     "ackReactionScope": "group-mentions"
   },

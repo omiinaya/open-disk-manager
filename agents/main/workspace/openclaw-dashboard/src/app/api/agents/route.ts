@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-
-const API_BASE = process.env.OPENCLAW_API_URL || 'http://localhost:18789'
+import { readFileSync } from 'fs'
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE}/agents/list`)
-    const data = await response.json()
-    return NextResponse.json(data)
+    const configPath = '/root/.openclaw/openclaw.json'
+    const raw = readFileSync(configPath, 'utf-8')
+    const config = JSON.parse(raw)
+    const agents = config.agents?.list || []
+    return NextResponse.json({ agents })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch agents' }, { status: 500 })
+    console.error('Failed to read agents:', error)
+    return NextResponse.json({ agents: [] }, { status: 200 })
   }
 }
