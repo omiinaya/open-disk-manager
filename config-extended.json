@@ -1,7 +1,7 @@
 {
   "agents": {
     "archy": {
-      "trainingMode": true
+      "trainingMode": false
     }
   }
 }

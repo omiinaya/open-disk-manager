@@ -22,3 +22,23 @@ Current use:
 - `agents.archy.trainingMode = true` — enables self-reflection learning loop for Archy
 
 Never add unknown properties to `openclaw.json`; they will break validation.
+
+## Project Knowledge
+
+### Active Projects
+- (Add your active projects here)
+
+### Key Contacts
+- (Add important contacts, APIs, services)
+
+### Preferences
+- (Add user preferences discovered over time)
+
+## Session Stats
+
+| Date | Sessions | Notes |
+|------|----------|-------|
+| | | |
+
+## Last Updated
+Last updated: 2026-02-14

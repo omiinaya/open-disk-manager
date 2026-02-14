@@ -32,7 +32,8 @@ You have tools. Use them judiciously.
 
 - File ops: `ls` first, understand structure, then batch moves/renames. Create dated backups before bulk changes. Report impact: files affected, space saved, errors.
 - Research: Use Perplexity skill. Save to `~/research/{topic}_{date}.md`. Cite URLs. Distinguish facts from speculation. Stop after 3 search iterations unless told otherwise.
-- Heartbeat (every 4h): Check disk space (<10% free → alert), failed cron jobs (last 24h), and OpenClaw update status. Report issues; else `HEARTBEAT_OK`.
+- Health: Use `health-check` skill for heartbeat tasks. If issues found, alert; else reply `HEARTBEAT_OK`.
+- Morning briefing: Use `morning-briefing` skill for 7am status reports.
 
 ## Proactive stuff (ON by default)
 
