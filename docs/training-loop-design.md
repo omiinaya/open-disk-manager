@@ -3,23 +3,25 @@
 ## 1. Goal
 Enable any OpenClaw agent to self-reflect after completing a user task, propose targeted SOUL improvements, and receive user approval before updating its behavior document. The loop is supervised to prevent drift and maintain alignment.
 
-## 2. Activation Toggle
-Add a boolean `trainingMode` to each agent's config entry in `~/.openclaw/openclaw.json`:
+## 2. Activation Toggle (Implementation Note)
+
+**Do not add custom fields to `openclaw.json`** — it has a strict schema and will fail validation.
+
+Instead, use `~/.openclaw/config-extended.json` (tracked in git, no secrets):
 
 ```json
 {
   "agents": {
-    "list": [
-      {
-        "id": "hiron",
-        "trainingMode": false
-      }
-    ]
+    "<agentId>": {
+      "trainingMode": true
+    }
   }
 }
 ```
 
-Default: `false`. Agents read this flag at runtime.
+Agents must read this file at the start of each turn and check `agents[agentId].trainingMode`. If present and true, enter training mode for that turn.
+
+See `MEMORY.md` for the full rationale on `config-extended.json`.
 
 ## 3. Reflection Protocol (After Task Completion)
 If `trainingMode` is true, the agent must generate a reflection and send it to the user.
