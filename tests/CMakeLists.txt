@@ -22,6 +22,8 @@ set(TEST_SOURCES
     test_clone.cpp
     test_boot.cpp
     test_utils.cpp
+    test_filesystem.cpp
+    test_operation.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

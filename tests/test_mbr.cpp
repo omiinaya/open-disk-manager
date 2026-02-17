@@ -73,12 +73,48 @@ std::vector<uint8_t> createTestMBR() {
     mbr[476] = 0x20;
     mbr[477] = 0x00;
     
-    // Partition 3 and 4 are empty
+    // Partition 3 (extended)
+    mbr[478] = 0x00;
+    mbr[479] = 0x01;
+    mbr[480] = 0x01;
+    mbr[481] = 0x00;
+    // Type: Extended
+    mbr[482] = 0x05;
+    // CHS end
+    mbr[483] = 0xFE;
+    mbr[484] = 0xFF;
+    mbr[485] = 0xFF;
+    // LBA start (sector 4198400)
+    mbr[486] = 0x00;
+    mbr[487] = 0x40;
+    mbr[488] = 0x00;
+    mbr[489] = 0x00;
+    // Sector count
+    mbr[490] = 0x00;
+    mbr[491] = 0x00;
+    mbr[492] = 0x20;
+    mbr[493] = 0x00;
+    
+    // Partition 4 is empty
     
     // Boot signature
     mbr[510] = 0x55;
     mbr[511] = 0xAA;
     
+    return mbr;
+}
+
+// Create empty MBR (no partitions)
+std::vector<uint8_t> createEmptyMBR() {
+    std::vector<uint8_t> mbr(512, 0);
+    // Disk signature
+    mbr[440] = 0xAA;
+    mbr[441] = 0xBB;
+    mbr[442] = 0xCC;
+    mbr[443] = 0xDD;
+    // Boot signature
+    mbr[510] = 0x55;
+    mbr[511] = 0xAA;
     return mbr;
 }
 
@@ -93,4 +129,39 @@ TEST(MBRTest, SignatureDetection) {
     auto mbr = createTestMBR();
     uint16_t sig = *reinterpret_cast<uint16_t*>(&mbr[510]);
     EXPECT_EQ(sig, 0xAA55);
+}
+
+TEST(MBRTest, DiskSignature) {
+    auto mbr = createTestMBR();
+    // Disk signature at bytes 440-443: 0x12, 0x34, 0x56, 0x78
+    EXPECT_EQ(mbr[440], 0x12);
+    EXPECT_EQ(mbr[441], 0x34);
+    EXPECT_EQ(mbr[442], 0x56);
+    EXPECT_EQ(mbr[443], 0x78);
+}
+
+TEST(MBRTest, PartitionEntryParse) {
+    auto mbr = createTestMBR();
+    // First partition entry at offset 446
+    EXPECT_EQ(mbr[446], 0x80); // Bootable
+    EXPECT_EQ(mbr[450], 0x83); // Linux type
+}
+
+TEST(MBRTest, ExtendedPartitionType) {
+    auto mbr = createTestMBR();
+    // Partition 3 at offset 478 should be extended type 0x05
+    EXPECT_EQ(mbr[482], 0x05);
+}
+
+TEST(MBRTest, EmptyMBRSignature) {
+    auto mbr = createEmptyMBR();
+    uint16_t sig = *reinterpret_cast<uint16_t*>(&mbr[510]);
+    EXPECT_EQ(sig, 0xAA55);
+}
+
+TEST(MBRTest, InvalidSignature) {
+    std::vector<uint8_t> mbr(512, 0);
+    // No signature
+    uint16_t sig = *reinterpret_cast<uint16_t*>(&mbr[510]);
+    EXPECT_NE(sig, 0xAA55);
 }
