@@ -24,6 +24,7 @@ set(TEST_SOURCES
     test_utils.cpp
     test_filesystem.cpp
     test_operation.cpp
+    test_partition_table.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})
