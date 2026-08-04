@@ -101,3 +101,38 @@ jobs:
           name: opm-packages
           path: build/*.deb
           if-no-files-found: error
+
+  windows-gui-packaging:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++-mingw-w64-x86-64-posix wine64
+
+      - name: Install Qt (Windows kit + Linux host kit)
+        run: |
+          pip install aqtinstall
+          python3 -m aqt install-qt windows desktop 6.9.3 win64_mingw -O /opt/qt
+          python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt
+
+      - name: Build Windows bundle
+        run: |
+          chmod +x packaging/build-windows-bundle.sh
+          packaging/build-windows-bundle.sh /opt/qt/6.9.3/mingw_64 /opt/qt/6.9.3/gcc_64 dist-win
+
+      - name: Smoke test CLI from bundle (under Wine)
+        run: |
+          cd dist-win
+          export WINEPATH="$PWD"
+          wine opm.exe --help >/dev/null 2>&1 && echo "bundle CLI OK"
+
+      - name: Upload Windows bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: opm-windows-bundle
+          path: dist-win
+          if-no-files-found: error

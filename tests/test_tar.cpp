@@ -161,6 +161,7 @@ TEST(TarTest, SymlinkRoundTrip) {
 
 TEST(TarTest, HardLinkRoundTrip) {
     OPM_SKIP_PLATFORM_SPECIFIC();
+#ifndef _WIN32
     std::string src = tmpDir("srchl");
     std::string arc = src + ".tar";
     std::string dst = tmpDir("dsthl");
@@ -213,10 +214,12 @@ TEST(TarTest, HardLinkRoundTrip) {
     }
 
     std::system(("rm -rf " + src + " " + dst + " " + arc).c_str());
+#endif
 }
 
 TEST(TarTest, DeviceNodeRoundTrip) {
     OPM_SKIP_PLATFORM_SPECIFIC();
+#ifndef _WIN32
     // Creating a device node needs mknod privileges (CAP_MKNOD). If we can't,
     // skip rather than fake success.
     if (::geteuid() != 0) GTEST_SKIP() << "needs root for mknod";
@@ -255,4 +258,5 @@ TEST(TarTest, DeviceNodeRoundTrip) {
     }
 
     std::system(("rm -rf " + src + " " + dst + " " + arc).c_str());
+#endif
 }
