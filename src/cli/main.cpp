@@ -2,10 +2,12 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cstdlib>
 #include "opm/partition_table.hpp"
 #include "opm/disk_io.hpp"
 #include "opm/utils.hpp"
 #include "opm/types.hpp"
+#include "opm/i18n.hpp"
 
 using namespace opm;
 
@@ -23,6 +25,7 @@ int cmdLVM(const std::vector<std::string>& args);
 int cmdRAID(const std::vector<std::string>& args);
 int cmdCryptInfo(const std::vector<std::string>& args);
 int cmdAlign(const std::vector<std::string>& args);
+int cmdI18n(const std::vector<std::string>& args);
 }
 }
 
@@ -49,9 +52,10 @@ void printUsage(const char* program) {
               << "  fsinfo <device> <start_sector>    Show filesystem information\n"
               << "  cryptinfo <device> <start>        Detect encryption (BitLocker/LUKS)\n"
               << "  align <device>                    Report 4K partition alignment\n"
-              << "\nSystem commands:\n"
+              << "System commands:\n"
               << "  lvm                              List LVM PVs/VGs/LVs\n"
               << "  raid                             List software RAID arrays\n"
+              << "  i18n [locale] [catalog]          Manage message catalogs\n"
               << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
               << "  " << program << " list\n"
@@ -216,6 +220,17 @@ void cmdRead(const std::string& device) {
 }
 
 int main(int argc, char* argv[]) {
+    // Load the message catalog from the environment, if configured:
+    //   OPM_LOCALE=es  OPM_CATALOG=/path/to/es.po
+    const char* locale_env = std::getenv("OPM_LOCALE");
+    const char* catalog_env = std::getenv("OPM_CATALOG");
+    if (locale_env && *locale_env && catalog_env && *catalog_env) {
+        int loaded = i18n::loadCatalog(locale_env, catalog_env);
+        if (loaded > 0) {
+            i18n::setLocale(locale_env);
+        }
+    }
+
     if (argc < 2) {
         printUsage(argv[0]);
         return 1;
@@ -271,6 +286,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdCryptInfo(args);
     } else if (command == "align") {
         return cli::cmdAlign(args);
+    } else if (command == "i18n") {
+        return cli::cmdI18n(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

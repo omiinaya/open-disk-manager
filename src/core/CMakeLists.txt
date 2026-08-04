@@ -38,6 +38,7 @@ set(CORE_SOURCES
     encryption.cpp
     lvm.cpp
     raid.cpp
+    i18n.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

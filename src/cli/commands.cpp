@@ -16,6 +16,7 @@
 #include "opm/lvm.hpp"
 #include "opm/raid.hpp"
 #include "opm/boot.hpp"
+#include "opm/i18n.hpp"
 
 namespace opm {
 namespace cli {
@@ -629,6 +630,33 @@ int cmdFSInfo(const std::vector<std::string>& args) {
                   << "Volume size:     " << utils::formatBytes(vol_length * bytes_per_sector) << "\n";
     }
 
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// i18n <locale> [catalog_path] - list locales or load a message catalog
+// ---------------------------------------------------------------------------
+int cmdI18n(const std::vector<std::string>& args) {
+    if (args.empty()) {
+        auto locales = i18n::loadedLocales();
+        std::cout << "Loaded locales (" << locales.size() << "):";
+        for (const auto& l : locales) std::cout << " " << l;
+        std::cout << "\nCurrent locale: " << i18n::currentLocale() << "\n";
+        return 0;
+    }
+    if (args.size() < 2) {
+        i18n::setLocale(args[0]);
+        std::cout << "Locale set to " << args[0] << "\n";
+        return 0;
+    }
+    int loaded = i18n::loadCatalog(args[0], args[1]);
+    if (loaded < 0) {
+        std::cerr << "Error: cannot read catalog file: " << args[1] << "\n";
+        return 1;
+    }
+    i18n::setLocale(args[0]);
+    std::cout << "Loaded " << loaded << " message(s) for locale "
+              << args[0] << "\n";
     return 0;
 }
 

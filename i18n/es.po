@@ -1,0 +1,19 @@
+# Spanish (es) message catalog for Open Partition Manager
+# Format: key = translated text. Load with: opm i18n es <path>
+
+cl.list.title = Escaneando dispositivos de almacenamiento...
+cl.list.none = No se encontraron dispositivos de almacenamiento.
+cl.list.needroot = Nota: este programa requiere privilegios de root.
+cl.create.ok = Particion creada
+cl.delete.ok = Particion eliminada
+cl.resize.ok = Particion redimensionada
+cl.move.ok = Particion movida
+cl.format.ok = Formateada
+cl.check.ok = Comprobacion superada: sin errores.
+cl.check.fail = Comprobacion fallida
+cl.fsinfo.fs = Sistema de archivos
+cl.fsinfo.start = Sector de inicio
+cl.align.ok = Todas las particiones estan alineadas a 4K/1MiB.
+cl.align.bad = Se detectaron particiones desalineadas.
+cl.crypt.none = No se detecto ninguna firma de cifrado
+cl.raid.none = No se detectaron matrices RAID de software.

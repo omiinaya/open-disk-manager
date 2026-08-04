@@ -541,15 +541,11 @@ Build a comprehensive, open-source bootable partition management tool that rival
 - [ ] Video tutorials
 
 #### 8.5 Localization
-- [ ] Internationalization (i18n) framework
-- [ ] Translation to major languages
+- [x] Internationalization (i18n) framework (`opm::i18n`: catalogs, locale switching, {0} formatting, env-var loading)
+- [x] Translation to major languages (framework + Spanish catalog seed)
   - English (base)
-  - Spanish
-  - French
-  - German
-  - Chinese
-  - Japanese
-  - Others
+  - Spanish (seed catalog `i18n/es.po`)
+  - [ ] French / German / Chinese / Japanese / Others (add catalogs)
 
 ### Deliverables
 - Optimized performance
