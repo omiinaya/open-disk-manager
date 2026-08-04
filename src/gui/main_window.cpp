@@ -265,7 +265,7 @@ void MainWindow::onActionQuit() {
 
 void MainWindow::onActionAbout() {
     QMessageBox::about(this, "About Open Partition Manager",
-        "<h2>Open Partition Manager 0.1.0</h2>"
+        "<h2>Open Partition Manager 0.2.0</h2>"
         "<p>An open-source partition management tool for Linux.</p>"
         "<p>Built with Qt and modern C++.</p>");
 }

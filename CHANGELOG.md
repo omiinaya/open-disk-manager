@@ -5,21 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-08-04
+
+The August 2026 audit-fix release: the CLI surface and GPT modification layer
+that the docs overclaimed were made real, every P0/P1/P2 audit item was fixed
+and verified end-to-end, and the GUI was wired to the real core library.
 
 ### Added
-- CLI command set: `create`, `delete`, `resize`, `move`, `format`, `check`,
-  `fsinfo`, `mklabel`, `cryptinfo`, `align`, `lvm`, `raid`
+- Full CLI command set: `create`, `delete`, `resize`, `move`, `format`,
+  `check`, `fsinfo`, `mklabel`, `cryptinfo`, `align`, `lvm`, `raid`, `i18n`
+- `--dry-run` mode for create/delete/resize
 - Real GPT create/delete/resize/commit with primary + backup sync and CRC recompute
 - GPT recover-from-backup (`GPTTable::recover` + `restoreFromBackup`)
-- Boot: MBR boot-signature repair (with backup), GPT restore-from-backup,
-  ISO9660 extraction, ISO mount/unmount, ISO creation, USB device detection
+- Boot: MBR boot-signature repair, GPT restore-from-backup, ISO9660
+  extraction, ISO mount/unmount/create, USB device detection
 - Encryption detection (BitLocker `FVE-FS`, LUKS v1/v2) via `opm cryptinfo`
 - LVM detection (`opm lvm`) and software RAID detection (`opm raid`)
 - 4K/1MiB alignment reporting (`opm align`)
-- DiskIO support for regular-file images (root-free testing)
+- i18n message-catalog framework + Spanish seed catalog
+- `DiskIO` support for regular-file images (root-free testing)
 - GitHub Actions CI workflow
-- 198 unit tests + root-free CLI end-to-end integration test
+- 204 unit tests + root-free CLI end-to-end integration test
 
 ### Fixed
 - NTFS boot sector struct was 519 bytes (overran the 512-byte sector);
@@ -50,9 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 30,718 tracked `node_modules` / build / `.docusaurus` files from git history
 
 ### Changed
-- Repo hygiene: `.gitignore` added; tracked files 31,186 → 148
+- Repo hygiene: `.gitignore` added (and the `core` rule fixed so it no longer
+  excludes `src/core/*.cpp`); tracked files 31,186 → 148
 - Docs corrected to reflect actual state (FEATURE-AVAILABILITY,
   PROJECT_STATUS_V2, roadmap checkboxes)
+- Version bumped from 0.1.0 to 0.2.0
 
 ## [0.1.0] - 2026-05-23
 

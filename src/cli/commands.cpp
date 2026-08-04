@@ -131,6 +131,23 @@ bool findPartitionByStart(const PartitionTable& table, uint64_t start,
 
 } // anonymous namespace
 
+namespace {
+bool dry_run = false;
+
+bool parseDryRun(const std::vector<std::string>& args,
+                 std::vector<std::string>& rest) {
+    rest.clear();
+    for (const auto& a : args) {
+        if (a == "--dry-run" || a == "-n") {
+            dry_run = true;
+        } else {
+            rest.push_back(a);
+        }
+    }
+    return !rest.empty();
+}
+} // anonymous namespace
+
 // ---------------------------------------------------------------------------
 // mklabel <device> <mbr|gpt>
 // ---------------------------------------------------------------------------
@@ -190,34 +207,39 @@ int cmdMklabel(const std::vector<std::string>& args) {
 }
 
 // ---------------------------------------------------------------------------
-// create <device> <start> <size> <type> [name]
+// create <device> <start> <size> <type> [name]  [--dry-run]
 // ---------------------------------------------------------------------------
 int cmdCreate(const std::vector<std::string>& args) {
-    if (args.size() < 4) {
-        std::cerr << "Usage: opm create <device> <start_sector> <size> <type> [name]\n";
+    std::vector<std::string> a;
+    if (!parseDryRun(args, a)) {
+        std::cerr << "Error: no arguments\n";
+        return 1;
+    }
+    if (a.size() < 4) {
+        std::cerr << "Usage: opm create <device> <start_sector> <size> <type> [name] [--dry-run]\n";
         return 1;
     }
     uint64_t start = 0, size = 0;
-    if (!parseU64(args[1], start)) {
-        std::cerr << "Error: invalid start sector: " << args[1] << "\n";
+    if (!parseU64(a[1], start)) {
+        std::cerr << "Error: invalid start sector: " << a[1] << "\n";
         return 1;
     }
-    if (!parseSize(args[2], size)) {
-        std::cerr << "Error: invalid size: " << args[2] << "\n";
+    if (!parseSize(a[2], size)) {
+        std::cerr << "Error: invalid size: " << a[2] << "\n";
         return 1;
     }
     bool ok = false;
-    PartitionType type = parsePartitionType(args[3], ok);
+    PartitionType type = parsePartitionType(a[3], ok);
     if (!ok) {
-        std::cerr << "Error: unknown partition type '" << args[3]
+        std::cerr << "Error: unknown partition type '" << a[3]
                   << "' (ntfs, fat32, linux, swap, efi, lvm, raid)\n";
         return 1;
     }
-    std::string name = args.size() > 4 ? args[4] : "";
+    std::string name = a.size() > 4 ? a[4] : "";
 
     std::string err;
     std::shared_ptr<DiskIO> disk;
-    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+    if (!openReadWrite(a[0], disk, err)) { std::cerr << err << "\n"; return 1; }
     std::unique_ptr<PartitionTable> table;
     if (!loadTable(disk, table, err)) {
         // No existing table: initialize a fresh MBR table automatically so
@@ -229,6 +251,16 @@ int cmdCreate(const std::vector<std::string>& args) {
             std::cerr << "Error: " << e.what() << "\n";
             return 1;
         }
+    }
+
+    if (dry_run) {
+        std::cout << "[DRY RUN] Would create " << table->typeName()
+                  << " partition: start=" << start
+                  << " size=" << utils::formatBytes(size)
+                  << " type=0x" << std::hex
+                  << static_cast<int>(type) << std::dec
+                  << " name='" << name << "'\n";
+        return 0;
     }
 
     Result r = table->createPartition(start, size, type, name);
@@ -247,24 +279,40 @@ int cmdCreate(const std::vector<std::string>& args) {
 }
 
 // ---------------------------------------------------------------------------
-// delete <device> <number>
+// delete <device> <number>  [--dry-run]
 // ---------------------------------------------------------------------------
 int cmdDelete(const std::vector<std::string>& args) {
-    if (args.size() < 2) {
-        std::cerr << "Usage: opm delete <device> <partition_number>\n";
+    std::vector<std::string> a;
+    parseDryRun(args, a);
+    if (a.size() < 2) {
+        std::cerr << "Usage: opm delete <device> <partition_number> [--dry-run]\n";
         return 1;
     }
     uint64_t number = 0;
-    if (!parseU64(args[1], number) || number == 0) {
-        std::cerr << "Error: invalid partition number: " << args[1] << "\n";
+    if (!parseU64(a[1], number) || number == 0) {
+        std::cerr << "Error: invalid partition number: " << a[1] << "\n";
         return 1;
     }
 
     std::string err;
     std::shared_ptr<DiskIO> disk;
-    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+    if (!openReadWrite(a[0], disk, err)) { std::cerr << err << "\n"; return 1; }
     std::unique_ptr<PartitionTable> table;
     if (!loadTable(disk, table, err)) { std::cerr << err << "\n"; return 1; }
+
+    if (dry_run) {
+        auto parts = table->getPartitions();
+        if (number > parts.size()) {
+            std::cerr << "Error: partition " << number << " does not exist\n";
+            return 1;
+        }
+        std::cout << "[DRY RUN] Would delete partition " << number
+                  << " (start=" << parts[number - 1].startSector()
+                  << " size=" << utils::formatBytes(
+                         parts[number - 1].sectorCount() * disk->sectorSize())
+                  << ") from " << table->typeName() << " table\n";
+        return 0;
+    }
 
     Result r = table->deletePartition(static_cast<int>(number));
     if (r.failed()) {
@@ -282,28 +330,37 @@ int cmdDelete(const std::vector<std::string>& args) {
 }
 
 // ---------------------------------------------------------------------------
-// resize <device> <number> <new_size>
+// resize <device> <number> <new_size>  [--dry-run]
 // ---------------------------------------------------------------------------
 int cmdResize(const std::vector<std::string>& args) {
-    if (args.size() < 3) {
-        std::cerr << "Usage: opm resize <device> <partition_number> <new_size>\n";
+    std::vector<std::string> a;
+    parseDryRun(args, a);
+    if (a.size() < 3) {
+        std::cerr << "Usage: opm resize <device> <partition_number> <new_size> [--dry-run]\n";
         return 1;
     }
     uint64_t number = 0, new_size = 0;
-    if (!parseU64(args[1], number) || number == 0) {
-        std::cerr << "Error: invalid partition number: " << args[1] << "\n";
+    if (!parseU64(a[1], number) || number == 0) {
+        std::cerr << "Error: invalid partition number: " << a[1] << "\n";
         return 1;
     }
-    if (!parseSize(args[2], new_size)) {
-        std::cerr << "Error: invalid size: " << args[2] << "\n";
+    if (!parseSize(a[2], new_size)) {
+        std::cerr << "Error: invalid size: " << a[2] << "\n";
         return 1;
     }
 
     std::string err;
     std::shared_ptr<DiskIO> disk;
-    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+    if (!openReadWrite(a[0], disk, err)) { std::cerr << err << "\n"; return 1; }
     std::unique_ptr<PartitionTable> table;
     if (!loadTable(disk, table, err)) { std::cerr << err << "\n"; return 1; }
+
+    if (dry_run) {
+        std::cout << "[DRY RUN] Would resize partition " << number << " on "
+                  << table->typeName() << " table to "
+                  << utils::formatBytes(new_size) << "\n";
+        return 0;
+    }
 
     Result r = table->resizePartition(static_cast<int>(number), new_size);
     if (r.failed()) {

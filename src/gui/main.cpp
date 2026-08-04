@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     QApplication::setApplicationName("Open Partition Manager");
     QApplication::setApplicationDisplayName("OPM");
     QApplication::setOrganizationName("OPM Project");
-    QApplication::setApplicationVersion("0.1.0");
+    QApplication::setApplicationVersion("0.2.0");
     
     // Set application icon
     // app.setWindowIcon(QIcon(":/icons/opm.png"));
