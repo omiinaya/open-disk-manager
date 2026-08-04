@@ -325,6 +325,11 @@ class DiskIO;
 
 namespace fat32 {
 
+// Set the volume label in the FAT32 root directory (updates the volume-label
+// entry, creating it in a free slot if absent).
+Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
+                const std::string& label);
+
 // Bring DiskIO into fat32 namespace
 using ::opm::DiskIO;
 

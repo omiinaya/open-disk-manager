@@ -32,6 +32,7 @@ set(TEST_SOURCES
     test_i18n.cpp
     test_conversion.cpp
     test_swap.cpp
+    test_labels.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

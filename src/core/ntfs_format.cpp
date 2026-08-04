@@ -43,6 +43,15 @@ Result formatNTFS(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     if (result.failed()) {
         return Result::error("Failed to create root directory: " + result.message);
     }
+
+    // Step 5b: Write the real $Volume record with the volume label
+    // (format previously ignored the label parameter entirely).
+    if (!label.empty()) {
+        result = setLabel(disk, start_sector, label);
+        if (result.failed()) {
+            return Result::error("Failed to write volume label: " + result.message);
+        }
+    }
     
     // Step 6: Flush all changes
     result = disk->flush();

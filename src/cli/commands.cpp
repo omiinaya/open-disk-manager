@@ -1069,5 +1069,55 @@ int cmdHideUnhide(const std::vector<std::string>& args, bool hide) {
     return 0;
 }
 
+// ---------------------------------------------------------------------------
+// label <device> <start_sector> <label> - set the volume label
+// ---------------------------------------------------------------------------
+int cmdLabel(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "Usage: opm label <device> <start_sector> <label>\n";
+        return 1;
+    }
+    uint64_t start = 0;
+    if (!parseU64(args[1], start)) {
+        std::cerr << "Error: invalid start sector: " << args[1] << "\n";
+        return 1;
+    }
+    std::string label = args[2];
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    FileSystemType fs = disk->detectFilesystem(start);
+    Result r;
+    switch (fs) {
+        case FileSystemType::FAT32:
+            r = fat32::setLabel(disk, start, label);
+            break;
+        case FileSystemType::NTFS:
+            r = ntfs::setLabel(disk, start, label);
+            break;
+        case FileSystemType::EXT2:
+        case FileSystemType::EXT3:
+        case FileSystemType::EXT4:
+            r = ext4::setLabel(disk, start, label);
+            break;
+        case FileSystemType::exFAT:
+            r = exfat::setLabel(disk, start, label);
+            break;
+        default:
+            std::cerr << "Error: no label support for filesystem at sector "
+                      << start << "\n";
+            return 1;
+    }
+    if (r.failed()) {
+        std::cerr << "Error: " << r.message << "\n";
+        return 1;
+    }
+    std::cout << "Volume label set to '" << label << "' ("
+              << fsTypeName(fs) << ").\n";
+    return 0;
+}
+
 } // namespace cli
 } // namespace opm

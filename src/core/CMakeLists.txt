@@ -41,6 +41,10 @@ set(CORE_SOURCES
     raid.cpp
     i18n.cpp
     swap.cpp
+    fat32_label.cpp
+    ext4_label.cpp
+    exfat_label.cpp
+    ntfs_label.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

@@ -327,5 +327,9 @@ Result updateExFATBootSectorForResize(std::shared_ptr<DiskIO> disk, uint64_t sta
 Result extendExFATAllocationBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                                    const ExFATLayout& old_layout, const ExFATLayout& new_layout);
 
+// Set the exFAT volume label (root-directory volume-label entry 0x83).
+Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
+                const std::string& label);
+
 } // namespace exfat
 } // namespace opm

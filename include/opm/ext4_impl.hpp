@@ -382,7 +382,7 @@ public:
     uint64_t getGroupStartBlock(uint32_t group) const {
         return static_cast<uint64_t>(group) * blocks_per_group;
     }
-    
+
     bool validate() const;
 };
 
@@ -558,7 +558,11 @@ Result createGroupBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                            const EXT4Layout& layout, uint32_t group);
 
 Result updateSuperblockForResize(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
-                                   const EXT4Layout& layout);
+                                  const EXT4Layout& layout);
+
+// Set the ext4 volume label (superblock s_volume_name field, 16 bytes).
+Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
+                const std::string& label);
 
 } // namespace ext4
 } // namespace opm

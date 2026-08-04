@@ -327,6 +327,11 @@ Result addAttribute(void* record, uint32_t attr_type, const void* data,
 // Fix up update sequence
 void fixupUpdateSequence(void* record);
 
+// Set the NTFS volume label by writing a proper $Volume record (MFT record 3)
+// containing $VOLUME_INFORMATION and $VOLUME_NAME resident attributes.
+Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
+                const std::string& label);
+
 // ============================================================================
 // NTFS Format Operations
 // ============================================================================

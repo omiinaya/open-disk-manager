@@ -29,6 +29,7 @@ int cmdI18n(const std::vector<std::string>& args);
 int cmdConvert(const std::vector<std::string>& args);
 int cmdSetActive(const std::vector<std::string>& args);
 int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
+int cmdLabel(const std::vector<std::string>& args);
 }
 }
 
@@ -56,6 +57,7 @@ void printUsage(const char* program) {
               << "                         ext4, exfat)\n"
               << "  check <device> <start_sector>     Check a filesystem\n"
               << "  fsinfo <device> <start_sector>    Show filesystem information\n"
+              << "  label <device> <start_sector> <name>  Set the volume label\n"
               << "  cryptinfo <device> <start>        Detect encryption (BitLocker/LUKS)\n"
               << "  align <device>                    Report 4K partition alignment\n"
               << "System commands:\n"
@@ -302,6 +304,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdHideUnhide(args, true);
     } else if (command == "unhide") {
         return cli::cmdHideUnhide(args, false);
+    } else if (command == "label" || command == "set-label") {
+        return cli::cmdLabel(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {
