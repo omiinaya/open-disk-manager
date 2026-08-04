@@ -286,7 +286,6 @@ FileSystemType DiskIO::detectFilesystem(uint64_t start_sector) {
     }
     
     // Check for ext2/3/4 - superblock is at byte offset 1024 (sector 2 at offset 0)
-    // For partitions, it's at start_sector + 2, offset 0, or absolute offset 1024
     uint8_t ext_buffer[512];
     // Try reading at offset 1024 from partition start
     if (read(ext_buffer, start_sector * sector_size_ + 1024, 512).success()) {
@@ -311,11 +310,13 @@ FileSystemType DiskIO::detectFilesystem(uint64_t start_sector) {
         }
     }
     
-    // Check for swap (signature at offset 4086 = sector 8, offset 54)
-    uint8_t swap_buffer[512];
-    if (read(swap_buffer, start_sector * 512 + 4086 - 54, 512).success()) {
-        if (memcmp(&swap_buffer[54], "SWAP-SPACE", 10) == 0 ||
-            memcmp(&swap_buffer[54], "SWAPSPACE2", 10) == 0) {
+    // Check for swap: v1 "SWAPSPACE2" magic at byte 4088 of the first
+    // 4096-byte page (10 bytes, spans into the second page), v0 "SWAP-SPACE"
+    // at byte 4086.
+    uint8_t swap_page[8192];
+    if (read(swap_page, start_sector * sector_size_, 8192).success()) {
+        if (memcmp(&swap_page[4088], "SWAPSPACE2", 10) == 0 ||
+            memcmp(&swap_page[4086], "SWAP-SPACE", 10) == 0) {
             return FileSystemType::Swap;
         }
     }

@@ -16,6 +16,7 @@
 #include "opm/lvm.hpp"
 #include "opm/raid.hpp"
 #include "opm/boot.hpp"
+#include "opm/swap.hpp"
 #include "opm/i18n.hpp"
 
 namespace opm {
@@ -518,9 +519,11 @@ int cmdFormat(const std::vector<std::string>& args) {
         r = ext4::formatEXT4(disk, start, size_bytes, label);
     } else if (fs_name == "exfat") {
         r = exfat::formatExFAT(disk, start, size_bytes, label);
+    } else if (fs_name == "swap") {
+        r = formatSwap(disk, start, size_bytes, label);
     } else {
         std::cerr << "Error: unknown filesystem '" << fs_name
-                  << "' (fat32, ntfs, ext4, exfat)\n";
+                  << "' (fat32, ntfs, ext4, exfat, swap)\n";
         return 1;
     }
 
@@ -582,6 +585,10 @@ int cmdCheck(const std::vector<std::string>& args) {
             break;
         case FileSystemType::exFAT:
             r = exfat::checkExFAT(disk, start);
+            break;
+        case FileSystemType::Swap:
+            r = isSwap(disk, start) ? Result::ok()
+                                    : Result::error("swap signature missing");
             break;
         default:
             std::cerr << "Error: check not supported for " << fsTypeName(fs) << "\n";

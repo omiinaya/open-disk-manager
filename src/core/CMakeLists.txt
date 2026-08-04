@@ -40,6 +40,7 @@ set(CORE_SOURCES
     lvm.cpp
     raid.cpp
     i18n.cpp
+    swap.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
