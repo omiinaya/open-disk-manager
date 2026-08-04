@@ -5,6 +5,63 @@ Build a comprehensive, open-source bootable partition management tool that rival
 
 ---
 
+## 🔍 Audit Findings — August 2026 (verified against fresh clone + build)
+
+**Status: repo dormant since 2026-05-23. Fresh Release build: ✅ clean (gcc 12, C++17, CMake). Tests: ✅ 182/182 pass** (docs previously claimed 36+ — understated; actual suite is 182 across 10 files).
+
+### Verified REAL (library core — genuine dense filesystem engineering, not scaffolding)
+
+| Module | Verdict | Notes |
+|---|---|---|
+| FAT32 (7 files, ~1,477 LOC) | ~95% real | Byte-accurate BPB packing, dual FAT, 8.3 names, cluster allocator, 5-stage fsck w/ repairs |
+| ext4 (8 files, ~1,730 LOC) | ~95% real | Superblock/GDT/inode/extent writes, journal superblock, backup superblocks, fsck |
+| NTFS (5 files, ~1,190 LOC) | Real, no stubs | 6-step format pipeline, MFT records, checksums, $Bitmap/$LogFile checks |
+| exFAT (5 files, ~1,030 LOC) | Real, no stubs | 6-step format pipeline, boot checksum, allocation bitmap, upcase table |
+| Operation/transaction | ~98% real | Full OperationQueue: validate→execute→rollback→undo, RAII Transaction guard |
+| Clone | ~88% real | Real sector copy + verify, multi-pass secure erase, benchmark engine |
+| CLI `list`/`info`/`read` | ✅ real | Working device enumeration + MBR/GPT parsing |
+
+### ⚠️ NOT as documented (docs claim "100% complete" — they are not)
+
+| Module | Real % | What's actually stubbed |
+|---|---|---|
+| **Boot** (`boot.cpp`, 460 LOC) | ~30% | **15 TODO stubs** — `installBootloader`, `repairBootSector`, `fixPartitionTable`, `extractISO`, `createBootableISO`, `detectUSBDevices`, `mountISO`, `unmountISO` all **return `Result::ok()` while doing nothing** (dangerous: report success for operations that never happened). Real only: `createLiveUSB`/`verifyLiveUSB`/`isBootableDevice`/`detectBootMode` |
+| **GUI** (23 files) | ~50% | All 7 operation handlers (`create/delete/resize/format/clone/erase`) = `TODO` + **fake success popups**; disk tree **fabricates fake disks**; benchmark dialog shows **hardcoded mock numbers**; **does not link** — `CMakeLists.txt` omits 2 dialog sources (`partition_properties_dialog.cpp`, `preferences_dialog.cpp`); `secure_erase_dialog` references `EraseMethod` enum values not in `clone.hpp`; never compiled |
+| **CLI surface** | ~30% | Only 3 of the promised ~8 commands exist. `commands.cpp` is a **12-line empty placeholder**. Missing: `create`, `delete`, `resize`, `format`, `check`, `fsinfo` (core functions exist — just unwired) |
+
+### 🐛 Known code-level bugs (found in audit)
+
+1. **ext4 journal not linked** — `createJournal` writes a valid JBD2 superblock but never sets `s_journal_inum`/`s_journal_uuid` in the ext4 superblock (ext4_journal.cpp L78, L172)
+2. **ext4 boot offset unit bug** — `createSuperblock` uses `start_sector * layout.block_size` (ext4_boot.cpp L29) while everything else uses `start_sector * 512` → wrong on block_size ≠ 512
+3. **OOB write in test** — `tests/test_filesystem.cpp:25` writes `bootSector[0x3E4]` (offset 996) into a 512-byte buffer; compiler emits `-Wstringop-overflow`
+4. **ext4 checksums zeroed** — superblock/GDT checksum fields inited to 0 despite `GDT_CSUM` advertised
+5. **LFN machinery unused** — FAT32 LFN entries + checksum exist but `createDirectoryEntry` writes short names only
+6. **Shrink unsupported** everywhere (documented errors, not silent)
+7. **FAT32 boot checksum function exists but unused** by format path
+
+### 🔴 Repo hygiene (biggest infra issue)
+
+- **31,186 tracked files: 30,718 are `node_modules`**, plus 283 build artifacts, 35 `.docusaurus` cache, `Testing/` logs — **no `.gitignore`** at all
+- Every clone is huge and slow (`git status` >60s on this box)
+- Local repo `.git/config` remote URL embeds a GitHub PAT — should be scrubbed to a tokenless URL
+
+### ✅ Docs corrections needed
+
+- `PROJECT_STATUS_V2.md` claims "Phase 5: Boot Environment 100%" and "Phase 6 GUI framework ready" — both overstated (see tables above)
+- Claims "36+ test cases" — actual: **182** (undercounted, good direction)
+- Claims "~15,000 lines" — actual: **18,209 C++ LOC** (src + tests + include)
+- `FEATURE-AVAILABILITY.md` lists create/delete/format/resize/check as available — available only in core library, NOT in CLI/GUI
+
+### Priority fix order (from audit)
+
+- **P0:** Add `.gitignore` (node_modules, build/, .docusaurus, Testing/); `git rm -r --cached` the junk; scrub PAT from remote URL
+- **P0:** Make boot.cpp stubs return honest errors instead of fake `ok()`; remove GUI fake-success popups
+- **P1:** Wire CLI `format`/`check`/`fsinfo` commands (core functions are real)
+- **P1:** Fix GUI build (2 missing sources, EraseMethod enum), real disk enumeration
+- **P2:** ext4 journal linkage, ext4 offset bug, OOB test fix, FAT32 checksum wiring
+
+---
+
 ## Phase 1: Foundation & Architecture (Months 1-2)
 
 ### Goals
