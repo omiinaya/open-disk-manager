@@ -17,6 +17,7 @@
 #include "opm/raid.hpp"
 #include "opm/boot.hpp"
 #include "opm/swap.hpp"
+#include "opm/recovery.hpp"
 #include "opm/i18n.hpp"
 
 namespace opm {
@@ -1116,6 +1117,60 @@ int cmdLabel(const std::vector<std::string>& args) {
     }
     std::cout << "Volume label set to '" << label << "' ("
               << fsTypeName(fs) << ").\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// recover <device> [--rebuild] - find and optionally rebuild partitions
+// ---------------------------------------------------------------------------
+int cmdRecover(const std::vector<std::string>& args) {
+    if (args.empty()) {
+        std::cerr << "Usage: opm recover <device> [--rebuild]\n";
+        return 1;
+    }
+    bool rebuild = false;
+    for (const auto& a : args) {
+        if (a == "--rebuild") rebuild = true;
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    std::cout << "Scanning " << args[0] << " for partition signatures...\n";
+    auto candidates = scanForPartitions(disk, 2048);
+    if (candidates.empty()) {
+        std::cout << "No partitions or filesystem signatures found.\n";
+        return 1;
+    }
+
+    std::cout << "Found " << candidates.size() << " candidate(s):\n";
+    for (size_t i = 0; i < candidates.size(); i++) {
+        const auto& c = candidates[i];
+        std::cout << "  [" << (i + 1) << "] sector " << c.start_sector
+                  << " size=" << utils::formatBytes(c.size_sectors * disk->sectorSize())
+                  << " fs=" << fsTypeName(c.fs)
+                  << (c.bootable ? " bootable" : "")
+                  << (c.from_partition_table ? " (table)" : "")
+                  << "\n";
+    }
+
+    if (!rebuild) {
+        std::cout << "Run 'opm recover <device> --rebuild' to write an MBR table "
+                     "from these candidates.\n";
+        return 0;
+    }
+
+    std::cout << "Rebuilding MBR partition table...\n";
+    Result r = rebuildPartitionTable(disk, candidates);
+    if (r.failed()) {
+        std::cerr << "Error: " << r.message << "\n";
+        return 1;
+    }
+    auto reloaded = PartitionTable::load(disk);
+    std::cout << "Rebuilt MBR table with "
+              << (reloaded ? reloaded->getPartitionCount() : 0)
+              << " partition(s). Data preserved; run 'opm check' to verify.\n";
     return 0;
 }
 

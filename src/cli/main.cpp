@@ -30,6 +30,7 @@ int cmdConvert(const std::vector<std::string>& args);
 int cmdSetActive(const std::vector<std::string>& args);
 int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
 int cmdLabel(const std::vector<std::string>& args);
+int cmdRecover(const std::vector<std::string>& args);
 }
 }
 
@@ -61,6 +62,7 @@ void printUsage(const char* program) {
               << "  cryptinfo <device> <start>        Detect encryption (BitLocker/LUKS)\n"
               << "  align <device>                    Report 4K partition alignment\n"
               << "System commands:\n"
+              << "  recover <device> [--rebuild]     Scan for lost partitions\n"
               << "  lvm                              List LVM PVs/VGs/LVs\n"
               << "  raid                             List software RAID arrays\n"
               << "  i18n [locale] [catalog]          Manage message catalogs\n"
@@ -306,6 +308,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdHideUnhide(args, false);
     } else if (command == "label" || command == "set-label") {
         return cli::cmdLabel(args);
+    } else if (command == "recover") {
+        return cli::cmdRecover(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {
