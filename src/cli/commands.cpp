@@ -18,6 +18,7 @@
 #include "opm/boot.hpp"
 #include "opm/swap.hpp"
 #include "opm/recovery.hpp"
+#include "opm/undelete.hpp"
 #include "opm/i18n.hpp"
 
 namespace opm {
@@ -1171,6 +1172,82 @@ int cmdRecover(const std::vector<std::string>& args) {
     std::cout << "Rebuilt MBR table with "
               << (reloaded ? reloaded->getPartitionCount() : 0)
               << " partition(s). Data preserved; run 'opm check' to verify.\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// undelete <device> <start_sector> [--restore <index>] [--name-char <c>]
+// Scans a FAT32 volume for deleted files; with --restore, recovers one.
+// ---------------------------------------------------------------------------
+int cmdUndelete(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm undelete <device> <start_sector> "
+                     "[--restore <index>] [--name-char <c>]\n";
+        return 1;
+    }
+    uint64_t start = 0;
+    if (!parseU64(args[1], start)) {
+        std::cerr << "Error: invalid start sector: " << args[1] << "\n";
+        return 1;
+    }
+    int restore_index = -1;
+    char name_char = '_';
+    for (size_t i = 2; i < args.size(); i++) {
+        if (args[i] == "--restore" && i + 1 < args.size()) {
+            if (!parseU64(args[i + 1], (uint64_t&)restore_index)) {
+                std::cerr << "Error: invalid restore index\n";
+                return 1;
+            }
+            restore_index = static_cast<int>(restore_index) - 1;  // 0-based
+        }
+        if (args[i] == "--name-char" && i + 1 < args.size()) {
+            name_char = args[i + 1].empty() ? '_' : args[i + 1][0];
+        }
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    FileSystemType fs = disk->detectFilesystem(start);
+    if (fs != FileSystemType::FAT32 && fs != FileSystemType::FAT16 &&
+        fs != FileSystemType::FAT12) {
+        std::cerr << "Error: undelete requires a FAT volume (found "
+                  << fsTypeName(fs) << ")\n";
+        return 1;
+    }
+
+    auto files = fat32::scanDeletedFiles(disk, start);
+    std::cout << "Found " << files.size() << " deleted file(s):\n";
+    for (size_t i = 0; i < files.size(); i++) {
+        const auto& f = files[i];
+        std::cout << "  [" << (i + 1) << "] " << f.name
+                  << " size=" << utils::formatBytes(f.size_bytes)
+                  << " start_cluster=" << f.start_cluster
+                  << (f.parent_cluster ? " (subdir)" : " (root)")
+                  << "\n";
+    }
+    if (files.empty()) {
+        std::cout << "Nothing to restore. Data may have been overwritten.\n";
+        return 1;
+    }
+    if (restore_index < 0) {
+        std::cout << "Run 'opm undelete <device> <start> --restore <index>' "
+                     "to recover a file.\n";
+        return 0;
+    }
+    if (restore_index >= static_cast<int>(files.size())) {
+        std::cerr << "Error: restore index out of range\n";
+        return 1;
+    }
+
+    Result r = fat32::restoreDeletedFile(disk, start, files[restore_index], name_char);
+    if (r.failed()) {
+        std::cerr << "Error: " << r.message << "\n";
+        return 1;
+    }
+    std::cout << "Restored '" << files[restore_index].name << "' (first char -> '"
+              << name_char << "').\n";
     return 0;
 }
 

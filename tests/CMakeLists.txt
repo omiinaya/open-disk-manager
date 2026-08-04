@@ -34,6 +34,7 @@ set(TEST_SOURCES
     test_swap.cpp
     test_labels.cpp
     test_recovery.cpp
+    test_undelete.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

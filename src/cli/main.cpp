@@ -31,6 +31,7 @@ int cmdSetActive(const std::vector<std::string>& args);
 int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
 int cmdLabel(const std::vector<std::string>& args);
 int cmdRecover(const std::vector<std::string>& args);
+int cmdUndelete(const std::vector<std::string>& args);
 }
 }
 
@@ -63,6 +64,7 @@ void printUsage(const char* program) {
               << "  align <device>                    Report 4K partition alignment\n"
               << "System commands:\n"
               << "  recover <device> [--rebuild]     Scan for lost partitions\n"
+              << "  undelete <dev> <start> [--restore <i>]  Recover deleted FAT files\n"
               << "  lvm                              List LVM PVs/VGs/LVs\n"
               << "  raid                             List software RAID arrays\n"
               << "  i18n [locale] [catalog]          Manage message catalogs\n"
@@ -310,6 +312,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdLabel(args);
     } else if (command == "recover") {
         return cli::cmdRecover(args);
+    } else if (command == "undelete") {
+        return cli::cmdUndelete(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

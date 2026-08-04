@@ -46,6 +46,7 @@ set(CORE_SOURCES
     exfat_label.cpp
     ntfs_label.cpp
     recovery.cpp
+    undelete.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
