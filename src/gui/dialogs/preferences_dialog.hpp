@@ -3,19 +3,19 @@
 #include <QDialog>
 #include <memory>
 
-namespace opm {
-class DiskIO;
-}
-
-namespace opm::gui {
-
-// Forward declarations
+// Qt forward declarations (global scope - NOT inside opm::gui)
 class QLabel;
 class QPushButton;
 class QDialogButtonBox;
 class QTabWidget;
 class QCheckBox;
 class QComboBox;
+
+namespace opm {
+class DiskIO;
+}
+
+namespace opm::gui {
 
 // Dialog for application preferences
 class PreferencesDialog : public QDialog {

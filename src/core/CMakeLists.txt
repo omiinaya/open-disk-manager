@@ -35,6 +35,9 @@ set(CORE_SOURCES
     exfat_format.cpp
     exfat_check.cpp
     exfat_resize.cpp
+    encryption.cpp
+    lvm.cpp
+    raid.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

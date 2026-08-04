@@ -44,11 +44,11 @@ void PartitionPropertiesDialog::setupUI() {
     general_layout->addWidget(partition_number_label_, 0, 1);
 
     general_layout->addWidget(new QLabel("Start Sector:", general_group), 1, 0);
-    start_sector_label_ = new QLabel(QString::number(partition_->start()), general_group);
+    start_sector_label_ = new QLabel(QString::number(partition_->startSector()), general_group);
     general_layout->addWidget(start_sector_label_, 1, 1);
 
     general_layout->addWidget(new QLabel("Size (sectors):", general_group), 2, 0);
-    size_label_ = new QLabel(QString::number(partition_->size()), general_group);
+    size_label_ = new QLabel(QString::number(partition_->sectorCount()) + QString(" sectors"), general_group);
     general_layout->addWidget(size_label_, 2, 1);
 
     general_layout->addWidget(new QLabel("Name:", general_group), 3, 0);
@@ -58,9 +58,12 @@ void PartitionPropertiesDialog::setupUI() {
     general_layout->addWidget(new QLabel("Type:", general_group), 4, 0);
     type_combo_ = new QComboBox(general_group);
     // Populate with common partition types
-    type_combo_->addItem("Primary", static_cast<int>(opm::PartitionType::Primary));
-    type_combo_->addItem("Logical", static_cast<int>(opm::PartitionType::Logical));
-    type_combo_->addItem("Extended", static_cast<int>(opm::PartitionType::Extended));
+    type_combo_->addItem("Linux (0x83)", static_cast<int>(opm::PartitionType::Linux));
+    type_combo_->addItem("Linux Swap (0x82)", static_cast<int>(opm::PartitionType::LinuxSwap));
+    type_combo_->addItem("Linux LVM (0x8E)", static_cast<int>(opm::PartitionType::LinuxLVM));
+    type_combo_->addItem("NTFS (0x07)", static_cast<int>(opm::PartitionType::NTFS));
+    type_combo_->addItem("FAT32 (0x0C)", static_cast<int>(opm::PartitionType::FAT32LBA));
+    type_combo_->addItem("EFI System (0xEF)", static_cast<int>(opm::PartitionType::EFI));
     general_layout->addWidget(type_combo_, 4, 1);
 
     main_layout->addWidget(general_group);
@@ -91,8 +94,8 @@ void PartitionPropertiesDialog::setupUI() {
 }
 
 void PartitionPropertiesDialog::loadPartitionInfo() {
-    original_start_ = partition_->start();
-    original_size_ = partition_->size();
+    original_start_ = partition_->startSector();
+    original_size_ = partition_->sectorCount();
     original_name_ = QString::fromStdString(partition_->name());
     current_type_ = partition_->type();
 }

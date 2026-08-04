@@ -12,6 +12,10 @@
 #include "opm/ntfs_impl.hpp"
 #include "opm/ext4_impl.hpp"
 #include "opm/exfat_impl.hpp"
+#include "opm/encryption.hpp"
+#include "opm/lvm.hpp"
+#include "opm/raid.hpp"
+#include "opm/boot.hpp"
 
 namespace opm {
 namespace cli {
@@ -626,6 +630,148 @@ int cmdFSInfo(const std::vector<std::string>& args) {
     }
 
     return 0;
+}
+
+// ---------------------------------------------------------------------------
+// lvm - list physical volumes, volume groups, logical volumes
+// ---------------------------------------------------------------------------
+int cmdLVM(const std::vector<std::string>&) {
+    auto pvs = detectPhysicalVolumes();
+    std::cout << "=== LVM Physical Volumes (" << pvs.size() << ") ===\n";
+    for (const auto& pv : pvs) {
+        std::cout << "  " << pv.device_path
+                  << "  vg=" << (pv.vg_name.empty() ? "(none)" : pv.vg_name)
+                  << "  size=" << utils::formatBytes(pv.total_size)
+                  << "  uuid=" << pv.uuid << "\n";
+    }
+
+    auto vgs = detectVolumeGroups();
+    std::cout << "\n=== Volume Groups (" << vgs.size() << ") ===\n";
+    for (const auto& vg : vgs) {
+        std::cout << "  " << vg.name
+                  << "  pvs=" << vg.pv_count
+                  << "  size=" << utils::formatBytes(vg.total_size)
+                  << "\n";
+    }
+
+    auto lvs = detectLogicalVolumes();
+    std::cout << "\n=== Logical Volumes (" << lvs.size() << ") ===\n";
+    for (const auto& lv : lvs) {
+        std::cout << "  " << lv.device_path
+                  << "  vg=" << lv.vg_name
+                  << "  size=" << utils::formatBytes(lv.size)
+                  << "\n";
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// raid - list software RAID arrays
+// ---------------------------------------------------------------------------
+int cmdRAID(const std::vector<std::string>&) {
+    auto arrays = detectRaidArrays();
+    if (arrays.empty()) {
+        std::cout << "No software RAID arrays detected.\n";
+        return 0;
+    }
+    std::cout << "Software RAID arrays (" << arrays.size() << "):\n";
+    for (const auto& a : arrays) {
+        std::string level;
+        switch (a.level) {
+            case RaidLevel::Linear: level = "linear"; break;
+            case RaidLevel::Raid0: level = "raid0"; break;
+            case RaidLevel::Raid1: level = "raid1"; break;
+            case RaidLevel::Raid5: level = "raid5"; break;
+            case RaidLevel::Raid6: level = "raid6"; break;
+            case RaidLevel::Raid10: level = "raid10"; break;
+            default: level = "unknown"; break;
+        }
+        std::cout << "  " << a.name << " (" << a.device_path
+                  << ") level=" << level << " drives=" << a.total_drives
+                  << " components:";
+        for (const auto& c : a.components) {
+            std::cout << " " << c.device_path;
+        }
+        std::cout << "\n";
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// cryptinfo <device> <start_sector> - detect encryption on a partition
+// ---------------------------------------------------------------------------
+int cmdCryptInfo(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm cryptinfo <device> <start_sector>\n";
+        return 1;
+    }
+    uint64_t start = 0;
+    if (!parseU64(args[1], start)) {
+        std::cerr << "Error: invalid start sector: " << args[1] << "\n";
+        return 1;
+    }
+
+    auto disk = DiskIO::openReadOnly(args[0]);
+    if (!disk || !disk->isOpen()) {
+        std::cerr << "Error: failed to open device: " << args[0] << "\n";
+        return 1;
+    }
+
+    std::string description;
+    Result r = describeEncryption(disk, start, description);
+    if (r.failed()) {
+        std::cerr << "Error: " << r.message << "\n";
+        return 1;
+    }
+    std::cout << "Encryption: " << description << "\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// align <device> - report 4K (1MiB) alignment of every partition
+// ---------------------------------------------------------------------------
+int cmdAlign(const std::vector<std::string>& args) {
+    if (args.size() < 1) {
+        std::cerr << "Usage: opm align <device>\n";
+        return 1;
+    }
+
+    auto disk = DiskIO::openReadOnly(args[0]);
+    if (!disk || !disk->isOpen()) {
+        std::cerr << "Error: failed to open device: " << args[0] << "\n";
+        return 1;
+    }
+
+    std::unique_ptr<PartitionTable> table;
+    try {
+        table = PartitionTable::load(disk);
+    } catch (...) {}
+    if (!table) {
+        std::cerr << "Error: no partition table found on " << args[0] << "\n";
+        return 1;
+    }
+
+    auto parts = table->getPartitions();
+    bool all_aligned = true;
+    std::cout << "4K alignment report for " << args[0] << " ("
+              << table->typeName() << ", " << parts.size() << " partition(s)):\n";
+    for (size_t i = 0; i < parts.size(); i++) {
+        const auto& p = parts[i];
+        bool aligned = p.isAligned();
+        if (!aligned) all_aligned = false;
+        std::cout << "  Partition " << (i + 1) << " @ sector " << p.startSector()
+                  << " (" << p.startSector() * disk->sectorSize() << " B): "
+                  << (aligned ? "ALIGNED" : "NOT ALIGNED (start not a 1MiB multiple)")
+                  << "\n";
+    }
+    if (all_aligned) {
+        std::cout << "All partitions are 4K/1MiB aligned.\n";
+    } else {
+        std::cout << "Unaligned partitions detected. Moving them to an aligned\n"
+                  << "boundary with 'opm move' will improve performance on "
+                     "4K-native SSDs.\n";
+    }
+    return all_aligned ? 0 : 1;
 }
 
 } // namespace cli

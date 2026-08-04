@@ -19,6 +19,10 @@ int cmdFormat(const std::vector<std::string>& args);
 int cmdCheck(const std::vector<std::string>& args);
 int cmdFSInfo(const std::vector<std::string>& args);
 int cmdMklabel(const std::vector<std::string>& args);
+int cmdLVM(const std::vector<std::string>& args);
+int cmdRAID(const std::vector<std::string>& args);
+int cmdCryptInfo(const std::vector<std::string>& args);
+int cmdAlign(const std::vector<std::string>& args);
 }
 }
 
@@ -43,6 +47,11 @@ void printUsage(const char* program) {
               << "                         ext4, exfat)\n"
               << "  check <device> <start_sector>     Check a filesystem\n"
               << "  fsinfo <device> <start_sector>    Show filesystem information\n"
+              << "  cryptinfo <device> <start>        Detect encryption (BitLocker/LUKS)\n"
+              << "  align <device>                    Report 4K partition alignment\n"
+              << "\nSystem commands:\n"
+              << "  lvm                              List LVM PVs/VGs/LVs\n"
+              << "  raid                             List software RAID arrays\n"
               << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
               << "  " << program << " list\n"
@@ -254,6 +263,14 @@ int main(int argc, char* argv[]) {
         return cli::cmdCheck(args);
     } else if (command == "fsinfo") {
         return cli::cmdFSInfo(args);
+    } else if (command == "lvm") {
+        return cli::cmdLVM(args);
+    } else if (command == "raid") {
+        return cli::cmdRAID(args);
+    } else if (command == "cryptinfo") {
+        return cli::cmdCryptInfo(args);
+    } else if (command == "align") {
+        return cli::cmdAlign(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

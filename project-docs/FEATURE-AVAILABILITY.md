@@ -2,11 +2,7 @@
 
 ## Single Edition, Complete Access
 
-**Open Partition Manager** follows the true open-source philosophy: **one version with all features**.
-
-### Why Single Edition?
-
-Unlike commercial partition managers that lock features behind paywalls:
+**Open Partition Manager** follows the true open-source philosophy: **one version with all features**. Unlike commercial partition managers that lock features behind paywalls, everything that exists in this project is available to every user for free.
 
 | Tool | Free Version | Paid Versions | Total Cost |
 |------|-------------|---------------|------------|
@@ -14,197 +10,138 @@ Unlike commercial partition managers that lock features behind paywalls:
 | **AOMEI Partition Assistant** | Limited features | Pro ($49.95), Server ($199), Unlimited ($399), Technician ($699) | Up to $699 |
 | **MiniTool Partition Wizard** | Limited features | Pro ($59), Server ($159), Enterprise ($399), Technician ($699) | Up to $699 |
 | **Acronis Disk Director** | No free version | Home ($49.99), Server (custom pricing) | $49.99+ |
-| **Paragon Partition Manager** | Limited free version | Hard Disk Manager ($39.95), Server ($149) | Up to $149 |
 | **Our Open Source Tool** | ✅ **COMPLETE** | **N/A - Everything Free** | **$0** |
 
-### What You Get (100% Free)
+---
 
-#### Basic Operations (Usually Free in Commercial Tools)
-- ✅ Create partitions
-- ✅ Delete partitions
-- ✅ Format partitions
-- ✅ Resize/Move partitions
-- ✅ Set active partition
-- ✅ Change drive letter
-- ✅ Check file system
+## Actual Implementation Status (August 2026)
 
-#### Advanced Operations (Usually Paid)
-- ✅ **OS Migration** - Move Windows to SSD without reinstall
-- ✅ **Disk Cloning** - Clone entire disks
-- ✅ **Partition Copy** - Copy individual partitions
-- ✅ **MBR to GPT Conversion** - Convert system disks for Windows 11
-- ✅ **GPT to MBR Conversion** - Legacy compatibility
-- ✅ **Dynamic Disk Management** - Full support
-- ✅ **RAID Support** - RAID-0, RAID-1, RAID-5, RAID-10
-- ✅ **LVM Support** - Logical Volume Management
-- ✅ **4K Alignment** - SSD optimization
-- ✅ **Windows Storage Spaces**
+> This table reflects what the code **actually implements** today, not aspirations.
+> Status legend: ✅ implemented & tested · 🚧 partial / honest-error fallback · 📋 planned
 
-#### Recovery Features (Usually Paid)
-- ✅ **Bootable Media Creation** - Create rescue USB/CD
-- ✅ **Boot Repair** - Fix MBR, GPT, GRUB, BCD
-- ✅ **Partition Recovery** - Recover lost partitions
-- ✅ **Password Reset** - Windows and Linux
-- ✅ **Data Recovery** - Basic file recovery
+### Partition Table Operations
 
-#### Encryption Support (Usually Premium)
-- ✅ **BitLocker** - Full read/write/resize support
-- ✅ **LUKS** - Linux encryption
-- ✅ **VeraCrypt** - Container support
+| Feature | Status | Notes |
+|---------|--------|-------|
+| MBR read / parse / validate | ✅ | Protective-MBR detection, disk signature, extended partitions |
+| GPT read / parse / validate | ✅ | CRC32-verified headers, backup GPT, UTF-16 names, GUIDs |
+| GPT create / delete / resize / commit | ✅ | Primary + backup sync, protective MBR, CRC recompute |
+| GPT recover from backup | ✅ | `GPTTable::recover()` + `restoreFromBackup()` |
+| MBR create / delete / resize | ✅ | 1MiB alignment, overlap validation |
+| Move partition (data-preserving) | ✅ | Copy sectors → re-create entry → drop old entry |
+| mklabel (MBR / GPT) | ✅ | Wipes stale GPT when labeling MBR |
+| APM / BSD disklabel | 📋 | Planned |
 
-#### Enterprise Features (Usually Expensive)
-- ✅ **Command Line Interface** - Scripting and automation
-- ✅ **Portable Version** - Run from USB without install
-- ✅ **Windows Server Support** - All server editions
-- ✅ **Remote Management** - Network operations
-- ✅ **RAID-5 Volume Repair**
-- ✅ **Technical Support** - Community and documentation
+### Filesystems
 
-### Usage Rights
+| Filesystem | Format | Check | Resize | Notes |
+|-----------|--------|-------|--------|-------|
+| FAT32 | ✅ | ✅ | ✅ | 5-stage fsck, boot checksum, dual FAT |
+| NTFS | ✅ | ✅ | ✅ | Boot sector, MFT, $Bitmap/$LogFile/$UpCase |
+| ext4 | ✅ | ✅ | ✅ | Superblock+GDT+journal, GDT CRC16, backup superblocks |
+| exFAT | ✅ | ✅ | ✅ | Boot checksum, allocation bitmap, upcase table |
+| swap | 📋 | 📋 | 📋 | Planned |
+| FS conversion (FAT32↔NTFS etc.) | 📋 | 📋 | 📋 | Planned |
 
-**Personal Use**: ✅ Unlimited machines, all features  
-**Commercial Use**: ✅ Business deployment, all features  
-**Educational Use**: ✅ Schools and universities, all features  
-**Government Use**: ✅ Public sector, all features  
-**Service Providers**: ✅ Client computers, all features  
+### Disk Operations
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Sector-by-sector disk clone | ✅ | With verification |
+| Partition copy | ✅ | Checksum verify |
+| Clone with resize | ✅ | `cloneDiskWithResize` |
+| Secure erase | ✅ | Zeros, Random, DoD 5220.22-M, Gutmann, NIST 800-88 |
+| Benchmark | ✅ | Sequential/random IOPS, latency, MB/s |
+| SMART read | 🚧 | `DiskIO::readSMART` exposed; device support varies |
+
+### CLI (opm)
+
+| Command | Status |
+|---------|--------|
+| `list` / `info` / `read` | ✅ |
+| `mklabel <mbr\|gpt>` | ✅ |
+| `create` / `delete` / `resize` / `move` | ✅ |
+| `format <fat32\|ntfs\|ext4\|exfat>` | ✅ |
+| `check` / `fsinfo` | ✅ |
+| Progress indicators / scripting | 📋 |
+
+### GUI (Qt, `-DBUILD_GUI=ON`)
+
+| Feature | Status |
+|---------|--------|
+| Disk tree (real enumeration) | ✅ |
+| Create / Delete / Resize / Format / Clone / Secure Erase dialogs | ✅ (wired to core) |
+| Benchmark dialog | ✅ (real benchmark) |
+| Visual partition map / drag-and-drop | 📋 |
+| Wizards (clone, migrate OS, bootable media, recovery) | 📋 |
+| Operation queue visualization / undo-redo | 📋 |
+
+### Boot & Recovery
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Live USB creation from ISO | ✅ | Writes + verifies + syncs |
+| Verify live USB | ✅ | Boot sig + ISO9660 check |
+| MBR boot-signature repair | ✅ | Backup first, honest failure when boot code empty |
+| GPT restore from backup | ✅ | CRC-verified recovery |
+| Bootloader install (syslinux/GRUB2) | 🚧 | Honest error: stage files not bundled; use distro installer |
+| ISO mount / unmount | ✅ | Real `mount(2)`/`umount(2)` on Linux |
+| ISO extraction (ISO9660) | ✅ | PVD + directory walk, recursive, progress |
+| ISO creation | ✅ | via xorriso/genisoimage/mkisofs |
+| USB device detection | ✅ | sysfs scan, vendor/model/size/FS/label |
+| Password reset (Windows/Linux) | 📋 | Planned |
+| Data recovery (undelete, PhotoRec) | 📋 | Planned |
+| Partition recovery / rebuild | 📋 | Planned |
+
+### Encryption (planned, not yet implemented)
+
+| Feature | Status |
+|---------|--------|
+| BitLocker detect / unlock / resize | 📋 |
+| LUKS detect / open / close | 📋 |
+| VeraCrypt detect / mount | 📋 |
+
+### Enterprise (planned, not yet implemented)
+
+| Feature | Status |
+|---------|--------|
+| Dynamic disks (Windows) | 📋 |
+| LVM (Linux) | 📋 |
+| RAID detection (mdadm/hardware) | 📋 |
+| Windows Storage Spaces | 📋 |
+
+### Conversion (planned, not yet implemented)
+
+| Feature | Status |
+|---------|--------|
+| MBR → GPT | 📋 |
+| GPT → MBR | 📋 |
+| 4K alignment optimization | 📋 (alignment checks exist) |
+
+---
+
+## Usage Rights
+
+**Personal Use**: ✅ Unlimited machines, all features
+**Commercial Use**: ✅ Business deployment, all features
+**Educational Use**: ✅ Schools and universities, all features
+**Government Use**: ✅ Public sector, all features
+**Service Providers**: ✅ Client computers, all features
 
 **NO RESTRICTIONS**: No machine limits, no user limits, no deployment limits.
 
 ---
 
-## Comparison with Commercial Tool Editions
-
-### EaseUS Partition Master
-
-| Feature | EaseUS Free | EaseUS Pro ($69.95) | EaseUS Server ($259) | **Our Tool** |
-|---------|-------------|---------------------|----------------------|--------------|
-| Basic partition ops | ✅ | ✅ | ✅ | ✅ |
-| Clone partition | ✅ | ✅ | ✅ | ✅ |
-| OS Migration | ❌ | ✅ | ✅ | ✅ |
-| Clone system disk | ❌ | ✅ | ✅ | ✅ |
-| WinPE bootable disk | ❌ | ✅ | ✅ | ✅ |
-| Partition recovery | ❌ | ✅ | ✅ | ✅ |
-| MBR/GPT convert (system) | ❌ | ✅ | ✅ | ✅ |
-| Dynamic disk management | ❌ | ✅ | ✅ | ✅ |
-| RAID-5 repair | ❌ | ✅ | ✅ | ✅ |
-| Windows Server support | ❌ | ❌ | ✅ | ✅ |
-| Command line | ❌ | ❌ | ❌ | ✅ |
-| Portable version | ❌ | ❌ | ❌ | ✅ |
-| License restrictions | 1 PC | 2 PCs | 2 Servers | **Unlimited** |
-| Price | Free | $69.95 | $259 | **FREE** |
-
-### AOMEI Partition Assistant
-
-| Feature | AOMEI Free | AOMEI Pro ($49.95) | AOMEI Server ($199) | **Our Tool** |
-|---------|------------|-------------------|---------------------|--------------|
-| Basic partition ops | ✅ | ✅ | ✅ | ✅ |
-| Merge partitions | ✅ | ✅ | ✅ | ✅ |
-| Migrate OS | ❌ | ✅ | ✅ | ✅ |
-| Disk clone | ❌ | ✅ | ✅ | ✅ |
-| Partition clone | ❌ | ✅ | ✅ | ✅ |
-| WinPE builder | ❌ | ✅ | ✅ | ✅ |
-| Windows Server support | ❌ | ❌ | ✅ | ✅ |
-| Command line | ❌ | ❌ | ✅ | ✅ |
-| Unlimited PCs | ❌ | ❌ | ✅ | ✅ |
-| License restrictions | 1 PC | 2 PCs | 2 Servers | **Unlimited** |
-| Price | Free | $49.95 | $199 | **FREE** |
-
----
-
-## What "Free" Really Means
-
-### ✅ You CAN:
-- Use on unlimited computers
-- Use for commercial purposes
-- Modify the source code
-- Redistribute to others
-- Create derivative works
-- Use all features without restrictions
-- Get community support
-- Contribute improvements
-
-### ❌ You CANNOT:
-- Remove copyright notices
-- Claim authorship
-- Sue for warranty (as-is software)
-- Expect paid support (community only)
-
-### License: GPL-3.0
+## License: GPL-3.0
 
 This ensures the software stays open source forever and cannot be made proprietary.
 
 ---
 
-## Feature Completeness Timeline
+## Roadmap
 
-All features will be available from the first stable release (v1.0):
+See `project-docs/open-partition-manager-roadmap.md` for the detailed phase
+breakdown. Unimplemented features above are tracked there; contributions are
+welcome on any of them.
 
-### v1.0 Release (Target: Month 16)
-- ✅ Complete partition management
-- ✅ Disk cloning and migration
-- ✅ Bootable environment
-- ✅ GUI and CLI
-- ✅ File system support (NTFS, FAT32, ext4, exFAT, etc.)
-- ✅ Boot repair tools
-- ✅ Password reset
-- ✅ BitLocker support
-- ✅ 4K alignment
-- ✅ All conversions (MBR↔GPT, etc.)
-
-### Post v1.0 (Community Driven)
-- Additional file systems
-- New features requested by users
-- Performance improvements
-- Bug fixes
-- Security updates
-
----
-
-## Why This Matters
-
-### For Home Users
-- Save $50-800 on partition software
-- Get professional features for free
-- No upgrade pressure
-- Community support
-
-### For Small Businesses
-- No per-machine licensing costs
-- No compliance tracking needed
-- Full feature set for IT tasks
-- Can customize if needed
-
-### For Enterprises
-- Mass deployment without licensing
-- Audit-able source code
-- No vendor lock-in
-- Customizable for specific needs
-
-### For Service Providers
-- Use on client machines for free
-- No license compliance issues
-- Can create custom versions
-- Transparent operations
-
-### For Education
-- Free for all students
-- Learning resource (source code)
-- No budget constraints
-- Can modify for research
-
----
-
-## Join the Movement
-
-By using and contributing to this open-source partition manager, you're supporting:
-- **Software freedom** - Users control their software
-- **Transparency** - Open, auditable code
-- **Community** - Collaborative development
-- **Accessibility** - Professional tools for everyone
-- **Education** - Learn from real-world code
-
-**Help us build the best free partition manager ever.**
-
----
-
-*All features subject to technical feasibility. The goal is complete feature parity with commercial tools while remaining 100% free and open source.*
+*Last updated: August 2026 — reflects actual code state, not aspirations.*

@@ -28,6 +28,7 @@ set(TEST_SOURCES
     test_checksums.cpp
     test_gpt_ops.cpp
     test_iso.cpp
+    test_encryption.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

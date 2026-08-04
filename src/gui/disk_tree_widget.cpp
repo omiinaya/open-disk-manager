@@ -1,5 +1,6 @@
 #include "disk_tree_widget.hpp"
 #include "opm/utils.hpp"
+#include "opm/disk_io.hpp"
 #include <QHeaderView>
 #include <QTreeWidgetItem>
 

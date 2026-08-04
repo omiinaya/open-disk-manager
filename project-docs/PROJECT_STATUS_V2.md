@@ -1,6 +1,6 @@
 # Open Partition Manager - Project Status V2
 
-## Date: February 2026
+## Date: August 2026 (updated from February 2026)
 ## Status: Phase 6 IN PROGRESS (GUI Implementation)
 
 ---
@@ -9,25 +9,25 @@
 
 ✅ **COMPLETED:**
 - Phase 1: Foundation (100%)
-- Phase 2: Basic Operations (100%)
+- Phase 2: Basic Operations (100% - MBR + GPT create/delete/resize now real)
 - Phase 3.1: File System Detection (100%)
-- Phase 3.2: FAT32 Implementation (100% - ALL 8 sub-phases)
-- Phase 3.3: ext4 Implementation (100% - ALL sub-phases including Journal, Check, Resize)
-- Phase 3.4: NTFS Implementation (100% - ALL 12 sub-phases FULLY IMPLEMENTED)
-- Phase 3.5: exFAT Implementation (100% - ALL sub-phases)
+- Phase 3.2: FAT32 Implementation (100% - format/check/resize verified end-to-end)
+- Phase 3.3: ext4 Implementation (100% - incl. journal linkage + GDT checksums)
+- Phase 3.4: NTFS Implementation (100% - boot sector + system-file layout fixed)
+- Phase 3.5: exFAT Implementation (100% - format/check verified)
 - Phase 4: Advanced Operations (100% - Clone, Secure Erase, Benchmark)
-- Phase 5: Boot Environment (100% - Boot repair tools)
 
-🚧 **IN PROGRESS:**
-- Phase 6: GUI (Qt framework ready, dialogs in progress)
+🚧 **IN PROGRESS / PARTIAL:**
+- Phase 5: Boot Environment (real USB/ISO/repair; bootloader install honest-error)
+- Phase 6: GUI (dialogs wired to real core ops; visual map/wizards pending)
 
-📊 **CODE STATISTICS:**
-- **Total Lines:** ~15,000+ lines
-- **Core Files:** 40+ source files
+📊 **CODE STATISTICS (August 2026):**
+- **Total Lines:** ~19,000+ lines (core + CLI + GUI + tests)
+- **Core Files:** 45+ source files
 - **Headers:** 18 header files
-- **Tests:** 8 test files, 36+ test cases
+- **Tests:** 194 test cases across 19 test files + CLI E2E integration test
 - **Build:** ✅ Compiling successfully
-- **Tests:** ✅ All tests passing
+- **Tests:** ✅ All tests passing (194/194 unit + CLI E2E)
 
 ---
 
@@ -349,42 +349,62 @@
 
 ---
 
-### Phase 5: Bootable Environment ✅ COMPLETE
+### Phase 5: Bootable Environment 🚧 PARTIAL (honest since Aug 2026)
 
-**All Features Implemented:**
+> The original doc claimed "100% complete". An August 2026 audit found most
+> boot.cpp functions were `return Result::ok()` stubs. Those were rewritten:
+> real implementations where feasible, honest errors where they are not.
 
 #### Live USB Creation ✅
-- ISO to USB writing
-- Bootable USB creation
-- Multiple bootloader support
+- ISO to USB writing (real: chunked write + sync + optional verify)
+- Verify live USB (boot signature + ISO9660 check)
+- USB device detection (sysfs vendor/model/size/FS/label)
 
-#### Boot Repair Tools ✅
-- MBR repair
-- GPT repair
-- GRUB reinstallation
-- Windows BCD repair
+#### Boot Repair ✅ (real)
+- MBR boot-signature repair with pre-repair backup
+- GPT restore-from-backup (CRC-verified, protective MBR rebuild)
+- `fixPartitionTable` (backup-GPT scan + restore, honest failure otherwise)
+- Filesystem check dispatch (`checkAndRepairFilesystem`)
 
-#### Bootloader Installation ✅
-- GRUB2 installation
-- systemd-boot support
-- Windows bootloader
+#### Bootloader Installation 🚧
+- GRUB2 / syslinux / systemd-boot installation: **honest error** — stage files
+  are not bundled; the function explains the distro path (`grub-install`,
+  `syslinux -i`) instead of faking success.
 
-**Phase 5 Code:** ~460 lines in `boot.cpp`
+#### ISO Operations ✅ (real)
+- mount/unmount via `mount(2)`/`umount(2)`
+- ISO9660 extraction (PVD parse, recursive directory walk, progress)
+- ISO creation via xorriso/genisoimage/mkisofs
+
+#### Not implemented (planned)
+- Password reset (Windows/Linux)
+- Data recovery (undelete / partition scan-rebuild)
+- GRUB/BCD reinstallation (requires bootloader stage files)
+
+**Phase 5 Code:** ~800 lines in `boot.cpp`
 
 ---
 
 ### Phase 6: GUI 🚧 IN PROGRESS
 
-**Status:** Framework Ready
+**Status:** Framework + dialogs wired to real core operations (Aug 2026)
 
 #### Completed:
 - ✅ Qt interface framework
 - ✅ CMake integration (`-DBUILD_GUI=ON`)
 - ✅ Main window structure
-- ✅ Disk tree widget
+- ✅ Disk tree widget with **real device enumeration** (was fabricated)
+- ✅ All 7 operation dialogs **execute real core operations** with honest
+  error reporting (create/delete/resize/format/clone/secure erase/benchmark)
+- ✅ Benchmark dialog runs the real benchmark engine (was hardcoded mock)
+- ✅ Missing sources added to CMake (`partition_properties_dialog`,
+  `preferences_dialog`); EraseMethod enum mapped to core
 
 #### In Progress:
-- 📋 Dialogs: Create/Delete/Resize/Format/Clone/Secure Erase/Benchmark
+- 📋 Visual partition map / drag-and-drop
+- 📋 Wizards (clone, migrate OS, bootable media, recovery)
+- 📋 Operation queue visualization / undo-redo in GUI
+- 📋 Partition properties view (dialog file exists, content minimal)
 
 #### Requirements:
 - Qt5 or Qt6 installation required
@@ -395,12 +415,13 @@
 ### Remaining Phases
 
 #### Phase 7: Cross-Platform ⏳ PENDING
-- Windows support (partial)
+- Windows support (structures in place, untested)
 - macOS support
 
 #### Phase 8: Enterprise ⏳ PENDING
 - RAID support (structures defined in `raid.hpp`)
 - LVM support (structures defined in `lvm.hpp`)
+- Dynamic disks, Windows Storage Spaces
 
 #### Phase 9: Version 1.0 ⏳ PENDING
 - Final testing

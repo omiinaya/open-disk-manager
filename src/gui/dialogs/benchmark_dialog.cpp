@@ -266,7 +266,7 @@ void BenchmarkDialog::onStartClicked() {
     if (opts.block_size == 0) opts.block_size = 4096;
     
     BenchmarkResult result;
-    Result r;
+    ::opm::Result r;
     try {
         if (partition_number_ >= 0) {
             // Resolve the partition extent for a bounded benchmark
@@ -283,7 +283,7 @@ void BenchmarkDialog::onStartClicked() {
                 }
             } catch (...) {}
             if (p_size == 0) {
-                r = Result::error("could not resolve partition extent");
+                r = ::opm::Result::error("could not resolve partition extent");
             } else {
                 r = benchmarkPartition(disk_, p_start, p_size, result, opts);
             }
@@ -291,7 +291,7 @@ void BenchmarkDialog::onStartClicked() {
             r = benchmarkDisk(disk_, result, opts);
         }
     } catch (const std::exception& e) {
-        r = Result::error(e.what());
+        r = ::opm::Result::error(e.what());
     }
     
     if (r.failed()) {

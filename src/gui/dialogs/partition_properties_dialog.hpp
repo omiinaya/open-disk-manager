@@ -1,22 +1,23 @@
 #pragma once
 
 #include <QDialog>
+#include <cstdint>
 #include <memory>
 
-namespace opm {
-class Partition;
-enum class PartitionType;
-}
-
-namespace opm::gui {
-
-// Forward declarations
+// Qt forward declarations (global scope - NOT inside opm::gui)
 class QLabel;
 class QPushButton;
 class QDialogButtonBox;
 class QTextEdit;
 class QLineEdit;
 class QComboBox;
+
+namespace opm {
+class Partition;
+enum class PartitionType : uint8_t;
+}
+
+namespace opm::gui {
 
 // Dialog for viewing and editing partition properties
 class PartitionPropertiesDialog : public QDialog {
