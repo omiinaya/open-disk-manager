@@ -32,6 +32,10 @@ int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
 int cmdLabel(const std::vector<std::string>& args);
 int cmdRecover(const std::vector<std::string>& args);
 int cmdUndelete(const std::vector<std::string>& args);
+int cmdLuks(const std::vector<std::string>& args);
+int cmdBitlocker(const std::vector<std::string>& args);
+int cmdBootRepair(const std::vector<std::string>& args);
+int cmdResetPassword(const std::vector<std::string>& args);
 }
 }
 
@@ -65,6 +69,11 @@ void printUsage(const char* program) {
               << "System commands:\n"
               << "  recover <device> [--rebuild]     Scan for lost partitions\n"
               << "  undelete <dev> <start> [--restore <i>]  Recover deleted FAT files\n"
+              << "  luks open|close|status             LUKS volume management (cryptsetup)\n"
+              << "  bitlocker unlock <dev> [mount]     Unlock BitLocker (dislocker)\n"
+              << "  boot-repair --uefi                 List/add UEFI boot entries (efibootmgr)\n"
+              << "  reset-password --linux <shadow> <user> [pass]  Reset a Linux password\n"
+              << "  reset-password --windows <sam> [user]         Reset Windows (chntpw)\n"
               << "  lvm                              List LVM PVs/VGs/LVs\n"
               << "  raid                             List software RAID arrays\n"
               << "  i18n [locale] [catalog]          Manage message catalogs\n"
@@ -314,6 +323,14 @@ int main(int argc, char* argv[]) {
         return cli::cmdRecover(args);
     } else if (command == "undelete") {
         return cli::cmdUndelete(args);
+    } else if (command == "luks") {
+        return cli::cmdLuks(args);
+    } else if (command == "bitlocker") {
+        return cli::cmdBitlocker(args);
+    } else if (command == "boot-repair") {
+        return cli::cmdBootRepair(args);
+    } else if (command == "reset-password") {
+        return cli::cmdResetPassword(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

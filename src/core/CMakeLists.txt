@@ -47,6 +47,7 @@ set(CORE_SOURCES
     ntfs_label.cpp
     recovery.cpp
     undelete.cpp
+    security_tools.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

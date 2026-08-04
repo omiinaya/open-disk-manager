@@ -19,6 +19,7 @@
 #include "opm/swap.hpp"
 #include "opm/recovery.hpp"
 #include "opm/undelete.hpp"
+#include "opm/security.hpp"
 #include "opm/i18n.hpp"
 
 namespace opm {
@@ -1249,6 +1250,132 @@ int cmdUndelete(const std::vector<std::string>& args) {
     std::cout << "Restored '" << files[restore_index].name << "' (first char -> '"
               << name_char << "').\n";
     return 0;
+}
+
+// ---------------------------------------------------------------------------
+// luks <open|close|status> ... — cryptsetup wrappers
+// bitlocker unlock <device> [mount] [--recovery <key>]
+// boot-repair --uefi [--add <label> <device> <loader>]
+// reset-password --windows <sam> [user] | --linux <shadow> <user> [pass]
+// ---------------------------------------------------------------------------
+int cmdLuks(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm luks <open <device> <name>|close <name>|status <name>>\n";
+        return 1;
+    }
+    if (args[0] == "open") {
+        if (args.size() < 3) { std::cerr << "Usage: opm luks open <device> <name>\n"; return 1; }
+        Result r = luksOpen(args[1], args[2]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "LUKS volume opened as " << args[2] << " (/dev/mapper/" << args[2] << ")\n";
+        return 0;
+    }
+    if (args[0] == "close") {
+        Result r = luksClose(args[1]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "LUKS mapping " << args[1] << " closed.\n";
+        return 0;
+    }
+    if (args[0] == "status") {
+        std::string out;
+        Result r = luksStatus(args[1], out);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << out;
+        return 0;
+    }
+    std::cerr << "Error: unknown luks subcommand '" << args[0] << "'\n";
+    return 1;
+}
+
+int cmdBitlocker(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] != "unlock") {
+        std::cerr << "Usage: opm bitlocker unlock <device> [mount_dir] [--recovery <key>]\n";
+        return 1;
+    }
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm bitlocker unlock <device> [mount_dir] [--recovery <key>]\n";
+        return 1;
+    }
+    std::string device = args[1];
+    std::string mount = "/mnt/bitlocker";
+    std::string recovery;
+    for (size_t i = 2; i < args.size(); i++) {
+        if (args[i] == "--recovery" && i + 1 < args.size()) {
+            recovery = args[i + 1];
+            i++;
+        } else if (!args[i].empty() && args[i][0] != '-') {
+            mount = args[i];
+        }
+    }
+    Result r = bitlockerUnlock(device, mount, recovery);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    std::cout << "BitLocker volume unlocked; mount with: mount -o loop "
+              << mount << "/dislocker-file /mnt/win\n";
+    return 0;
+}
+
+int cmdBootRepair(const std::vector<std::string>& args) {
+    bool uefi = false;
+    bool add = false;
+    std::vector<std::string> add_args;
+    for (const auto& a : args) {
+        if (a == "--uefi") uefi = true;
+        else if (a == "--add") add = true;
+        else add_args.push_back(a);
+    }
+    if (!uefi) {
+        std::cerr << "Usage: opm boot-repair --uefi [--add <label> <device> <loader>]\n";
+        return 1;
+    }
+    if (add) {
+        if (add_args.size() < 3) {
+            std::cerr << "Usage: opm boot-repair --uefi --add <label> <device> <loader>\n";
+            return 1;
+        }
+        Result r = uefiAddEntry(add_args[0], add_args[1], add_args[2]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "UEFI boot entry '" << add_args[0] << "' created.\n";
+        return 0;
+    }
+    std::string out;
+    Result r = uefiListEntries(out);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    std::cout << out;
+    return 0;
+}
+
+int cmdResetPassword(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        std::cerr << "Usage:\n"
+                  << "  opm reset-password --windows <sam_hive> [user]\n"
+                  << "  opm reset-password --linux <shadow_file> <user> [password]\n";
+        return 1;
+    }
+    if (args[0] == "--windows") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm reset-password --windows <sam_hive> [user]\n";
+            return 1;
+        }
+        std::string user = args.size() > 2 ? args[2] : "Administrator";
+        Result r = windowsResetPassword(args[1], user);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Windows password reset prepared for '" << user
+                  << "' (follow the chntpw prompts).\n";
+        return 0;
+    }
+    if (args[0] == "--linux") {
+        if (args.size() < 3) {
+            std::cerr << "Usage: opm reset-password --linux <shadow_file> <user> [password]\n";
+            return 1;
+        }
+        std::string password = args.size() > 3 ? args[3] : "opm-reset";
+        Result r = resetLinuxPassword(args[1], args[2], password);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Password for '" << args[2] << "' reset in " << args[1] << ".\n";
+        return 0;
+    }
+    std::cerr << "Error: unknown reset-password mode '" << args[0] << "'\n";
+    return 1;
 }
 
 } // namespace cli
