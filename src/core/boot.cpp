@@ -15,10 +15,10 @@
 
 #ifdef __linux__
 #include <sys/mount.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <sys/sysmacros.h>
 #endif
+#include <unistd.h>
+#include <sys/stat.h>
 
 namespace opm {
 

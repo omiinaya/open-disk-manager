@@ -4,12 +4,55 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#ifdef __linux__
 #include <sys/ioctl.h>
 #include <dirent.h>
 #include <linux/fs.h>
 #include <linux/hdreg.h>
+#endif
 #include <cstring>
 #include <cerrno>
+
+#ifdef _WIN32
+// ---- Windows portability shims -------------------------------------------------
+// MSVC and older MinGW-w64 toolchains do not provide POSIX pread/pwrite.
+// Implement them with ReadFile/WriteFile + OVERLAPPED on the CRT fd.
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+#ifndef SSIZE_T
+typedef SSIZE_T ssize_t;
+#endif
+#else
+#include <unistd.h>
+#endif
+#include <io.h>
+#include <windows.h>
+
+static ssize_t opm_pread(int fd, void* buf, size_t count, uint64_t offset) {
+    HANDLE h = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov = {};
+    ov.Offset = static_cast<DWORD>(offset & 0xFFFFFFFFu);
+    ov.OffsetHigh = static_cast<DWORD>(offset >> 32);
+    DWORD n = 0;
+    if (!ReadFile(h, buf, static_cast<DWORD>(count), &n, &ov)) return -1;
+    return static_cast<ssize_t>(n);
+}
+
+static ssize_t opm_pwrite(int fd, const void* buf, size_t count, uint64_t offset) {
+    HANDLE h = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov = {};
+    ov.Offset = static_cast<DWORD>(offset & 0xFFFFFFFFu);
+    ov.OffsetHigh = static_cast<DWORD>(offset >> 32);
+    DWORD n = 0;
+    if (!WriteFile(h, buf, static_cast<DWORD>(count), &n, &ov)) return -1;
+    return static_cast<ssize_t>(n);
+}
+
+#define pread opm_pread
+#define pwrite opm_pwrite
+#endif  // _WIN32
 
 namespace opm {
 
@@ -40,7 +83,6 @@ std::shared_ptr<DiskIO> DiskIO::openReadWrite(const std::string& device_path) {
 }
 
 Result DiskIO::openDevice() {
-    #ifdef __linux__
     int flags = readonly_ ? O_RDONLY : O_RDWR;
 
     // Open buffered first so we can inspect the inode type.
@@ -59,16 +101,13 @@ Result DiskIO::openDevice() {
     }
 
     struct stat st;
-    bool buffered_only = true;  // default: buffered IO (safe everywhere)
+    bool block_device = false;
     if (fstat(plain_fd, &st) == 0 && S_ISBLK(st.st_mode)) {
-        buffered_only = false;  // raw block device: consider O_DIRECT
+        block_device = true;
     }
 
-    if (buffered_only) {
-        // Regular files (image-file testing) and other types always use
-        // buffered IO - O_DIRECT here fails on misaligned caller buffers.
-        fd_ = plain_fd;
-    } else {
+#if defined(__linux__) && defined(O_DIRECT)
+    if (block_device) {
         // Block device: try O_DIRECT, but verify it actually works. Some
         // filesystems accept the O_DIRECT open yet fail every IO with EINVAL.
         ::close(plain_fd);
@@ -86,6 +125,12 @@ Result DiskIO::openDevice() {
                 fd_ = ::open(device_path_.c_str(), flags);  // buffered fallback
             }
         }
+    } else
+#endif
+    {
+        // Regular files (image-file testing) and other types always use
+        // buffered IO - O_DIRECT here fails on misaligned caller buffers.
+        fd_ = plain_fd;
     }
 
     if (fd_ < 0) {
@@ -106,13 +151,11 @@ Result DiskIO::openDevice() {
     // Detect geometry
     detectGeometry();
     
-    #endif
-    
     return Result::ok();
 }
 
 Result DiskIO::detectDeviceSize() {
-    #ifdef __linux__
+#ifdef __linux__
     // Try BLKGETSIZE64 first
     if (ioctl(fd_, BLKGETSIZE64, &device_size_) >= 0) {
         return Result::ok();
@@ -124,15 +167,15 @@ Result DiskIO::detectDeviceSize() {
         device_size_ = static_cast<uint64_t>(size_sectors) * 512;
         return Result::ok();
     }
+#endif
 
-    // Regular-file fallback (virtual disk images used in tests)
+    // Regular-file fallback (virtual disk images used in tests) — works
+    // on every platform.
     struct stat st;
     if (fstat(fd_, &st) == 0 && S_ISREG(st.st_mode)) {
         device_size_ = static_cast<uint64_t>(st.st_size);
         return Result::ok();
     }
-    
-    #endif
     
     return Result::error("Failed to detect device size");
 }
@@ -183,7 +226,7 @@ Result DiskIO::read(void* buffer, uint64_t offset, size_t size) {
         return Result::error("Device not open");
     }
     
-    ssize_t result = pread(fd_, buffer, size, static_cast<off_t>(offset));
+    ssize_t result = pread(fd_, buffer, size, offset);
     if (result < 0) {
         return Result::error("Read failed: " + std::string(strerror(errno)));
     }
@@ -204,7 +247,7 @@ Result DiskIO::write(const void* buffer, uint64_t offset, size_t size) {
         return Result::error("Device is read-only");
     }
     
-    ssize_t result = pwrite(fd_, buffer, size, static_cast<off_t>(offset));
+    ssize_t result = pwrite(fd_, buffer, size, offset);
     if (result < 0) {
         return Result::error("Write failed: " + std::string(strerror(errno)));
     }

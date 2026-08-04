@@ -13,15 +13,19 @@ option(BUILD_DOCS "Build documentation" OFF)
 option(ENABLE_SANITIZERS "Enable sanitizers in debug builds" ON)
 
 # Compiler warnings
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
     add_compile_options(-Wall -Wextra -Wpedantic)
     add_compile_options(-fstack-protector-strong -D_FORTIFY_SOURCE=2)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # MinGW cross-builds: keep warnings but skip stack protector (the MinGW
+    # CRT does not provide __stack_chk_fail, which breaks linking).
+    add_compile_options(-Wall -Wextra -Wpedantic)
 elseif(MSVC)
     add_compile_options(/W4)
 endif()
 
 # Sanitizers for debug builds
-if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT WIN32)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         add_compile_options(-fsanitize=address,undefined)
         add_link_options(-fsanitize=address,undefined)

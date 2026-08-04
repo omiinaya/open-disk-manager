@@ -9,6 +9,12 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+// MSVC names these CRT functions with a leading underscore.
+#define popen _popen
+#define pclose _pclose
+#endif
+
 namespace opm {
 
 namespace {

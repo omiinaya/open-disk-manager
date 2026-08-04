@@ -16,6 +16,19 @@ TEST(SecurityTest, FindToolFindsExistingAndMissing) {
 }
 
 TEST(SecurityTest, ResetLinuxPasswordReplacesHashAtomically) {
+    // The whole test exercises the openssl hash pipeline; skip gracefully
+    // where openssl is unavailable (e.g. cross-compiled Windows under Wine).
+    FILE* probe_p = ::popen("openssl version 2>/dev/null", "r");
+    if (!probe_p) {
+        GTEST_SKIP() << "openssl not available on this platform";
+    }
+    char probe_buf[64];
+    bool have_openssl = ::fgets(probe_buf, sizeof(probe_buf), probe_p) != nullptr;
+    ::pclose(probe_p);
+    if (!have_openssl) {
+        GTEST_SKIP() << "openssl not available on this platform";
+    }
+
     fs::path dir = fs::temp_directory_path() /
                    ("opm_sec_" + std::to_string(::getpid()) + "_" +
                     std::to_string(std::rand()));
