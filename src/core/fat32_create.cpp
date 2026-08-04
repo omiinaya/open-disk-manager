@@ -59,6 +59,14 @@ Result writeFAT32BootSector(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     FAT32BootSector boot_sector;
     initBootSector(boot_sector, layout, serial, label.c_str());
     
+    // Store the boot-sector checksum in the reserved area (bytes 52-53, LE).
+    // The checksum must be computed with the field itself zeroed.
+    boot_sector.bpb_reserved[0] = 0;
+    boot_sector.bpb_reserved[1] = 0;
+    uint16_t checksum = calculateBootSectorChecksum(boot_sector);
+    boot_sector.bpb_reserved[0] = static_cast<uint8_t>(checksum & 0xFF);
+    boot_sector.bpb_reserved[1] = static_cast<uint8_t>(checksum >> 8);
+    
     // Write to sector 0
     Result result = disk->writeSector(&boot_sector, start_sector);
     if (result.failed()) {
@@ -101,6 +109,22 @@ Result verifyFAT32BootSector(std::shared_ptr<DiskIO> disk, uint64_t start_sector
     // Verify signature at end of sector
     if (boot_sector.bs_boot_signature != BOOT_SIGNATURE) {
         return Result::error("Invalid boot sector signature");
+    }
+    
+    // Verify the boot-sector checksum when one is present (bytes 52-53, LE).
+    // A stored value of 0 means the volume was formatted by a tool that does
+    // not write checksums - skip validation in that case.
+    uint16_t stored = static_cast<uint16_t>(boot_sector.bpb_reserved[0]) |
+                      (static_cast<uint16_t>(boot_sector.bpb_reserved[1]) << 8);
+    if (stored != 0) {
+        boot_sector.bpb_reserved[0] = 0;
+        boot_sector.bpb_reserved[1] = 0;
+        uint16_t computed = calculateBootSectorChecksum(boot_sector);
+        if (stored != computed) {
+            return Result::error("Boot sector checksum mismatch (stored=" +
+                                 std::to_string(stored) + ", computed=" +
+                                 std::to_string(computed) + ")");
+        }
     }
     
     // Verify FAT32 identifier

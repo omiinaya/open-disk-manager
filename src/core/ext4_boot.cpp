@@ -1,6 +1,7 @@
 #include "opm/ext4_impl.hpp"
 #include "opm/disk_io.hpp"
 #include <cstring>
+#include <cstddef>
 #include <vector>
 
 namespace opm {
@@ -26,7 +27,7 @@ Result createSuperblock(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     }
     
     // Calculate superblock offset (1024 bytes from partition start)
-    uint64_t sb_offset = (start_sector * layout.block_size) + 1024;
+    uint64_t sb_offset = (start_sector * layout.bytes_per_sector) + 1024;
     
     // Write superblock
     Result result = disk->write(&sb, sb_offset, sizeof(EXT4Superblock));
@@ -64,11 +65,22 @@ Result createGroupDescriptors(std::shared_ptr<DiskIO> disk, uint64_t start_secto
     // For larger blocks, GDT starts at block 1
     
     uint64_t gdt_start_block = (layout.block_size == 1024) ? 2 : 1;
-    uint64_t gdt_offset = (start_sector * layout.block_size) + 
+    uint64_t gdt_offset = (start_sector * layout.bytes_per_sector) + 
                           (gdt_start_block * layout.block_size);
     
     // Create group descriptors
     std::vector<EXT4GroupDesc> gdt(layout.num_groups);
+
+    // Read the superblock UUID for the GDT checksum seed
+    uint8_t s_uuid[16] = {0};
+    {
+        uint64_t sb_offset = (start_sector * layout.bytes_per_sector) + 1024;
+        EXT4Superblock sb;
+        if (disk->read(&sb, sb_offset, sizeof(EXT4Superblock)).success() &&
+            sb.s_magic == EXT4_SUPER_MAGIC) {
+            std::memcpy(s_uuid, sb.s_uuid, 16);
+        }
+    }
     
     for (uint32_t i = 0; i < layout.num_groups; i++) {
         gdt[i].init(i, layout.block_size);
@@ -110,6 +122,9 @@ Result createGroupDescriptors(std::shared_ptr<DiskIO> disk, uint64_t start_secto
         
         // Flags
         gdt[i].bg_flags = 0;
+
+        // Legacy GDT_CSUM checksum (bg_checksum must be zero during computation)
+        gdt[i].bg_checksum = ext4GroupDescChecksum(s_uuid, i, gdt[i]);
     }
     
     // Write GDT
@@ -144,7 +159,7 @@ Result createBlockBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     for (uint32_t group = 0; group < layout.num_groups; group++) {
         uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
         uint64_t bitmap_block = group_start + 3;  // Block 3 in each group
-        uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+        uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                                   (bitmap_block * layout.block_size);
         
         // Create bitmap
@@ -183,7 +198,7 @@ Result createInodeBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     for (uint32_t group = 0; group < layout.num_groups; group++) {
         uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
         uint64_t bitmap_block = group_start + 4;  // Block 4 in each group
-        uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+        uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                                   (bitmap_block * layout.block_size);
         
         // Create bitmap
@@ -225,7 +240,7 @@ Result createInodeTable(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     for (uint32_t group = 0; group < layout.num_groups; group++) {
         uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
         uint64_t table_start_block = group_start + 5;  // Block 5 in each group
-        uint64_t table_offset = (start_sector * layout.block_size) + 
+        uint64_t table_offset = (start_sector * layout.bytes_per_sector) + 
                                 (table_start_block * layout.block_size);
         
         // Calculate table size
@@ -275,7 +290,7 @@ uint64_t calculateBackupSuperblockOffset(uint64_t start_sector,
                                             const EXT4Layout& layout,
                                             uint32_t group) {
     uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
-    return (start_sector * layout.block_size) + 
+    return (start_sector * layout.bytes_per_sector) + 
            (group_start * layout.block_size) + 1024;
 }
 
@@ -284,13 +299,56 @@ uint64_t calculateBackupGDTOffset(uint64_t start_sector,
                                    uint32_t group) {
     uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
     uint64_t gdt_start_block = (layout.block_size == 1024) ? 2 : 1;
-    return (start_sector * layout.block_size) + 
+    return (start_sector * layout.bytes_per_sector) + 
            ((group_start + gdt_start_block) * layout.block_size);
 }
 
 uint32_t calculateInodeTableSize(const EXT4Layout& layout) {
     uint32_t table_size_bytes = layout.inodes_per_group * layout.inode_size;
     return (table_size_bytes + layout.block_size - 1) / layout.block_size;
+}
+
+// ============================================================================
+// CRC16 (CCITT, poly 0x1021) — legacy ext4 group-descriptor checksums
+// ============================================================================
+
+uint16_t crc16(uint16_t crc, const uint8_t* data, size_t length) {
+    static bool table_ready = false;
+    static uint16_t table[256];
+    if (!table_ready) {
+        for (uint32_t i = 0; i < 256; i++) {
+            uint16_t c = static_cast<uint16_t>(i << 8);
+            for (uint32_t j = 0; j < 8; j++) {
+                c = (c & 0x8000) ? static_cast<uint16_t>((c << 1) ^ 0x1021)
+                                 : static_cast<uint16_t>(c << 1);
+            }
+            table[i] = c;
+        }
+        table_ready = true;
+    }
+    while (length--) {
+        crc = static_cast<uint16_t>((crc << 8) ^ table[((crc >> 8) ^ *data++) & 0xFF]);
+    }
+    return crc;
+}
+
+uint16_t ext4GroupDescChecksum(const uint8_t s_uuid[16], uint32_t group,
+                               const EXT4GroupDesc& gd) {
+    // Matches the kernel's legacy ext4_group_desc_csum(): crc16 over
+    // [s_uuid || le32(group_num) || descriptor with bg_checksum zeroed].
+    constexpr size_t checksum_offset =
+        offsetof(EXT4GroupDesc, bg_checksum);
+    uint16_t crc = crc16(0xFFFF, s_uuid, 16);
+
+    uint32_t le_group = group;  // little-endian on x86/ARM; packed structs are LE
+    crc = crc16(crc, reinterpret_cast<const uint8_t*>(&le_group), sizeof(le_group));
+
+    const uint8_t* gd_bytes = reinterpret_cast<const uint8_t*>(&gd);
+    crc = crc16(crc, gd_bytes, checksum_offset);
+    // Skip the 2-byte checksum field itself
+    crc = crc16(crc, gd_bytes + checksum_offset + 2,
+                sizeof(EXT4GroupDesc) - checksum_offset - 2);
+    return crc;
 }
 
 } // namespace ext4

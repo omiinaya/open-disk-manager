@@ -267,7 +267,7 @@ void EXT4GroupDesc::init(uint32_t group_num, uint32_t block_size) {
 void EXT4Inode::init_directory(uint32_t mode) {
     std::memset(this, 0, sizeof(*this));
     
-    i_mode = S_IFDIR | (mode & 0777);
+    i_mode = EXT4_S_IFDIR | (mode & 0777);
     i_uid = 0;
     i_uid_high = 0;
     i_gid = 0;
@@ -309,7 +309,7 @@ void EXT4Inode::init_directory(uint32_t mode) {
 void EXT4Inode::init_file(uint32_t mode) {
     std::memset(this, 0, sizeof(*this));
     
-    i_mode = S_IFREG | (mode & 0777);
+    i_mode = EXT4_S_IFREG | (mode & 0777);
     i_uid = 0;
     i_uid_high = 0;
     i_gid = 0;
@@ -374,7 +374,7 @@ void initInode(EXT4Inode& inode, uint16_t mode, uint16_t uid,
     (void)size;
     
     // Check if directory by testing mode bits
-    if ((mode & S_IFDIR) == S_IFDIR) {
+    if ((mode & EXT4_S_IFDIR) == EXT4_S_IFDIR) {
         inode.init_directory(mode & 0777);
     } else {
         inode.init_file(mode & 0777);

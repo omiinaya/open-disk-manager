@@ -85,7 +85,7 @@ Result createJournal(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     jsb.h_checksum = 0;
     
     // Write journal superblock
-    uint64_t jsb_offset = (start_sector * layout.block_size) + 
+    uint64_t jsb_offset = (start_sector * layout.bytes_per_sector) + 
                            (journal_start_block * layout.block_size);
     
     Result result = disk->write(&jsb, jsb_offset, sizeof(JournalSuperblock));
@@ -143,7 +143,7 @@ Result createJournal(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     uint32_t offset = getInodeOffset(journal_inode, layout.inodes_per_group);
     
     uint64_t inode_table_block = 5;  // Inode table starts at block 5
-    uint64_t inode_offset = (start_sector * layout.block_size) + 
+    uint64_t inode_offset = (start_sector * layout.bytes_per_sector) + 
                              (inode_table_block * layout.block_size) + 
                              (offset * layout.inode_size);
     
@@ -168,9 +168,53 @@ Result createJournal(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
         return result;
     }
     
-    // Update superblock with journal info
-    // (In real implementation, would update s_journal_inum, etc.)
-    
+    // ==================================================================
+    // Link the journal into the ext4 superblock
+    // ==================================================================
+    // Read the primary superblock back from disk, set the journal inode and
+    // UUID fields, and rewrite both primary + backup superblocks so the FS
+    // advertises the journal that exists on disk.
+    uint64_t sb_offset = (start_sector * layout.bytes_per_sector) + 1024;
+    EXT4Superblock sb;
+    Result sr = disk->read(&sb, sb_offset, sizeof(EXT4Superblock));
+    if (sr.failed()) {
+        return Result::error("Failed to read superblock for journal linkage: " +
+                             sr.message);
+    }
+
+    // Sanity check magic before mutating (avoid corrupting non-ext4 data)
+    if (sb.s_magic != EXT4_SUPER_MAGIC) {
+        return Result::error("Superblock magic mismatch during journal linkage "
+                             "(expected 0xEF53)");
+    }
+
+    sb.s_journal_inum = EXT4_JOURNAL_INO;
+    std::memcpy(sb.s_journal_uuid, sb.s_uuid, 16);
+
+    // Mirror the FS UUID into the journal superblock for consistency
+    std::memcpy(jsb.h_uuid, sb.s_uuid, 16);
+    result = disk->write(&jsb, jsb_offset, sizeof(JournalSuperblock));
+    if (result.failed()) {
+        return Result::error("Failed to update journal superblock UUID: " +
+                             result.message);
+    }
+
+    result = disk->write(&sb, sb_offset, sizeof(EXT4Superblock));
+    if (result.failed()) {
+        return Result::error("Failed to write superblock with journal linkage: " +
+                             result.message);
+    }
+
+    // Keep the backup superblocks consistent (groups 1, 3, 5)
+    std::vector<uint32_t> backup_groups = {1, 3, 5};
+    for (uint32_t bg : backup_groups) {
+        if (bg < layout.num_groups) {
+            uint64_t backup_offset = calculateBackupSuperblockOffset(
+                start_sector, layout, bg);
+            disk->write(&sb, backup_offset, sizeof(EXT4Superblock));
+        }
+    }
+
     return Result::ok();
 }
 

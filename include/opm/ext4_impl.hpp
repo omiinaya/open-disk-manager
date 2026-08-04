@@ -84,10 +84,10 @@ constexpr uint16_t EXT4_VALID_FS = 1;
 constexpr uint16_t EXT4_ERROR_FS = 2;
 constexpr uint16_t EXT4_ORPHAN_FS = 4;
 
-// Inode mode types
-constexpr uint16_t S_IFDIR = 0040000;  // Directory
-constexpr uint16_t S_IFREG = 0100000;  // Regular file
-constexpr uint16_t S_IFLNK = 0120000;  // Symbolic link
+// Inode mode types (EXT4_ prefix to avoid clashing with sys/stat.h macros)
+constexpr uint16_t EXT4_S_IFDIR = 0040000;  // Directory
+constexpr uint16_t EXT4_S_IFREG = 0100000;  // Regular file
+constexpr uint16_t EXT4_S_IFLNK = 0120000;  // Symbolic link
 
 // Extent tree constants
 constexpr uint32_t EXT4_EXTENT_MAGIC = 0xF30A;
@@ -362,6 +362,7 @@ class EXT4Layout {
 public:
     uint64_t total_size;                 // Total volume size in bytes
     uint32_t block_size;               // Block size (usually 4096)
+    uint32_t bytes_per_sector = 512;   // Sector size (start_sector is in sectors)
     uint32_t blocks_per_group;         // Blocks per group
     uint32_t clusters_per_group;         // Clusters per group
     uint32_t inodes_per_group;         // Inodes per group
@@ -496,6 +497,14 @@ uint64_t calculateBackupGDTOffset(uint64_t start_sector,
                                    uint32_t group);
 
 uint32_t calculateInodeTableSize(const EXT4Layout& layout);
+
+// CRC16 (CCITT, poly 0x1021) used for legacy group-descriptor checksums
+uint16_t crc16(uint16_t crc, const uint8_t* data, size_t length);
+
+// Compute the legacy GDT_CSUM checksum for a group descriptor:
+// crc16 over [s_uuid || le32(group) || descriptor with bg_checksum zeroed]
+uint16_t ext4GroupDescChecksum(const uint8_t s_uuid[16], uint32_t group,
+                               const EXT4GroupDesc& gd);
 
 // ============================================================================
 // ext4 Root Directory Helper Functions

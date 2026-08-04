@@ -119,7 +119,7 @@ Result checkGroupDescriptors(std::shared_ptr<DiskIO> disk, uint64_t start_sector
                                std::vector<std::string>* errors) {
     
     uint64_t gdt_start_block = (layout.block_size == 1024) ? 2 : 1;
-    uint64_t gdt_offset = (start_sector * layout.block_size) + 
+    uint64_t gdt_offset = (start_sector * layout.bytes_per_sector) + 
                           (gdt_start_block * layout.block_size);
     
     for (uint32_t group = 0; group < layout.num_groups; group++) {
@@ -169,7 +169,7 @@ Result checkBlockBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     // Check first group only for now
     uint64_t group_start = 0;
     uint64_t bitmap_block = group_start + 3;
-    uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                               (bitmap_block * layout.block_size);
     
     std::vector<uint8_t> bitmap(layout.block_size);
@@ -202,7 +202,7 @@ Result checkInodeBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     uint64_t group_start = 0;
     uint64_t bitmap_block = group_start + 4;
-    uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                               (bitmap_block * layout.block_size);
     
     std::vector<uint8_t> bitmap(layout.block_size);
@@ -238,7 +238,7 @@ Result checkRootInode(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     uint32_t offset = getInodeOffset(EXT4_ROOT_INO, layout.inodes_per_group);
     
     uint64_t inode_table_block = 5;
-    uint64_t inode_offset = (start_sector * layout.block_size) + 
+    uint64_t inode_offset = (start_sector * layout.bytes_per_sector) + 
                              (inode_table_block * layout.block_size) + 
                              (offset * layout.inode_size);
     
@@ -250,7 +250,7 @@ Result checkRootInode(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     }
     
     // Check mode
-    if ((inode.i_mode & S_IFDIR) != S_IFDIR) {
+    if ((inode.i_mode & EXT4_S_IFDIR) != EXT4_S_IFDIR) {
         errors->push_back("Root inode is not a directory");
     }
     

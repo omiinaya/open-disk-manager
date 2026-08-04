@@ -165,7 +165,7 @@ Result createGroupBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     // Create block bitmap
     uint64_t bitmap_block = group_start + 3;
-    uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                               (bitmap_block * layout.block_size);
     
     std::vector<uint8_t> bitmap(layout.block_size, 0);
@@ -188,7 +188,7 @@ Result createGroupBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     // Create inode bitmap
     uint64_t inode_bitmap_block = group_start + 4;
-    uint64_t inode_bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t inode_bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                                     (inode_bitmap_block * layout.block_size);
     
     std::vector<uint8_t> inode_bitmap(layout.block_size, 0);
@@ -200,7 +200,7 @@ Result createGroupBitmaps(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     // Create inode table
     uint64_t inode_table_block = group_start + 5;
-    uint64_t inode_table_offset = (start_sector * layout.block_size) + 
+    uint64_t inode_table_offset = (start_sector * layout.bytes_per_sector) + 
                                    (inode_table_block * layout.block_size);
     
     uint32_t table_size = layout.inodes_per_group * layout.inode_size;

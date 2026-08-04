@@ -26,7 +26,7 @@ Result createRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     // Read inode table for group 0
     uint64_t inode_table_block = 5;  // Inode table starts at block 5 in group 0
-    uint64_t inode_offset = (start_sector * layout.block_size) + 
+    uint64_t inode_offset = (start_sector * layout.bytes_per_sector) + 
                              (inode_table_block * layout.block_size) + 
                              (offset * layout.inode_size);
     
@@ -71,7 +71,7 @@ Result createRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     }
     
     // Create root directory data
-    uint64_t root_data_offset = (start_sector * layout.block_size) + 
+    uint64_t root_data_offset = (start_sector * layout.bytes_per_sector) + 
                                   (root_data_block * layout.block_size);
     
     std::vector<uint8_t> dir_block(layout.block_size, 0);
@@ -129,7 +129,7 @@ Result markBlockUsed(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
     uint64_t bitmap_block = group_start + 3;  // Block bitmap at block 3 in group
-    uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                               (bitmap_block * layout.block_size);
     
     uint32_t bit_idx = block % layout.blocks_per_group;
@@ -157,7 +157,7 @@ Result markInodeUsed(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     uint64_t group_start = static_cast<uint64_t>(group) * layout.blocks_per_group;
     uint64_t bitmap_block = group_start + 4;  // Inode bitmap at block 4 in group
-    uint64_t bitmap_offset = (start_sector * layout.block_size) + 
+    uint64_t bitmap_offset = (start_sector * layout.bytes_per_sector) + 
                               (bitmap_block * layout.block_size);
     
     uint32_t bit_idx = (inode - 1) % layout.inodes_per_group;  // Inodes are 1-based
@@ -187,7 +187,7 @@ Result updateGroupDescriptorUsed(std::shared_ptr<DiskIO> disk, uint64_t start_se
     
     // Read group descriptor
     uint64_t gdt_start_block = (layout.block_size == 1024) ? 2 : 1;
-    uint64_t gd_offset = (start_sector * layout.block_size) + 
+    uint64_t gd_offset = (start_sector * layout.bytes_per_sector) + 
                            (gdt_start_block * layout.block_size) + 
                            (group * sizeof(EXT4GroupDesc));
     

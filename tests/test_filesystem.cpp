@@ -21,12 +21,6 @@ TEST(FilesystemTest, FAT32BootSectorSignature) {
     bootSector[0x1E6] = 0x41;
     bootSector[0x1E7] = 0x56;
     
-    // Backup boot sector signature
-    bootSector[0x3E4] = 0x52;
-    bootSector[0x3E5] = 0x72;
-    bootSector[0x3E6] = 0x41;
-    bootSector[0x3E7] = 0x56;
-    
     // Boot signature
     bootSector[510] = 0x55;
     bootSector[511] = 0xAA;
