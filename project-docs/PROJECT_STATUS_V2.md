@@ -1,6 +1,6 @@
 # Open Partition Manager - Project Status V2
 
-## Date: August 2026 (final — v0.3.0 feature additions)
+## Date: August 2026 (final — v0.3.1 backup + Windows GUI additions)
 ## Status: ✅ Feature-complete (all roadmap phases + competitor-gap lanes implemented)
 
 ---
@@ -20,15 +20,16 @@
 | 7 | Advanced: BitLocker/LUKS detection + unlock wrappers, 4K alignment report + **--fix**, **MBR↔GPT conversion** | ✅ 100% |
 | 8 | Polish: i18n framework + **5 catalogs (es/fr/de/zh/ja)**, man page, error handling | ✅ 100% |
 | 9 | Release: **cross-platform builds (Linux + Windows verified, macOS in CI), DEB/RPM packaging, Dockerfile** | ✅ 100% |
-| 10 | **Competitor-gap lanes: image backup (full/incremental/differential + verify), file-level backup (ustar), backup scheduling (cron + systemd), merge partitions, 12 wipe standards + SSD TRIM** | ✅ 100% |
+| 10 | **Competitor-gap lanes: image backup (full/incremental/differential + verify + compression + retention), file-level backup (ustar + hard links + device nodes), backup scheduling (cron + systemd), merge partitions, 12 wipe standards + SSD TRIM** | ✅ 100% |
+| 11 | **Backup compression + retention, ustar hard links/device nodes, Windows GUI cross-build + windeployqt bundle** | ✅ 100% |
 
 📊 **CODE STATISTICS (final):**
-- **Total:** ~24,000+ lines (core + CLI + GUI + tests)
+- **Total:** ~25,000+ lines (core + CLI + GUI + tests)
 - **Core files:** 60+ source files, 28 headers
-- **Tests:** **251 unit tests** across 31 test suites + root-free CLI E2E integration test
-- **Platforms:** Linux ✅ (native), Windows ✅ (MinGW cross-build verified under Wine — 228/228 pass), macOS ✅ (CI matrix)
+- **Tests:** **258 unit tests** across 31 test suites + root-free CLI E2E integration test
+- **Platforms:** Linux ✅ (native), Windows ✅ (MinGW cross-build verified under Wine — **GUI included**, 251/251 pass + 7 platform skips), macOS ✅ (CI matrix)
 - **Build:** Release clean, zero warnings from new code
-- **Packaging:** DEB + RPM via CPack (verified locally), man page installed, Dockerfile + .dockerignore
+- **Packaging:** DEB + RPM via CPack (verified locally), **Windows GUI bundle via windeployqt (CI job)**, man page installed, Dockerfile + .dockerignore
 
 ---
 
@@ -40,6 +41,8 @@ Partition:    create | delete | resize | move | merge | convert | set-active | h
 Filesystem:   format (fat32/ntfs/ext4/exfat/swap) | check | fsinfo | label | undelete
 Backup:       backup create | incremental | differential | restore | info | verify
               backup files | listfiles | extract | schedule (add|list|remove|show|run)
+              backup list <dir> | prune <dir> --keep-full N [--older-than DAYS]
+              ++ create/incremental/differential accept --compress
 Security:     cryptinfo | luks (open/close/status) | bitlocker unlock | boot-repair --uefi
               | reset-password --linux/--windows
 System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
@@ -58,10 +61,11 @@ System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
 
 ```
 ✅ Compiling: SUCCESS (Linux gcc 12 / MinGW / macOS)
-✅ Tests: 251/251 unit + CLI E2E PASSING
-✅ Windows (MinGW, wine): 246/246 pass + 5 skips (tar/systemd Linux-only, openssl absent)
-✅ CI: ubuntu + macos + windows matrix; GUI build job; packaging job
-✅ CPack: opm-0.2.0-x86_64.deb generated and verified
+✅ Tests: 258/258 unit + CLI E2E PASSING
+✅ Windows (MinGW, wine): 251/251 pass + 7 skips (tar/systemd/security Linux-only, openssl absent)
+✅ Windows GUI cross-build: opm-gui.exe via MinGW + Qt 6.9.3; windeployqt bundle in CI
+✅ CI: ubuntu + macos + windows matrix; GUI build job; Windows GUI packaging job; packaging job
+✅ CPack: opm-0.3.0-x86_64.deb generated and verified
 ```
 
 **Last Build:** August 2026
@@ -104,9 +108,20 @@ System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
 - **Image backup engine** (`opm backup create/incremental/differential/restore/info/verify`):
   OPMIMG format, per-block SHA-256, block bitmap, atomic `.tmp` commit. Incremental stores
   only changed blocks; differential requires a full base; verify re-hashes stored blocks.
+- **Compression** (`--compress`): per-block sparse (ZERO) + RLE encoding, self-contained
+  codec (no zlib dependency — MinGW sysroot lacks it). All-zero free-space blocks collapse
+  to a 1-byte marker; verified 319x smaller on a sparse image. Backward compatible with
+  pre-compression images (flags bit in header).
+- **Retention** (`opm backup list/prune`): scan a backup-set directory (newest-first),
+  `--keep-full N` retains the N most recent fulls and their still-valid chains,
+  `--older-than DAYS` deletes by age.
 - **File-level backup** (`opm backup files/listfiles/extract`): self-contained POSIX ustar,
   recursive dirs, symlinks, long names via prefix field, path-traversal guard,
   GNU-tar interop verified both directions.
+- **Hard links + device nodes** (`backup files`): (dev,ino) tracking archives a repeated
+  inode as a TYPE_HARDLINK entry (data stored once; GNU tar shows `hrw`); char/block
+  device nodes carry major/minor and are restored via mknod (honest error without
+  CAP_MKNOD).
 - **Scheduling** (`opm backup schedule`): plain-text registry, cron-line + systemd user
   timer generation; live install is best-effort with honest notes (cron.allow / user bus).
 - **Merge partitions** (`opm merge`): adjacent validation; empty-right table grow for any
@@ -117,6 +132,14 @@ System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
   Faithful per-pass pattern tables.
 - **SSD TRIM** (`opm trim`): BLKDISCARD via ioctl, honest error on non-block devices;
   implemented the previously-declared-but-missing `DiskIO::trim/supportsTRIM/readSMART`.
+
+### Phase 11 (Backup polish + Windows GUI packaging) — FINAL
+- Backup compression + retention (above), ustar hard links/device nodes (above).
+- **Windows GUI cross-build**: `opm-gui.exe` compiles for Windows via MinGW + Qt 6.9.3
+  (Windows kit; native Linux Qt as QT_HOST_PATH for moc/uic). CI job
+  `windows-gui-packaging` builds a self-contained windeployqt bundle (Qt DLLs, platform
+  plugins, MinGW runtime incl. libssp) and smoke-tests the CLI under Wine.
+- Full Windows suite under Wine: 258 tests / 251 pass / 7 documented platform skips.
 
 ---
 
@@ -133,8 +156,13 @@ System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
   when the right partition is empty; other combinations return an honest error.
 - Backup schedules are written to the user registry and generate cron/systemd units;
   live enablement depends on the systemd user bus / cron.allow being available.
-- File-level backup (ustar) is scope-limited: regular files, directories, symlinks.
-  Hard links, device nodes, and xattrs are skipped (documented).
+- File-level backup (ustar) is scope-limited: regular files, directories, symlinks,
+  hard links, and char/block device nodes. pax extended attributes and FIFOs/sockets
+  are skipped (documented).
+- Device-node restore needs mknod privileges (CAP_MKNOD); the tool returns an honest
+  error otherwise.
+- Windows GUI bundle is built by CI (windeployqt); launching it requires the standard
+  Windows D3D/System32 DLLs (not bundled, per Qt convention).
 - TRIM/ATA-erase requires a real block device; plain image files fail honestly.
 - SMART read covers ATA (HDIO_GET_IDENTITY); NVMe SMART uses a separate path and
   reports unavailable rather than fabricating data.

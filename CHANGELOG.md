@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-08-04
+
+Backup polish + Windows GUI packaging.
+
+### Added
+- **Backup compression**: `opm backup create/incremental/differential --compress` —
+  per-block sparse (ZERO) + RLE encoding, self-contained codec (no zlib dependency,
+  MinGW sysroot lacks it). All-zero free-space blocks collapse to a 1-byte marker
+  (measured 319× smaller on a sparse 4 MiB image). Backward compatible with
+  pre-compression images via a header flags bit.
+- **Backup retention**: `opm backup list <dir>` (newest-first listing of a backup
+  set) and `opm backup prune <dir> --keep-full N [--older-than DAYS]` — chain-safe
+  pruning that keeps the N most recent fulls (and their still-valid incrementals/
+  differentials) or drops images by age.
+- **ustar hard links**: `opm backup files` now tracks (dev,ino) during the walk; a
+  repeated inode is archived as a hard-link entry (data stored once, dedup).
+  GNU-tar interop verified (`hrw` entry). Restore recreates the link via `link(2)`
+  with a traversal-safe target.
+- **ustar device nodes**: char/block nodes archived with major/minor; restored via
+  `mknod` (honest error without CAP_MKNOD; test skips when not root).
+- **Windows GUI cross-build + packaging**: `cmake/mingw-toolchain.cmake` +
+  `packaging/build-windows-bundle.sh` (QT_HOST_PATH = native Qt for host tools,
+  CMAKE_PREFIX_PATH = Windows Qt kit; windeployqt under Wine; MinGW runtime DLLs
+  included). New CI job `windows-gui-packaging` produces and uploads the bundle.
+- Tests: 251 → 258 (compression 2, retention 3, tar hard links 1, device nodes 1).
+  Full Windows suite under Wine: 258 run / 251 pass / 7 documented platform skips.
+
 ## [0.3.0] - 2026-08-04
 
 Competitor-gap release: the features that commercial partition managers

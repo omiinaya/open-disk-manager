@@ -6,10 +6,10 @@ sidebar_position: 2
 
 ## Current Status
 
-**Version**: 0.2.0
+**Version**: 0.3.1
 **Completed**: All roadmap phases implemented (August 2026)
-**Core + CLI + GUI + Tests**: ~24,000 lines
-**Tests**: 230 unit tests + CLI E2E, passing on Linux and Windows (MinGW)
+**Core + CLI + GUI + Tests**: ~25,000 lines
+**Tests**: 258 unit tests + CLI E2E, passing on Linux and Windows (MinGW) including the GUI
 
 ---
 
@@ -34,10 +34,16 @@ sidebar_position: 2
 ### Advanced Operations ✅
 - Disk cloning (sector + verify, resize-aware)
 - Partition copying
-- Secure erase (zero/random/DoD/Gutmann/NIST)
+- Secure erase (12 standards) + SSD TRIM
 - Benchmarking
 - LVM detection, software RAID detection
 - BitLocker/LUKS detection + unlock (tool wrappers)
+
+### Backup & Recovery ✅
+- Image backup: full / incremental / differential + compression (--compress) + verify
+- Backup-set retention: `backup list` / `backup prune --keep-full / --older-than`
+- File-level backup (ustar): dirs, files, symlinks, hard links, device nodes
+- Scheduled backups (cron line + systemd user timer generation)
 
 ### Boot & Recovery ✅
 - Live USB creation + verify
@@ -65,7 +71,8 @@ sidebar_position: 2
 These items require external resources or real-world hardware and are
 documented as future work rather than claimed:
 
-- **Windows GUI packaging** (Qt app bundles for Windows/macOS installers)
+- **Windows/macOS GUI installers** (Qt app bundles exist via windeployqt in CI;
+  NSIS/InnoSetup and DMG installers are not yet produced)
 - **Hardware-in-the-loop testing** on many real devices (HDD/SSD/NVMe/USB)
 - **Compatibility testing** across BIOS/UEFI vendor firmware
 - **Community building** (forum/Discord, issue workflows, contribution metrics)

@@ -72,9 +72,10 @@
 | `boot-repair --uefi` / `reset-password --linux\|--windows` | ✅ |
 | `lvm` / `raid` | ✅ | `i18n` | ✅ |
 | `wipe [--method]` / `trim` | ✅ | 12 erase standards + BLKDISCARD |
-| **`backup create/incremental/differential/restore/info/verify`** | ✅ | Image backup (OPMIMG) |
-| **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar) |
+| **`backup create/incremental/differential/restore/info/verify`** | ✅ | Image backup (OPMIMG) + `--compress` |
+| **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar, hard links + device nodes) |
 | **`backup schedule add/list/remove/show/run`** | ✅ | Cron + systemd-timer generation |
+| **`backup list` / `backup prune`** | ✅ | Backup-set listing + retention (`--keep-full`, `--older-than`) |
 | Progress indicators / scripting | 🚧 | Embedded in commands; JSON output planned |
 
 ### GUI (Qt, `-DBUILD_GUI=ON`)
@@ -88,6 +89,7 @@
 | **Operation log dock** | ✅ | **Dark/light theme** (persisted) | ✅ |
 | **Status bar progress** for long operations | ✅ |
 | **Wizards (clone, migrate OS, bootable media, recovery)** | ✅ |
+| **Windows GUI build** | ✅ | `opm-gui.exe` via MinGW + Qt 6.9.3; windeployqt bundle in CI (`windows-gui-packaging` job) |
 | Drag-and-drop resize/move | 📋 | (dialog-driven today) |
 | Operation queue visualization / undo-redo | 📋 | (core queue exists; GUI panel planned) |
 
@@ -145,7 +147,10 @@
 | **Differential** | ✅ | `opm backup differential` — changed blocks vs. a full base |
 | **Restore** | ✅ | `opm backup restore` — full + incremental apply on top of base |
 | **Verify** | ✅ | `opm backup verify` — re-hash stored blocks, detect corruption |
+| **Compression** | ✅ | `opm backup create ... --compress` — sparse ZERO + RLE per-block, no external deps |
+| **Retention** | ✅ | `opm backup list/prune` — keep N fulls or drop by age; chain-safe |
 | **File-level backup** | ✅ | `opm backup files` — self-contained ustar tar (GNU-tar interop verified) |
+| **Hard links / device nodes** | ✅ | `backup files` preserves hard links (dedup) + char/block nodes (mknod on restore) |
 | **File extract** | ✅ | `opm backup extract` — path-traversal guard |
 | **Scheduling** | ✅ | `opm backup schedule` — registry + cron line + systemd user timer |
 | **Windows PE recovery media** | 📋 | WinPE is Windows-only; `opm bootable` covers Linux live USB |

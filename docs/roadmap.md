@@ -66,8 +66,8 @@ sidebar_position: 99
 
 ## Current Status
 
-**Version**: 0.3.0
-**Completed**: All roadmap phases + competitor-gap lanes (backup engine, merge, 12 wipe standards, TRIM)
+**Version**: 0.3.1
+**Completed**: All roadmap phases + competitor-gap lanes (backup engine, merge, 12 wipe standards, TRIM, compression, retention, Windows GUI bundle)
 **Core Code**: ~26,000 lines (core + CLI + GUI + tests)
 **Total Estimated**: ~15,000 lines at v1.0 (exceeded; scope grew with backup/merge lanes)
 
@@ -84,8 +84,8 @@ sidebar_position: 99
 ### Code Statistics
 
 - **Core library**: ~26,000 LOC (core + CLI + GUI)
-- **Tests**: 251 unit tests across 31 suites + CLI E2E
-- **Version**: 0.3.0
+- **Tests**: 258 unit tests across 31 suites + CLI E2E
+- **Version**: 0.3.1
 
 ---
 
