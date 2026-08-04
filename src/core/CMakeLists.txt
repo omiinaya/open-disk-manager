@@ -50,6 +50,7 @@ set(CORE_SOURCES
     security_tools.cpp
     backup.cpp
     schedule.cpp
+    tar.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

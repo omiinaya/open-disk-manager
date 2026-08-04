@@ -24,6 +24,7 @@
 #include "opm/i18n.hpp"
 #include "opm/backup.hpp"
 #include "opm/schedule.hpp"
+#include "opm/tar.hpp"
 
 namespace opm {
 namespace cli {
@@ -1389,7 +1390,11 @@ int cmdBackup(const std::vector<std::string>& args) {
                   << "  opm backup differential <device> <base-image> <image>\n"
                   << "  opm backup restore <image> <device>\n"
                   << "  opm backup info <image>\n"
-                  << "  opm backup verify <image>\n";
+                  << "  opm backup verify <image>\n"
+                  << "  opm backup files <source-dir> <archive.tar>      (file-level backup)\n"
+                  << "  opm backup listfiles <archive.tar>\n"
+                  << "  opm backup extract <archive.tar> <dest-dir>\n"
+                  << "  opm backup schedule add|list|remove|show|run ... (scheduled backups)\n";
         return 1;
     }
     const std::string& sub = args[0];
@@ -1482,6 +1487,43 @@ int cmdBackup(const std::vector<std::string>& args) {
         Result r = backupVerify(args[1]);
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
         std::cout << "Image OK: all " << "stored blocks verified\n";
+        return 0;
+    }
+    if (sub == "files") {
+        // File/folder-level backup: opm backup files <src_dir> <archive>
+        if (args.size() < 3) {
+            std::cerr << "Usage: opm backup files <source-dir> <archive.tar>\n";
+            return 1;
+        }
+        Result r = tarCreate(args[1], args[2]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Archived " << args[1] << " -> " << args[2] << "\n";
+        return 0;
+    }
+    if (sub == "extract") {
+        if (args.size() < 3) {
+            std::cerr << "Usage: opm backup extract <archive.tar> <dest-dir>\n";
+            return 1;
+        }
+        Result r = tarExtract(args[1], args[2]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Extracted " << args[1] << " -> " << args[2] << "\n";
+        return 0;
+    }
+    if (sub == "listfiles") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm backup listfiles <archive.tar>\n";
+            return 1;
+        }
+        std::vector<TarEntryInfo> entries;
+        Result r = tarList(args[1], entries);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        for (const auto& e : entries) {
+            std::cout << (e.is_dir ? "d " : e.is_symlink ? "l " : "- ")
+                      << e.size << "  " << e.name;
+            if (e.is_symlink) std::cout << " -> " << e.linkname;
+            std::cout << "\n";
+        }
         return 0;
     }
     if (sub == "schedule") {
