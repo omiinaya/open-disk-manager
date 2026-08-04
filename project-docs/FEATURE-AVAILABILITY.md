@@ -40,8 +40,8 @@
 | NTFS | ✅ | ✅ | ✅ | Boot sector, MFT, $Bitmap/$LogFile/$UpCase |
 | ext4 | ✅ | ✅ | ✅ | Superblock+GDT+journal, GDT CRC16, backup superblocks |
 | exFAT | ✅ | ✅ | ✅ | Boot checksum, allocation bitmap, upcase table |
-| swap | 📋 | 📋 | 📋 | Planned |
-| FS conversion (FAT32↔NTFS etc.) | 📋 | 📋 | 📋 | Planned |
+| swap | ✅ | ✅ | — | SWAPSPACE2 v1, detection fixed (spans 4K page) |
+| FS conversion (FAT32↔NTFS etc.) | 📋 | 📋 | 📋 | Planned (table conversion is ✅ — see below) |
 
 ### Disk Operations
 
@@ -60,10 +60,15 @@
 |---------|--------|
 | `list` / `info` / `read` | ✅ |
 | `mklabel <mbr\|gpt>` | ✅ |
-| `create` / `delete` / `resize` / `move` | ✅ |
-| `format <fat32\|ntfs\|ext4\|exfat>` | ✅ |
-| `check` / `fsinfo` | ✅ |
-| Progress indicators / scripting | 📋 |
+| `create` / `delete` / `resize` / `move` | ✅ (all with `--dry-run`) |
+| `convert <mbr\|gpt>` | ✅ | `set-active`, `hide`, `unhide` | ✅ |
+| `format <fat32\|ntfs\|ext4\|exfat\|swap>` | ✅ |
+| `check` / `fsinfo` / `label` | ✅ |
+| `recover [--rebuild]` | ✅ | `undelete [--restore]` | ✅ |
+| `align [--fix]` / `cryptinfo` / `luks` / `bitlocker` | ✅ |
+| `boot-repair --uefi` / `reset-password --linux\|--windows` | ✅ |
+| `lvm` / `raid` | ✅ | `i18n` | ✅ |
+| Progress indicators / scripting | 🚧 | Embedded in commands; JSON output planned |
 
 ### GUI (Qt, `-DBUILD_GUI=ON`)
 
@@ -72,9 +77,12 @@
 | Disk tree (real enumeration) | ✅ |
 | Create / Delete / Resize / Format / Clone / Secure Erase dialogs | ✅ (wired to core) |
 | Benchmark dialog | ✅ (real benchmark) |
-| Visual partition map / drag-and-drop | 📋 |
-| Wizards (clone, migrate OS, bootable media, recovery) | 📋 |
-| Operation queue visualization / undo-redo | 📋 |
+| Visual partition map (click select, double-click properties) | ✅ |
+| **Operation log dock** | ✅ | **Dark/light theme** (persisted) | ✅ |
+| **Status bar progress** for long operations | ✅ |
+| **Wizards (clone, migrate OS, bootable media, recovery)** | ✅ |
+| Drag-and-drop resize/move | 📋 | (dialog-driven today) |
+| Operation queue visualization / undo-redo | 📋 | (core queue exists; GUI panel planned) |
 
 ### Boot & Recovery
 
@@ -89,34 +97,35 @@
 | ISO extraction (ISO9660) | ✅ | PVD + directory walk, recursive, progress |
 | ISO creation | ✅ | via xorriso/genisoimage/mkisofs |
 | USB device detection | ✅ | sysfs scan, vendor/model/size/FS/label |
-| Password reset (Windows/Linux) | 📋 | Planned |
-| Data recovery (undelete, PhotoRec) | 📋 | Planned |
-| Partition recovery / rebuild | 📋 | Planned |
+| Password reset (Windows via chntpw / Linux native shadow) | ✅ |
+| Undelete files (FAT) | ✅ | (`opm undelete`; NTFS planned) |
+| Partition recovery / rebuild | ✅ | (`opm recover` — signature scan + MBR rebuild) |
 
-### Encryption (planned, not yet implemented)
+### Encryption
 
 | Feature | Status |
 |---------|--------|
-| BitLocker detect / unlock / resize | 📋 |
-| LUKS detect / open / close | 📋 |
+| BitLocker detect | ✅ | LUKS detect (v1+v2) | ✅ |
+| BitLocker unlock (password/recovery, dislocker) | ✅ |
+| LUKS open / close / status (cryptsetup) | ✅ |
 | VeraCrypt detect / mount | 📋 |
 
-### Enterprise (planned, not yet implemented)
+### Enterprise
 
 | Feature | Status |
 |---------|--------|
 | Dynamic disks (Windows) | 📋 |
-| LVM (Linux) | 📋 |
-| RAID detection (mdadm/hardware) | 📋 |
+| LVM (Linux) | ✅ | (`opm lvm` — PV/VG/LV detection) |
+| RAID detection (mdadm) | ✅ | (`opm raid` — /proc/mdstat + superblock scan) |
 | Windows Storage Spaces | 📋 |
 
-### Conversion (planned, not yet implemented)
+### Conversion
 
 | Feature | Status |
 |---------|--------|
-| MBR → GPT | 📋 |
-| GPT → MBR | 📋 |
-| 4K alignment optimization | 📋 (alignment checks exist) |
+| MBR → GPT | ✅ | (`opm convert ... gpt`) |
+| GPT → MBR | ✅ | (`opm convert ... mbr`, >4/2TiB refused) |
+| 4K alignment **optimization** | ✅ | (`opm align --fix`, data-preserving) |
 
 ---
 

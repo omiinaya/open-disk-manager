@@ -1,0 +1,19 @@
+# Japanese (ja) message catalog for Open Partition Manager
+# Format: key = translated text. Load with: opm i18n ja <path>
+
+cl.list.title = ストレージデバイスをスキャン中...
+cl.list.none = ストレージデバイスが見つかりませんでした。
+cl.list.needroot = 注意: このプログラムには root 権限が必要です。
+cl.create.ok = パーティションを作成しました
+cl.delete.ok = パーティションを削除しました
+cl.resize.ok = パーティションのサイズを変更しました
+cl.move.ok = パーティションを移動しました
+cl.format.ok = フォーマットしました
+cl.check.ok = チェック合格: エラーはありません。
+cl.check.fail = チェックに失敗しました
+cl.fsinfo.fs = ファイルシステム
+cl.fsinfo.start = 開始セクタ
+cl.align.ok = すべてのパーティションが 4K/1MiB アライメントされています。
+cl.align.bad = アライメントされていないパーティションが検出されました。
+cl.crypt.none = 暗号化シグネチャは検出されませんでした
+cl.raid.none = ソフトウェア RAID アレイは検出されませんでした。

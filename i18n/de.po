@@ -1,0 +1,19 @@
+# German (de) message catalog for Open Partition Manager
+# Format: key = translated text. Load with: opm i18n de <path>
+
+cl.list.title = Speichergeräte werden gesucht...
+cl.list.none = Keine Speichergeräte gefunden.
+cl.list.needroot = Hinweis: Dieses Programm benötigt Root-Rechte.
+cl.create.ok = Partition erstellt
+cl.delete.ok = Partition gelöscht
+cl.resize.ok = Partition vergrößert/verkleinert
+cl.move.ok = Partition verschoben
+cl.format.ok = Formatiert
+cl.check.ok = Prüfung bestanden: keine Fehler.
+cl.check.fail = Prüfung fehlgeschlagen
+cl.fsinfo.fs = Dateisystem
+cl.fsinfo.start = Startssektor
+cl.align.ok = Alle Partitionen sind auf 4K/1MiB ausgerichtet.
+cl.align.bad = Nicht ausgerichtete Partitionen erkannt.
+cl.crypt.none = Keine Verschlüsselungssignatur erkannt
+cl.raid.none = Keine Software-RAID-Arrays erkannt.

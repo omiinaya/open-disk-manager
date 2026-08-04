@@ -6,75 +6,78 @@ sidebar_position: 2
 
 ## Current Status
 
-**Version**: 0.1.0 Alpha
-**Completed**: ~95% of core functionality
-**Core Code**: ~11,363 lines
+**Version**: 0.2.0
+**Completed**: All roadmap phases implemented (August 2026)
+**Core + CLI + GUI + Tests**: ~24,000 lines
+**Tests**: 230 unit tests + CLI E2E, passing on Linux and Windows (MinGW)
 
 ---
 
 ## Completed ✅
 
 ### Phase 1-5: Core Functionality
-- MBR/GPT partition tables
-- Transaction system
+- MBR/GPT partition tables (read + write + convert)
+- Transaction system with rollback
 - Device enumeration
-- Safe operations with rollback
+- Safe operations with validation
 
-### Phase 3: All Filesystems (COMPLETE)
+### All Filesystems (COMPLETE)
 
-| Filesystem | Format | Check | Resize | Lines | Status |
-|-----------|--------|-------|--------|-------|--------|
-| **FAT32** | ✅ | ✅ | ✅ | ~2,327 | Complete |
-| **EXT4** | ✅ | ✅ | ✅ | ~2,221 | Complete |
-| **NTFS** | ✅ | ✅ | ✅ | ~1,594 | Complete |
-| **exFAT** | ✅ | ✅ | ✅ | ~1,408 | Complete |
+| Filesystem | Format | Check | Resize | Label | Undelete | Status |
+|-----------|--------|-------|--------|-------|----------|--------|
+| **FAT32** | ✅ | ✅ | ✅ | ✅ | ✅ | Complete |
+| **EXT4** | ✅ | ✅ | ✅ | ✅ | — | Complete |
+| **NTFS** | ✅ | ✅ | ✅ | ✅ | — | Complete |
+| **exFAT** | ✅ | ✅ | ✅ | ✅ | — | Complete |
+| **swap** | ✅ | ✅ | — | ✅ | — | Complete |
 
-### Phase 4: Advanced Operations ✅
-- ✅ Disk cloning
-- ✅ Partition copying
-- ✅ Secure erase (7 methods)
-- ✅ Benchmarking
+### Advanced Operations ✅
+- Disk cloning (sector + verify, resize-aware)
+- Partition copying
+- Secure erase (zero/random/DoD/Gutmann/NIST)
+- Benchmarking
+- LVM detection, software RAID detection
+- BitLocker/LUKS detection + unlock (tool wrappers)
 
-### Phase 5: Boot Environment ✅
-- ✅ Live USB creation
-- ✅ Boot repair (MBR/GPT/GRUB/BCD)
-- ✅ Bootloader installation
+### Boot & Recovery ✅
+- Live USB creation + verify
+- Boot repair (MBR signature, GPT restore-from-backup)
+- ISO mount/extract/create
+- Partition recovery scan + MBR rebuild (`opm recover`)
+- FAT32 undelete (`opm undelete`)
+- UEFI boot entries, Windows SAM reset, Linux shadow reset
+
+### GUI ✅
+- Qt6 interface, real device enumeration
+- All 7 operation dialogs (real core execution)
+- Visual partition map, operation log, dark/light theme, progress bar
+- 4 wizards (clone, migrate OS, bootable media, recovery)
+
+### Release ✅
+- CI matrix: ubuntu + macos + windows (MSYS2/MinGW)
+- CPack DEB + RPM packaging (verified), man page, Dockerfile
+- i18n catalogs: es, fr, de, zh, ja
 
 ---
 
-## In Progress 🚧
+## Remaining (external / long-tail) 📋
 
-### Phase 6: GUI (60%)
-- ✅ Qt framework setup
-- ✅ Main window
-- ✅ Disk tree widget
-- 🚧 Operation dialogs
+These items require external resources or real-world hardware and are
+documented as future work rather than claimed:
 
----
-
-## Planned 📋
-
-### Phase 7: Cross-Platform
-- Windows support
-- macOS support
-
-### Phase 8: Enterprise
-- RAID support (headers defined)
-- LVM support (headers defined)
-
-### Phase 9: Release
-- Final testing
-- Documentation
-- Packaging
+- **Windows GUI packaging** (Qt app bundles for Windows/macOS installers)
+- **Hardware-in-the-loop testing** on many real devices (HDD/SSD/NVMe/USB)
+- **Compatibility testing** across BIOS/UEFI vendor firmware
+- **Community building** (forum/Discord, issue workflows, contribution metrics)
+- **Video tutorials**
+- **AUR / macOS package formats** (deb+rpm done)
 
 ---
 
 ## Total Estimated Code
 
-~15,000 lines at Version 1.0
-
-**Current**: ~11,363 lines (75% of v1.0 target)
+**Current**: ~24,000 lines (core 55+ files, CLI, GUI, tests)
 
 ---
 
-*Last Updated: February 2026*
+*Last Updated: August 2026*

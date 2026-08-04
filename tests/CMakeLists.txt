@@ -45,6 +45,10 @@ target_include_directories(opm_tests
         ${CMAKE_SOURCE_DIR}/include
 )
 
+target_compile_definitions(opm_tests PRIVATE
+    OPM_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 target_link_libraries(opm_tests
     PRIVATE
         opm-core

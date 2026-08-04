@@ -1,0 +1,19 @@
+# French (fr) message catalog for Open Partition Manager
+# Format: key = translated text. Load with: opm i18n fr <path>
+
+cl.list.title = Analyse des périphériques de stockage...
+cl.list.none = Aucun périphérique de stockage trouvé.
+cl.list.needroot = Remarque : ce programme nécessite des privilèges root.
+cl.create.ok = Partition créée
+cl.delete.ok = Partition supprimée
+cl.resize.ok = Partition redimensionnée
+cl.move.ok = Partition déplacée
+cl.format.ok = Formatée
+cl.check.ok = Vérification réussie : aucune erreur.
+cl.check.fail = Vérification échouée
+cl.fsinfo.fs = Système de fichiers
+cl.fsinfo.start = Secteur de départ
+cl.align.ok = Toutes les partitions sont alignées sur 4K/1MiB.
+cl.align.bad = Des partitions non alignées ont été détectées.
+cl.crypt.none = Aucune signature de chiffrement détectée
+cl.raid.none = Aucun ensemble RAID logiciel détecté.

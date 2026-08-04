@@ -62,3 +62,18 @@ TEST(I18nTest, LoadedLocales) {
     EXPECT_EQ(locales[0], "en");
     EXPECT_EQ(locales[1], "fr");
 }
+
+// The shipped catalogs (es/fr/de/zh/ja) must all load and translate.
+TEST(I18nTest, ShippedCatalogsLoadAndTranslate) {
+    i18n::clearCatalogs();
+    std::string dir = std::string(OPM_SOURCE_DIR) + "/i18n/";
+    for (const char* loc : {"es", "fr", "de", "zh", "ja"}) {
+        i18n::clearCatalogs();
+        int n = i18n::loadCatalog(loc, dir + loc + ".po");
+        EXPECT_GT(n, 0) << loc;
+        i18n::setLocale(loc);
+        // The key must resolve to a translation, never the raw key.
+        EXPECT_NE(i18n::tr("cl.list.title"), "cl.list.title") << loc;
+        EXPECT_NE(i18n::tr("cl.create.ok"), "cl.create.ok") << loc;
+    }
+}

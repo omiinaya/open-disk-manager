@@ -1,0 +1,19 @@
+# Chinese (zh) message catalog for Open Partition Manager
+# Format: key = translated text. Load with: opm i18n zh <path>
+
+cl.list.title = 正在扫描存储设备...
+cl.list.none = 未找到存储设备。
+cl.list.needroot = 注意：此程序需要 root 权限。
+cl.create.ok = 分区已创建
+cl.delete.ok = 分区已删除
+cl.resize.ok = 分区已调整大小
+cl.move.ok = 分区已移动
+cl.format.ok = 已格式化
+cl.check.ok = 检查通过：未发现错误。
+cl.check.fail = 检查失败
+cl.fsinfo.fs = 文件系统
+cl.fsinfo.start = 起始扇区
+cl.align.ok = 所有分区均已按 4K/1MiB 对齐。
+cl.align.bad = 检测到未对齐的分区。
+cl.crypt.none = 未检测到加密签名
+cl.raid.none = 未检测到软件 RAID 阵列。
