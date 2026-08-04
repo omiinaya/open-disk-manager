@@ -29,6 +29,8 @@
 #include "opm/tar.hpp"
 #include "opm/merge.hpp"
 #include "opm/clone.hpp"
+#include "opm/json.hpp"
+#include "cli_common.hpp"
 
 namespace opm {
 namespace cli {
@@ -1592,6 +1594,22 @@ int cmdBackup(const std::vector<std::string>& args) {
         BackupInfo info;
         Result r = backupInfo(args[1], info);
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        if (cli::wantsJson(args)) {
+            JsonWriter w(std::cout);
+            w.beginObject();
+            w.field("image", args[1]);
+            w.field("mode", info.mode_string());
+            w.field("source", info.source_name);
+            w.field("source_size", info.source_size);
+            w.field("num_blocks", info.num_blocks);
+            w.field("block_size", static_cast<uint64_t>(info.block_size));
+            w.field("present_blocks", info.present_blocks);
+            w.field("compressed", info.compressed);
+            w.field("created_at", info.created_at);
+            w.endObject();
+            w.finish();
+            return 0;
+        }
         std::cout << "Image:      " << args[1] << "\n"
                   << "Mode:       " << info.mode_string() << "\n"
                   << "Source:     " << info.source_name << "\n"
@@ -1620,6 +1638,30 @@ int cmdBackup(const std::vector<std::string>& args) {
         std::vector<BackupEntry> entries;
         Result r = backupListDir(args[1], entries);
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        if (cli::wantsJson(args)) {
+            JsonWriter w(std::cout);
+            w.beginObject();
+            w.field("dir", args[1]);
+            w.field("count", static_cast<uint64_t>(entries.size()));
+            w.key("images");
+            w.beginArray();
+            for (const auto& e : entries) {
+                w.beginObject();
+                w.field("name", e.name);
+                w.field("file_size", e.file_size);
+                w.field("mode", e.info.mode_string());
+                w.field("source", e.info.source_name);
+                w.field("num_blocks", e.info.num_blocks);
+                w.field("present_blocks", e.info.present_blocks);
+                w.field("compressed", e.info.compressed);
+                w.field("created_at", e.info.created_at);
+                w.endObject();
+            }
+            w.endArray();
+            w.endObject();
+            w.finish();
+            return 0;
+        }
         if (entries.empty()) {
             std::cout << "No OPMIMG images found in " << args[1] << "\n";
             return 0;

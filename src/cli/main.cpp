@@ -3,11 +3,14 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
+#include <algorithm>
 #include "opm/partition_table.hpp"
 #include "opm/disk_io.hpp"
 #include "opm/utils.hpp"
 #include "opm/types.hpp"
 #include "opm/i18n.hpp"
+#include "opm/json.hpp"
+#include "cli_common.hpp"
 
 using namespace opm;
 
@@ -113,19 +116,59 @@ void printPartition(const Partition& part, int number) {
               << "\n";
 }
 
-void cmdList() {
-    std::cout << "Scanning for storage devices...\n\n";
-    
+void cmdList(bool json_mode) {
+    if (!json_mode) std::cout << "Scanning for storage devices...\n\n";
+
     auto devices = DeviceEnumerator::enumerateDevices();
-    
+
+    if (json_mode) {
+        JsonWriter w(std::cout);
+        w.beginObject();
+        w.field("count", static_cast<uint64_t>(devices.size()));
+        w.key("devices");
+        w.beginArray();
+        for (const auto& dev : devices) {
+            w.beginObject();
+            w.field("path", dev.path);
+            w.field("model", dev.model.empty() ? "Unknown" : dev.model);
+            w.field("size", dev.size);
+            w.field("ssd", dev.ssd);
+            w.field("removable", dev.removable);
+            // Try to read partition table
+            try {
+                auto disk = DiskIO::openReadOnly(dev.path);
+                if (disk) {
+                    auto table = PartitionTable::load(disk);
+                    if (table && table->isValid()) {
+                        w.field("table", table->typeName());
+                        w.field("partitions", static_cast<uint64_t>(table->getPartitionCount()));
+                    } else {
+                        w.field("table", "None or invalid");
+                        w.field("partitions", uint64_t(0));
+                    }
+                } else {
+                    w.field("table", "None or invalid");
+                    w.field("partitions", uint64_t(0));
+                }
+            } catch (const std::exception& e) {
+                w.field("error", std::string(e.what()));
+            }
+            w.endObject();
+        }
+        w.endArray();
+        w.endObject();
+        w.finish();
+        return;
+    }
+
     if (devices.empty()) {
         std::cout << "No storage devices found.\n"
                   << "Note: This program requires root privileges to access disks.\n";
         return;
     }
-    
+
     std::cout << "Found " << devices.size() << " storage device(s):\n\n";
-    
+
     for (size_t i = 0; i < devices.size(); i++) {
         const auto& dev = devices[i];
         std::cout << "Device " << (i + 1) << ": " << dev.path << "\n"
@@ -133,7 +176,7 @@ void cmdList() {
                   << "  Size:     " << utils::formatBytes(dev.size) << "\n"
                   << "  Type:     " << (dev.ssd ? "SSD" : "HDD") << "\n"
                   << "  Removable: " << (dev.removable ? "Yes" : "No") << "\n";
-        
+
         // Try to read partition table
         try {
             auto disk = DiskIO::openReadOnly(dev.path);
@@ -149,24 +192,49 @@ void cmdList() {
         } catch (const std::exception& e) {
             std::cout << "  Error:    " << e.what() << "\n";
         }
-        
+
         std::cout << "\n";
     }
 }
 
-void cmdInfo(const std::string& device) {
-    std::cout << "Device Information: " << device << "\n\n";
-    
+void cmdInfo(const std::string& device, bool json_mode) {
+    if (!json_mode) std::cout << "Device Information: " << device << "\n\n";
+
     try {
         auto disk = DiskIO::openReadOnly(device);
         if (!disk) {
-            std::cerr << "Error: Failed to open device: " << device << "\n";
-            std::cerr << "Make sure you have root privileges.\n";
+            if (!json_mode) {
+                std::cerr << "Error: Failed to open device: " << device << "\n";
+                std::cerr << "Make sure you have root privileges.\n";
+            } else {
+                JsonWriter w(std::cout);
+                w.beginObject();
+                w.field("device", device);
+                w.field("error", "failed to open device");
+                w.endObject();
+                w.finish();
+            }
             return;
         }
-        
+
         auto info = disk->getDeviceInfo();
-        
+        if (json_mode) {
+            JsonWriter w(std::cout);
+            w.beginObject();
+            w.field("device", device);
+            w.field("model", info.model.empty() ? "Unknown" : info.model);
+            w.field("serial", info.serial.empty() ? "Unknown" : info.serial);
+            w.field("size", info.size);
+            w.field("bytes_per_sector", static_cast<uint64_t>(info.geometry.bytes_per_sector));
+            w.field("sectors", info.geometry.total_sectors);
+            w.field("ssd", info.ssd);
+            w.field("removable", info.removable);
+            w.field("readonly", info.readonly);
+            w.endObject();
+            w.finish();
+            return;
+        }
+
         std::cout << "Path:        " << info.path << "\n"
                   << "Model:       " << (info.model.empty() ? "Unknown" : info.model) << "\n"
                   << "Serial:      " << (info.serial.empty() ? "Unknown" : info.serial) << "\n"
@@ -188,7 +256,16 @@ void cmdInfo(const std::string& device) {
         }
         
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        if (json_mode) {
+            JsonWriter w(std::cout);
+            w.beginObject();
+            w.field("device", device);
+            w.field("error", std::string(e.what()));
+            w.endObject();
+            w.finish();
+        } else {
+            std::cerr << "Error: " << e.what() << "\n";
+        }
     }
 }
 
@@ -279,15 +356,17 @@ int main(int argc, char* argv[]) {
     }
     
     if (command == "list" || command == "ls") {
-        cmdList();
+        bool j = std::find(args.begin(), args.end(), "--json") != args.end();
+        cmdList(j);
     } else if (command == "info") {
+        bool j = std::find(args.begin(), args.end(), "--json") != args.end();
         if (argc < 3) {
             std::cerr << "Error: info command requires a device path\n"
-                      << "Usage: " << argv[0] << " info <device>\n"
+                      << "Usage: " << argv[0] << " info <device> [--json]\n"
                       << "Example: " << argv[0] << " info /dev/sda\n";
             return 1;
         }
-        cmdInfo(argv[2]);
+        cmdInfo(argv[2], j);
     } else if (command == "read" || command == "show") {
         if (argc < 3) {
             std::cerr << "Error: read command requires a device path\n"

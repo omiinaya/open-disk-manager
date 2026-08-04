@@ -65,6 +65,14 @@ expect_fail "bad size suffix"  "$OPM" create "$IMG" 2048 10Z linux
 expect_fail "unknown fs"       "$OPM" format "$IMG" btrfs 2048 10M
 expect_fail "fs on empty"      "$OPM" check "$IMG" 400000
 
+# --- JSON output mode ---
+BKDIR="$(mktemp -d /tmp/opm-e2e-bk-XXXXXX)"
+check "json list" sh -c "\"$OPM\" list --json | python3 -c 'import json,sys; json.load(sys.stdin)'"
+check "json info" sh -c "\"$OPM\" info \"$IMG\" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"size\" in d'"
+check "json backup info" sh -c "\"$OPM\" backup create \"$IMG\" \"$BKDIR/bak.img\" --block-size 64M >/dev/null 2>&1 && \"$OPM\" backup info \"$BKDIR/bak.img\" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"mode\"]==\"full\"'"
+check "json backup list" sh -c "\"$OPM\" backup list \"$BKDIR\" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"count\"]==1'"
+rm -rf "$BKDIR"
+
 if [ "$fail" -eq 0 ]; then
     echo "ALL E2E CLI TESTS PASSED"
 else
