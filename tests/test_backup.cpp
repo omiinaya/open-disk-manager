@@ -3,6 +3,9 @@
 #include "opm/disk_io.hpp"
 #include <cstdio>
 #include <cstring>
+#include <ctime>
+#include <algorithm>
+#include <filesystem>
 #include <vector>
 
 using namespace opm;
@@ -208,3 +211,234 @@ TEST(BackupTest, RejectsNonOpmImage) {
     EXPECT_TRUE(r.failed());
     std::remove(junk.c_str());
 }
+
+// ---------------------------------------------------------------------------
+// Compression (--compress): sparse/RLE per-block encoding
+// ---------------------------------------------------------------------------
+
+// Build a sparse source image: mostly zeros with a small patterned region, so
+// compression actually shrinks it.
+bool makeSparseImage(const std::string& path, uint64_t mb, uint32_t seed) {
+    std::FILE* f = std::fopen(path.c_str(), "wb");
+    if (!f) return false;
+    std::vector<uint8_t> buf(1024 * 1024, 0);
+    uint32_t s = seed;
+    // Fill only the first 4 KiB of each MiB block with pseudo-random data.
+    for (uint64_t m = 0; m < mb; m++) {
+        for (size_t i = 0; i < 4096; i++) {
+            s = s * 1664525u + 1013904223u;
+            buf[i] = static_cast<uint8_t>(s >> 24);
+        }
+        std::memset(buf.data() + 4096, 0, buf.size() - 4096);
+        if (std::fwrite(buf.data(), 1, buf.size(), f) != buf.size()) {
+            std::fclose(f);
+            return false;
+        }
+    }
+    std::fclose(f);
+    return true;
+}
+
+TEST(BackupTest, CompressedFullIsSmallerAndRoundTrips) {
+    std::string src = tmpPath("csrc");
+    std::string imgC = tmpPath("cimgc");
+    std::string imgU = tmpPath("cimgu");
+    std::string dst = tmpPath("cdst");
+    ASSERT_TRUE(makeSparseImage(src, 4, 31415));   // 4 MiB, mostly zeros
+
+    auto disk = DiskIO::openReadWrite(src);
+    ASSERT_TRUE(disk && disk->isOpen());
+    BackupOptions opts; opts.block_size = 1024 * 1024;  // 4 blocks
+
+    // Uncompressed image for comparison
+    Result r = backupCreateFull(disk, imgU, opts);
+    ASSERT_TRUE(r.success()) << r.message;
+    // Compressed image
+    BackupOptions copts = opts; copts.compress = true;
+    r = backupCreateFull(disk, imgC, copts);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    BackupInfo info;
+    r = backupInfo(imgC, info);
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_TRUE(info.compressed);
+
+    // The compressed image must be strictly smaller than the raw image.
+    std::FILE* fu = std::fopen(imgU.c_str(), "rb");
+    std::FILE* fc = std::fopen(imgC.c_str(), "rb");
+    ASSERT_TRUE(fu && fc);
+    std::fseek(fu, 0, SEEK_END); std::fseek(fc, 0, SEEK_END);
+    long su = std::ftell(fu), sc = std::ftell(fc);
+    std::fclose(fu); std::fclose(fc);
+    EXPECT_LT(sc, su) << "compressed image should be smaller";
+
+    r = backupVerify(imgC);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    ASSERT_TRUE(makeSparseImage(dst, 4, 777));  // different content
+    auto target = DiskIO::openReadWrite(dst);
+    ASSERT_TRUE(target && target->isOpen());
+    r = backupRestore(imgC, target, opts);
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_TRUE(filesEqual(src, dst)) << "compressed restore must match source exactly";
+
+    std::remove(src.c_str()); std::remove(imgC.c_str());
+    std::remove(imgU.c_str()); std::remove(dst.c_str());
+}
+
+TEST(BackupTest, CompressedIncrementalRoundTrips) {
+    std::string src = tmpPath("cisrc");
+    std::string full = tmpPath("cifull");
+    std::string inc = tmpPath("ciinc");
+    std::string dst = tmpPath("cidst");
+    ASSERT_TRUE(makeSparseImage(src, 4, 2718));
+
+    auto disk = DiskIO::openReadWrite(src);
+    ASSERT_TRUE(disk && disk->isOpen());
+    BackupOptions opts; opts.block_size = 1024 * 1024;
+    Result r = backupCreateFull(disk, full, opts);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    // Change one byte in block 1
+    ASSERT_TRUE(pokeImage(src, 1ULL * 1024 * 1024 + 50, 0xCD));
+    BackupOptions copts = opts; copts.compress = true;
+    r = backupCreateIncremental(disk, full, inc, /*differential=*/false, copts);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    BackupInfo info;
+    r = backupInfo(inc, info);
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_EQ(info.mode, BackupMode::Incremental);
+    EXPECT_EQ(info.present_blocks, 1ULL);
+    EXPECT_TRUE(info.compressed);
+
+    r = backupVerify(inc);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    ASSERT_TRUE(makeSparseImage(dst, 4, 555));
+    auto target = DiskIO::openReadWrite(dst);
+    ASSERT_TRUE(target && target->isOpen());
+    r = backupRestore(full, target, opts);
+    ASSERT_TRUE(r.success()) << r.message;
+    r = backupRestore(inc, target, opts);
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_TRUE(filesEqual(src, dst)) << "full + compressed incremental must match source";
+
+    std::remove(src.c_str()); std::remove(full.c_str());
+    std::remove(inc.c_str()); std::remove(dst.c_str());
+}
+
+// ---------------------------------------------------------------------------
+// Retention: list + prune
+// ---------------------------------------------------------------------------
+
+// Craft a minimal valid OPMIMG file with a caller-controlled created_at.
+// Layout mirrors the packed BackupHeader in backup.cpp.
+bool makeFakeImage(const std::string& path, uint32_t mode, uint64_t created_at) {
+    std::FILE* f = std::fopen(path.c_str(), "wb");
+    if (!f) return false;
+    std::vector<uint8_t> hdr(512, 0);
+    const char* magic = "OPMIMG01";
+    std::memcpy(hdr.data(), magic, 8);
+    auto put32 = [&](size_t off, uint32_t v) {
+        hdr[off] = v & 0xFF; hdr[off+1] = (v >> 8) & 0xFF;
+        hdr[off+2] = (v >> 16) & 0xFF; hdr[off+3] = (v >> 24) & 0xFF;
+    };
+    auto put64 = [&](size_t off, uint64_t v) {
+        for (int i = 0; i < 8; i++) hdr[off+i] = (v >> (8*i)) & 0xFF;
+    };
+    put32(8, 1);          // version
+    put32(12, mode);      // mode (0 full, 1 incr, 2 diff)
+    put64(16, 512);       // source_size
+    put32(24, 512);       // sector_size
+    put32(28, 512);       // block_size
+    put64(32, 1);         // num_blocks
+    put64(40, 0);         // present_blocks (0 → no data section needed)
+    put64(48, created_at);
+    std::memcpy(hdr.data() + 56, "fake", 4);  // source_name
+    // header(512) + bitmap(1) + checksum table(32)
+    std::vector<uint8_t> body(33, 0);
+    if (std::fwrite(hdr.data(), 1, hdr.size(), f) != hdr.size()) { std::fclose(f); return false; }
+    if (std::fwrite(body.data(), 1, body.size(), f) != body.size()) { std::fclose(f); return false; }
+    std::fclose(f);
+    return true;
+}
+
+TEST(BackupTest, ListSkipsNonImagesAndSortsNewestFirst) {
+    std::string dir = std::string("/tmp/opm_bk_list_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    ASSERT_TRUE(makeFakeImage(dir + "/a_full.img", 0, 1000));
+    ASSERT_TRUE(makeFakeImage(dir + "/b_incr.img", 1, 3000));
+    ASSERT_TRUE(makeFakeImage(dir + "/c_full.img", 0, 2000));
+    // A non-image file must be ignored
+    std::FILE* f = std::fopen((dir + "/notes.txt").c_str(), "w");
+    ASSERT_TRUE(f); std::fwrite("not an image", 1, 12, f); std::fclose(f);
+
+    std::vector<BackupEntry> entries;
+    Result r = backupListDir(dir, entries);
+    ASSERT_TRUE(r.success()) << r.message;
+    ASSERT_EQ(entries.size(), 3u);
+    // newest first: b (3000), c (2000), a (1000)
+    EXPECT_EQ(entries[0].name, "b_incr.img");
+    EXPECT_EQ(entries[1].name, "c_full.img");
+    EXPECT_EQ(entries[2].name, "a_full.img");
+
+    std::filesystem::remove_all(dir);
+}
+
+TEST(BackupTest, PruneKeepsNewestFullAndItsChain) {
+    std::string dir = std::string("/tmp/opm_bk_prune_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    // timeline: f1(100) inc1(200) f2(300) inc2(400) f3(500) inc3(600)
+    ASSERT_TRUE(makeFakeImage(dir + "/f1.img", 0, 100));
+    ASSERT_TRUE(makeFakeImage(dir + "/inc1.img", 1, 200));
+    ASSERT_TRUE(makeFakeImage(dir + "/f2.img", 0, 300));
+    ASSERT_TRUE(makeFakeImage(dir + "/inc2.img", 1, 400));
+    ASSERT_TRUE(makeFakeImage(dir + "/f3.img", 0, 500));
+    ASSERT_TRUE(makeFakeImage(dir + "/inc3.img", 1, 600));
+
+    PruneOptions po; po.keep_full = 2;  // keep f3 + f2; drop f1 and inc1
+    std::vector<std::string> removed;
+    Result r = backupPrune(dir, po, removed);
+    ASSERT_TRUE(r.success()) << r.message;
+    ASSERT_EQ(removed.size(), 2u) << "f1 and inc1 (older than oldest kept full f2) pruned";
+
+    std::vector<BackupEntry> entries;
+    r = backupListDir(dir, entries);
+    ASSERT_TRUE(r.success()) << r.message;
+    ASSERT_EQ(entries.size(), 4u);
+    std::vector<std::string> names;
+    for (const auto& e : entries) names.push_back(e.name);
+    EXPECT_NE(std::find(names.begin(), names.end(), "f3.img"), names.end());
+    EXPECT_NE(std::find(names.begin(), names.end(), "f2.img"), names.end());
+    EXPECT_NE(std::find(names.begin(), names.end(), "inc3.img"), names.end());
+    EXPECT_NE(std::find(names.begin(), names.end(), "inc2.img"), names.end());
+    EXPECT_EQ(std::find(names.begin(), names.end(), "f1.img"), names.end());
+    EXPECT_EQ(std::find(names.begin(), names.end(), "inc1.img"), names.end());
+
+    std::filesystem::remove_all(dir);
+}
+
+TEST(BackupTest, PruneOlderThanDays) {
+    std::string dir = std::string("/tmp/opm_bk_age_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+    ASSERT_TRUE(makeFakeImage(dir + "/old.img", 0, now - 10 * 86400ULL));  // 10 days old
+    ASSERT_TRUE(makeFakeImage(dir + "/fresh.img", 0, now - 3600ULL));      // 1 hour old
+
+    PruneOptions po; po.older_than_days = 7;
+    std::vector<std::string> removed;
+    Result r = backupPrune(dir, po, removed);
+    ASSERT_TRUE(r.success()) << r.message;
+    ASSERT_EQ(removed.size(), 1u);
+    EXPECT_NE(removed[0].find("old.img"), std::string::npos);
+
+    std::vector<BackupEntry> entries;
+    r = backupListDir(dir, entries);
+    ASSERT_TRUE(r.success()) << r.message;
+    ASSERT_EQ(entries.size(), 1u);
+    EXPECT_EQ(entries[0].name, "fresh.img");
+
+    std::filesystem::remove_all(dir);
+}
+

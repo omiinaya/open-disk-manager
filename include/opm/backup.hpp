@@ -32,6 +32,7 @@ enum class BackupMode : uint32_t {
 
 struct BackupOptions {
     uint32_t block_size = 1048576; // 1 MiB
+    bool compress = false;         // per-block sparse+RLE compression (FLAG_COMPRESSED)
     ProgressCallback progress_callback;
 };
 
@@ -43,8 +44,17 @@ struct BackupInfo {
     uint64_t num_blocks = 0;
     uint64_t present_blocks = 0;   // physically stored blocks
     uint64_t created_at = 0;
+    bool compressed = false;
     std::string source_name;
     std::string mode_string() const;
+};
+
+// One image entry discovered by backupListDir.
+struct BackupEntry {
+    std::string path;              // absolute path to the image file
+    std::string name;              // basename
+    BackupInfo info;
+    uint64_t file_size = 0;
 };
 
 // Create a FULL backup of a device/partition into image_path.
@@ -73,5 +83,24 @@ Result backupInfo(const std::string& image_path, BackupInfo& info);
 // Re-hash every physically-stored data block and compare against the image's
 // checksum table. Returns success only if all stored blocks verify.
 Result backupVerify(const std::string& image_path);
+
+// Retention policy for a backup-set directory.
+struct PruneOptions {
+    uint64_t keep_full = 0;      // keep the N most recent FULL backups (and any
+                                 // incremental/differential newer than the oldest
+                                 // retained full); 0 = no count-based pruning
+    uint64_t older_than_days = 0;// delete any image older than this many days; 0=off
+};
+
+// Scan a directory for OPMIMG images, sorted by created_at (newest first).
+// Non-image files are ignored.
+Result backupListDir(const std::string& dir, std::vector<BackupEntry>& entries);
+
+// Apply a retention policy: delete images per PruneOptions. Filled 'removed'
+// receives the absolute paths that were deleted. Returns the count of removed
+// images (may be 0 with success when everything is retained).
+Result backupPrune(const std::string& dir,
+                   const PruneOptions& options,
+                   std::vector<std::string>& removed);
 
 } // namespace opm

@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdint>
 #include <cstring>
+#include <cstdlib>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include "opm/partition_table.hpp"
@@ -1498,16 +1500,18 @@ int cmdTrim(const std::vector<std::string>& args) {
 int cmdBackup(const std::vector<std::string>& args) {
     if (args.empty() || args[0] == "--help" || args[0] == "-h") {
         std::cerr << "Usage:\n"
-                  << "  opm backup create <device> <image> [--block-size N]\n"
-                  << "  opm backup incremental <device> <base-image> <image> [--diff]\n"
-                  << "  opm backup differential <device> <base-image> <image>\n"
+                  << "  opm backup create <device> <image> [--block-size N] [--compress]\n"
+                  << "  opm backup incremental <device> <base-image> <image> [--diff] [--compress]\n"
+                  << "  opm backup differential <device> <base-image> <image> [--compress]\n"
                   << "  opm backup restore <image> <device>\n"
                   << "  opm backup info <image>\n"
                   << "  opm backup verify <image>\n"
                   << "  opm backup files <source-dir> <archive.tar>      (file-level backup)\n"
                   << "  opm backup listfiles <archive.tar>\n"
                   << "  opm backup extract <archive.tar> <dest-dir>\n"
-                  << "  opm backup schedule add|list|remove|show|run ... (scheduled backups)\n";
+                  << "  opm backup schedule add|list|remove|show|run ... (scheduled backups)\n"
+                  << "  opm backup list <dir>                           (backup-set directory)\n"
+                  << "  opm backup prune <dir> --keep-full N [--older-than DAYS]\n";
         return 1;
     }
     const std::string& sub = args[0];
@@ -1517,6 +1521,11 @@ int cmdBackup(const std::vector<std::string>& args) {
             uint64_t v = 0;
             if (parseSize(a[i + 1], v) && v > 0) opts.block_size = static_cast<uint32_t>(v);
             i += 2;
+            return true;
+        }
+        if (a[i] == "--compress") {
+            opts.compress = true;
+            i += 1;
             return true;
         }
         return false;
@@ -1589,6 +1598,7 @@ int cmdBackup(const std::vector<std::string>& args) {
                   << "Size:       " << info.source_size << " bytes\n"
                   << "Blocks:     " << info.num_blocks << " (" << info.block_size << "B each)\n"
                   << "Stored:     " << info.present_blocks << "\n"
+                  << "Compressed: " << (info.compressed ? "yes" : "no") << "\n"
                   << "Created:    " << info.created_at << "\n";
         return 0;
     }
@@ -1600,6 +1610,66 @@ int cmdBackup(const std::vector<std::string>& args) {
         Result r = backupVerify(args[1]);
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
         std::cout << "Image OK: all " << "stored blocks verified\n";
+        return 0;
+    }
+    if (sub == "list") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm backup list <dir>\n";
+            return 1;
+        }
+        std::vector<BackupEntry> entries;
+        Result r = backupListDir(args[1], entries);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        if (entries.empty()) {
+            std::cout << "No OPMIMG images found in " << args[1] << "\n";
+            return 0;
+        }
+        std::cout << std::left
+                  << std::setw(28) << "Name" << " "
+                  << std::setw(12) << "Mode" << " "
+                  << std::setw(10) << "Size" << " "
+                  << std::setw(6) << "Stored" << " "
+                  << std::setw(10) << "Created" << " "
+                  << "Source\n";
+        for (const auto& e : entries) {
+            std::cout << std::left
+                      << std::setw(28) << e.name.substr(0, 27) << " "
+                      << std::setw(12) << e.info.mode_string() << " "
+                      << std::setw(10) << e.file_size << " "
+                      << std::setw(6) << e.info.present_blocks << " "
+                      << std::setw(10) << e.info.created_at << " "
+                      << e.info.source_name << "\n";
+        }
+        return 0;
+    }
+    if (sub == "prune") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm backup prune <dir> --keep-full N [--older-than DAYS]\n";
+            return 1;
+        }
+        PruneOptions po;
+        size_t i = 2;
+        while (i < args.size()) {
+            if (i + 1 < args.size() && args[i] == "--keep-full") {
+                po.keep_full = std::strtoull(args[i + 1].c_str(), nullptr, 10);
+                i += 2;
+            } else if (i + 1 < args.size() && args[i] == "--older-than") {
+                po.older_than_days = std::strtoull(args[i + 1].c_str(), nullptr, 10);
+                i += 2;
+            } else {
+                std::cerr << "Unknown option: " << args[i] << "\n";
+                return 1;
+            }
+        }
+        if (po.keep_full == 0 && po.older_than_days == 0) {
+            std::cerr << "Nothing to do: specify --keep-full N and/or --older-than DAYS\n";
+            return 1;
+        }
+        std::vector<std::string> removed;
+        Result r = backupPrune(args[1], po, removed);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Removed " << removed.size() << " image(s)\n";
+        for (const auto& p : removed) std::cout << "  - " << p << "\n";
         return 0;
     }
     if (sub == "files") {

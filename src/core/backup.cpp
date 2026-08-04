@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <vector>
 #include <ctime>
+#include <algorithm>
+#include <filesystem>
+#include <system_error>
 
 namespace opm {
 
@@ -113,10 +116,154 @@ static void sha256_of(const uint8_t* data, size_t len, uint8_t out[32]) {
 }
 
 // ============================================================================
+// Per-block compression (self-contained, cross-platform — no zlib on the
+// MinGW sysroot). Each stored block uses one of:
+//   RAW  (0): block stored verbatim (incompressible data)
+//   ZERO (1): block is all-zero (free space) — no payload bytes at all
+//   RLE  (2): run-length encoded stream
+// Encoding: literal byte b != 0 -> b; literal 0 -> 0x00 0x00; run of c copies
+// of value v -> 0x00 c v (c >= 1; c==0 never emitted). Decoder: byte 0x00,
+// next byte c: c==0 -> single zero, else read v -> emit c copies of v.
+// ============================================================================
+constexpr uint8_t BLK_RAW = 0;
+constexpr uint8_t BLK_ZERO = 1;
+constexpr uint8_t BLK_RLE = 2;
+
+static bool allZero(const uint8_t* data, size_t len) {
+    for (size_t i = 0; i < len; i++)
+        if (data[i] != 0) return false;
+    return true;
+}
+
+// Append the RLE-encoded form of src[0..len) to out.
+static void rleEncode(const uint8_t* src, size_t len, std::vector<uint8_t>& out) {
+    size_t i = 0;
+    while (i < len) {
+        size_t j = i + 1;
+        while (j < len && src[j] == src[i] && (j - i) < 255) j++;
+        size_t run = j - i;
+        uint8_t v = src[i];
+        // Use a run token when it saves bytes: zero runs >= 2, others >= 4.
+        bool use_run = (v == 0 && run >= 2) || (v != 0 && run >= 4);
+        if (use_run) {
+            out.push_back(0x00);
+            out.push_back(static_cast<uint8_t>(run));
+            out.push_back(v);
+        } else {
+            for (size_t k = i; k < j; k++) {
+                if (src[k] == 0) { out.push_back(0x00); out.push_back(0x00); }
+                else out.push_back(src[k]);
+            }
+        }
+        i = j;
+    }
+}
+
+// Decode an RLE stream of src[0..len) into out (which must be pre-sized to the
+// expected decoded length). Returns false on malformed input / overflow.
+static bool rleDecode(const uint8_t* src, size_t len, std::vector<uint8_t>& out, size_t expect) {
+    size_t i = 0, o = 0;
+    while (i < len && o < expect) {
+        if (src[i] != 0) { out[o++] = src[i++]; continue; }
+        if (i + 1 >= len) return false;
+        uint8_t c = src[i + 1];
+        if (c == 0) { out[o++] = 0; i += 2; continue; }
+        if (i + 2 >= len) return false;
+        uint8_t v = src[i + 2];
+        if (o + c > expect) return false;
+        std::memset(&out[o], v, c);
+        o += c;
+        i += 3;
+    }
+    return i == len && o == expect;
+}
+
+// Compress one block into out: appends [method byte][payload] and returns
+// the method used. Decoded size is always the caller's known block length.
+static uint8_t compressBlock(const uint8_t* src, size_t len, std::vector<uint8_t>& out) {
+    if (allZero(src, len)) {
+        out.push_back(BLK_ZERO);
+        return BLK_ZERO;
+    }
+    // Try RLE; if the result is not smaller than raw, store raw.
+    std::vector<uint8_t> enc;
+    enc.reserve(len / 2 + 16);
+    rleEncode(src, len, enc);
+    if (enc.size() < len) {
+        out.push_back(BLK_RLE);
+        out.insert(out.end(), enc.begin(), enc.end());
+        return BLK_RLE;
+    }
+    out.push_back(BLK_RAW);
+    out.insert(out.end(), src, src + len);
+    return BLK_RAW;
+}
+
+// Encode one block into an owned byte vector: [method byte][payload].
+static std::vector<uint8_t> encodeBlock(const std::vector<uint8_t>& src, size_t len) {
+    std::vector<uint8_t> enc;
+    compressBlock(src.data(), len, enc);
+    return enc;
+}
+
+// Append one stored block to a data section.
+//   uncompressed layout: [payload bytes] (block's raw bytes)
+//   compressed layout:   [uint32 len][method byte][payload]
+// Returns the method used (for progress/reporting; ZERO blocks emit only the
+// method byte, RAW/RLE emit method + the block's encoded length).
+static uint8_t appendBlock(const std::vector<uint8_t>& src, size_t len,
+                           std::vector<uint8_t>& section, bool compress) {
+    if (!compress) {
+        section.insert(section.end(), src.begin(), src.begin() + static_cast<std::ptrdiff_t>(len));
+        return BLK_RAW;
+    }
+    // Build the encoded block, then prefix with its total length.
+    std::vector<uint8_t> enc = encodeBlock(src, len);
+    uint8_t method = enc.empty() ? BLK_RAW : enc[0];
+    uint32_t payload_len = static_cast<uint32_t>(enc.size());
+    uint32_t stored_len = payload_len; // bytes that follow the 4-byte prefix
+    uint8_t prefix[4] = {
+        static_cast<uint8_t>(stored_len & 0xFF),
+        static_cast<uint8_t>((stored_len >> 8) & 0xFF),
+        static_cast<uint8_t>((stored_len >> 16) & 0xFF),
+        static_cast<uint8_t>((stored_len >> 24) & 0xFF)
+    };
+    section.insert(section.end(), prefix, prefix + 4);
+    section.insert(section.end(), enc.begin(), enc.end());
+    return method;
+}
+
+// Decode one stored block: section = [method byte][payload] (the 4-byte length
+// prefix is consumed by the caller before calling this). Output is the decoded
+// block bytes (exactly 'expected_len' on success).
+static bool readStoredBlock(const uint8_t* section, size_t section_len,
+                            size_t expected_len, std::vector<uint8_t>& out) {
+    if (section_len < 1) return false;
+    uint8_t method = section[0];
+    const uint8_t* payload = section + 1;
+    uint32_t payload_len = static_cast<uint32_t>(section_len - 1);
+    out.assign(expected_len, 0);
+    switch (method) {
+        case BLK_RAW:
+            if (payload_len != expected_len) return false;
+            std::memcpy(out.data(), payload, expected_len);
+            return true;
+        case BLK_ZERO:
+            // all-zero block; out is already zeroed. Any payload ignored.
+            return true;
+        case BLK_RLE:
+            return rleDecode(payload, payload_len, out, expected_len);
+        default:
+            return false;
+    }
+}
+
+// ============================================================================
 // OPMIMG format layout
 // ============================================================================
 constexpr char BACKUP_MAGIC[8] = {'O','P','M','I','M','G','0','1'};
 constexpr uint32_t BACKUP_VERSION = 1;
+constexpr uint32_t FLAG_COMPRESSED = 0x01; // data section is [u32 len][method][payload] per block
 constexpr size_t BACKUP_HEADER_SIZE = 512;
 constexpr size_t SHA256_LEN = 32;
 
@@ -226,12 +373,13 @@ Result backupCreateFull(std::shared_ptr<DiskIO> source,
     BackupHeader h; fillHeader(h);
     h.mode = 0; h.source_size = src_size; h.sector_size = sector; h.block_size = bs;
     h.num_blocks = nb; h.present_blocks = nb;
+    if (options.compress) h.flags |= FLAG_COMPRESSED;
     std::strncpy(h.source_name, source->devicePath().c_str(), sizeof(h.source_name) - 1);
 
     std::vector<uint8_t> bitmap((nb + 7) / 8, 0xFF);
     std::vector<uint8_t> table(nb * SHA256_LEN, 0);
     std::vector<uint8_t> payload;
-    payload.reserve(nb * bs);
+    payload.reserve(options.compress ? nb * 64 : nb * bs);
     std::vector<uint8_t> buf(bs);
 
     for (uint64_t i = 0; i < nb; i++) {
@@ -240,7 +388,7 @@ Result backupCreateFull(std::shared_ptr<DiskIO> source,
         Result r = source->read(buf.data(), i * bs, bs);  // read full block size window; tail beyond size reads up to file's actual content
         if (r.failed()) return Result::error("read failed at block " + std::to_string(i) + ": " + r.message);
         sha256_of(buf.data(), read_bytes, &table[i * SHA256_LEN]);
-        payload.insert(payload.end(), buf.data(), buf.data() + read_bytes);
+        appendBlock(buf, read_bytes, payload, options.compress);
         if (options.progress_callback) {
             options.progress_callback(i + 1, nb, "backing up full");
         }
@@ -289,11 +437,13 @@ Result backupCreateIncremental(std::shared_ptr<DiskIO> source,
     h.mode = differential ? 2 : 1;
     h.source_size = src_size; h.sector_size = sector; h.block_size = bs;
     h.num_blocks = nb;
+    if (options.compress) h.flags |= FLAG_COMPRESSED;
     std::strncpy(h.source_name, source->devicePath().c_str(), sizeof(h.source_name) - 1);
 
     std::vector<uint8_t> bitmap((nb + 7) / 8, 0);
     std::vector<uint8_t> table = base_table; // start from base state; only changed digests updated
     std::vector<uint8_t> payload;
+    payload.reserve(options.compress ? 64 : bs);
     std::vector<uint8_t> buf(bs);
     uint64_t present = 0;
 
@@ -307,7 +457,7 @@ Result backupCreateIncremental(std::shared_ptr<DiskIO> source,
         if (std::memcmp(digest, &base_table[i * SHA256_LEN], SHA256_LEN) != 0) {
             bitmap[i / 8] |= (uint8_t)(1 << (i % 8));
             std::memcpy(&table[i * SHA256_LEN], digest, SHA256_LEN);
-            payload.insert(payload.end(), buf.data(), buf.data() + read_bytes);
+            appendBlock(buf, read_bytes, payload, options.compress);
             present++;
         }
         if (options.progress_callback) options.progress_callback(i + 1, nb, "diffing blocks");
@@ -344,16 +494,38 @@ Result backupRestore(const std::string& image_path,
         return Result::error("target is smaller than the image source (" +
                              std::to_string(target_size) + " < " + std::to_string(h.source_size) + ")");
     uint32_t bs = h.block_size;
+    bool compressed = (h.flags & FLAG_COMPRESSED) != 0;
     std::vector<uint8_t> buf(bs);
+    // For compressed blocks we decode into this scratch buffer (block size, not bs,
+    // since a compressed block's payload is at most the decoded length).
+    std::vector<uint8_t> dec;
     uint64_t written = 0;
     for (uint64_t i = 0; i < h.num_blocks; i++) {
         bool present = (bitmap[i / 8] >> (i % 8)) & 1;
         if (!present) continue; // inherited from base — leave target as-is
         uint64_t read_bytes = bs;
         if ((i + 1) * bs > h.source_size) read_bytes = h.source_size - i * bs;
-        r = readAll(f, buf.data(), read_bytes, "block data");
-        if (r.failed()) { std::fclose(f); return r; }
-        r = target->write(buf.data(), i * bs, read_bytes);
+        if (!compressed) {
+            r = readAll(f, buf.data(), read_bytes, "block data");
+            if (r.failed()) { std::fclose(f); return r; }
+            r = target->write(buf.data(), i * bs, read_bytes);
+        } else {
+            // length-prefixed compressed block
+            uint8_t lenb[4];
+            r = readAll(f, lenb, 4, "block length");
+            if (r.failed()) { std::fclose(f); return r; }
+            uint32_t stored_len = (uint32_t)lenb[0] | ((uint32_t)lenb[1] << 8) |
+                                  ((uint32_t)lenb[2] << 16) | ((uint32_t)lenb[3] << 24);
+            if (stored_len == 0) { std::fclose(f); return Result::error("corrupt block length"); }
+            std::vector<uint8_t> stored(stored_len);
+            r = readAll(f, stored.data(), stored_len, "compressed block");
+            if (r.failed()) { std::fclose(f); return r; }
+            if (!readStoredBlock(stored.data(), stored_len, (size_t)read_bytes, dec)) {
+                std::fclose(f);
+                return Result::error("failed to decompress block " + std::to_string(i));
+            }
+            r = target->write(dec.data(), i * bs, read_bytes);
+        }
         if (r.failed()) { std::fclose(f); return r; }
         written++;
         if (options.progress_callback) options.progress_callback(written, h.present_blocks, "restoring");
@@ -380,6 +552,7 @@ Result backupInfo(const std::string& image_path, BackupInfo& info) {
     info.num_blocks = h.num_blocks;
     info.present_blocks = h.present_blocks;
     info.created_at = h.created_at;
+    info.compressed = (h.flags & FLAG_COMPRESSED) != 0;
     info.source_name = std::string(h.source_name, boundedStrlen(h.source_name, 256));
     return Result::ok();
 }
@@ -399,15 +572,34 @@ Result backupVerify(const std::string& image_path) {
     if (r.success()) { table.resize(h.num_blocks * SHA256_LEN); r = readAll(f, table.data(), table.size(), "checksum table"); }
     if (r.failed()) { std::fclose(f); return r; }
     uint32_t bs = h.block_size;
+    bool compressed = (h.flags & FLAG_COMPRESSED) != 0;
     std::vector<uint8_t> buf(bs);
+    std::vector<uint8_t> dec;
     uint64_t checked = 0;
     for (uint64_t i = 0; i < h.num_blocks; i++) {
         bool present = (bitmap[i / 8] >> (i % 8)) & 1;
         if (!present) continue;
         uint64_t read_bytes = bs;
         if ((i + 1) * bs > h.source_size) read_bytes = h.source_size - i * bs;
-        r = readAll(f, buf.data(), read_bytes, "block data");
-        if (r.failed()) { std::fclose(f); return r; }
+        if (!compressed) {
+            r = readAll(f, buf.data(), read_bytes, "block data");
+            if (r.failed()) { std::fclose(f); return r; }
+        } else {
+            uint8_t lenb[4];
+            r = readAll(f, lenb, 4, "block length");
+            if (r.failed()) { std::fclose(f); return r; }
+            uint32_t stored_len = (uint32_t)lenb[0] | ((uint32_t)lenb[1] << 8) |
+                                  ((uint32_t)lenb[2] << 16) | ((uint32_t)lenb[3] << 24);
+            if (stored_len == 0) { std::fclose(f); return Result::error("corrupt block length"); }
+            std::vector<uint8_t> stored(stored_len);
+            r = readAll(f, stored.data(), stored_len, "compressed block");
+            if (r.failed()) { std::fclose(f); return r; }
+            if (!readStoredBlock(stored.data(), stored_len, (size_t)read_bytes, dec)) {
+                std::fclose(f);
+                return Result::error("corrupt compressed block at index " + std::to_string(i));
+            }
+            std::memcpy(buf.data(), dec.data(), read_bytes);
+        }
         uint8_t digest[SHA256_LEN];
         sha256_of(buf.data(), read_bytes, digest);
         if (std::memcmp(digest, &table[i * SHA256_LEN], SHA256_LEN) != 0) {
@@ -417,6 +609,87 @@ Result backupVerify(const std::string& image_path) {
         checked++;
     }
     std::fclose(f);
+    return Result::ok();
+}
+
+// ---------------------------------------------------------------------------
+// Retention: list images in a backup-set directory + prune per policy
+// ---------------------------------------------------------------------------
+Result backupListDir(const std::string& dir, std::vector<BackupEntry>& entries) {
+    std::error_code ec;
+    if (!std::filesystem::is_directory(dir, ec))
+        return Result::error("not a directory: " + dir);
+    for (const auto& de : std::filesystem::directory_iterator(dir, ec)) {
+        if (ec) break;
+        if (!de.is_regular_file(ec)) continue;
+        std::string p = de.path().string();
+        BackupInfo info;
+        if (backupInfo(p, info).failed()) continue; // not an OPMIMG image — skip
+        BackupEntry e;
+        e.path = p;
+        e.name = de.path().filename().string();
+        e.info = info;
+        e.file_size = static_cast<uint64_t>(de.file_size(ec));
+        entries.push_back(std::move(e));
+    }
+    // Newest first
+    std::sort(entries.begin(), entries.end(),
+              [](const BackupEntry& a, const BackupEntry& b) {
+                  return a.info.created_at > b.info.created_at;
+              });
+    return Result::ok();
+}
+
+Result backupPrune(const std::string& dir,
+                   const PruneOptions& options,
+                   std::vector<std::string>& removed) {
+    std::vector<BackupEntry> entries;
+    Result r = backupListDir(dir, entries);
+    if (r.failed()) return r;
+
+    // --older-than: delete images older than N days (by created_at)
+    uint64_t cutoff = 0;
+    if (options.older_than_days > 0) {
+        uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+        cutoff = now - options.older_than_days * 86400ULL;
+        for (const auto& e : entries) {
+            if (e.info.created_at < cutoff)
+                removed.push_back(e.path);
+        }
+    }
+
+    // --keep-full: keep the N most recent FULL backups; any incremental /
+    // differential older than the oldest retained full loses its base and is
+    // deleted with it. Newer non-full images are always kept (they still have
+    // a base on disk).
+    if (options.keep_full > 0) {
+        uint64_t kept = 0;
+        uint64_t oldest_kept_full_ts = 0;
+        for (const auto& e : entries) {
+            if (e.info.mode != BackupMode::Full) continue;
+            if (kept < options.keep_full) {
+                kept++;
+                oldest_kept_full_ts = e.info.created_at;
+            }
+        }
+        if (kept == options.keep_full && oldest_kept_full_ts > 0) {
+            for (const auto& e : entries) {
+                if (e.info.created_at < oldest_kept_full_ts)
+                    removed.push_back(e.path);
+            }
+        }
+    }
+
+    // Deduplicate (an image can match both policies) and delete
+    std::sort(removed.begin(), removed.end());
+    removed.erase(std::unique(removed.begin(), removed.end()), removed.end());
+    size_t failed = 0;
+    for (const auto& p : removed) {
+        if (std::remove(p.c_str()) != 0) failed++;
+    }
+    if (failed > 0)
+        return Result::error(std::to_string(failed) + " of " +
+                             std::to_string(removed.size()) + " images could not be removed");
     return Result::ok();
 }
 
