@@ -51,6 +51,7 @@ set(CORE_SOURCES
     backup.cpp
     schedule.cpp
     tar.cpp
+    merge.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

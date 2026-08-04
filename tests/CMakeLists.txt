@@ -39,6 +39,7 @@ set(TEST_SOURCES
     test_backup.cpp
     test_schedule.cpp
     test_tar.cpp
+    test_merge.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

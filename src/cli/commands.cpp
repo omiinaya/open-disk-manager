@@ -25,6 +25,7 @@
 #include "opm/backup.hpp"
 #include "opm/schedule.hpp"
 #include "opm/tar.hpp"
+#include "opm/merge.hpp"
 
 namespace opm {
 namespace cli {
@@ -1380,6 +1381,38 @@ int cmdResetPassword(const std::vector<std::string>& args) {
     }
     std::cerr << "Error: unknown reset-password mode '" << args[0] << "'\n";
     return 1;
+}
+
+int cmdMerge(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        std::cerr << "Usage:\n"
+                  << "  opm merge <device> <numA> <numB> [--into <folder>]\n"
+                  << "    Merge two adjacent partitions. The left partition survives and\n"
+                  << "    grows right. If the right partition is empty, the merge is a\n"
+                  << "    table-level grow (any filesystem). If both are FAT32, the right\n"
+                  << "    partition's data is copied into a folder on the left first.\n";
+        return 1;
+    }
+    if (args.size() < 3) {
+        std::cerr << "Usage: opm merge <device> <numA> <numB> [--into <folder>]\n";
+        return 1;
+    }
+    uint64_t na = 0, nb = 0;
+    if (!parseU64(args[1], na) || !parseU64(args[2], nb)) {
+        std::cerr << "Error: partition numbers must be integers\n";
+        return 1;
+    }
+    MergeOptions opts;
+    if (args.size() > 4 && args[3] == "--into") opts.folder_name = args[4];
+    auto disk = DiskIO::openReadWrite(args[0]);
+    if (!disk || !disk->isOpen()) {
+        std::cerr << "Error: cannot open " << args[0] << "\n";
+        return 1;
+    }
+    Result r = mergePartitions(disk, static_cast<int>(na), static_cast<int>(nb), opts);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    std::cout << "Merged partitions " << na << " and " << nb << " on " << args[0] << "\n";
+    return 0;
 }
 
 int cmdBackup(const std::vector<std::string>& args) {

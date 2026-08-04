@@ -37,6 +37,7 @@ int cmdBitlocker(const std::vector<std::string>& args);
 int cmdBootRepair(const std::vector<std::string>& args);
 int cmdResetPassword(const std::vector<std::string>& args);
 int cmdBackup(const std::vector<std::string>& args);
+int cmdMerge(const std::vector<std::string>& args);
 }
 }
 
@@ -55,6 +56,8 @@ void printUsage(const char* program) {
               << "  delete <device> <number>          Delete a partition\n"
               << "  resize <device> <number> <size>   Resize a partition\n"
               << "  move <device> <number> <start>    Move a partition (copies data)\n"
+              << "  merge <device> <numA> <numB>      Merge adjacent partitions (data move\n"
+              << "                         for FAT32, table grow for empty)\n"
               << "  convert <device> <mbr|gpt>        Convert the partition table in place\n"
               << "  set-active <device> <n> [on|off]  Toggle the MBR bootable flag\n"
               << "  hide/unhide <device> <n>          Hide/unhide a FAT-family partition\n"
@@ -338,6 +341,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdResetPassword(args);
     } else if (command == "backup") {
         return cli::cmdBackup(args);
+    } else if (command == "merge") {
+        return cli::cmdMerge(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {
