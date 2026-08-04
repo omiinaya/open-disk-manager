@@ -10,9 +10,11 @@
 
 #ifndef _WIN32
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <dirent.h>
 #include <unistd.h>
 #endif
+#include <map>
 
 namespace opm {
 
@@ -52,8 +54,11 @@ struct __attribute__((packed)) UstarHeader {
 static_assert(sizeof(UstarHeader) == TAR_BLOCK, "ustar header must be 512 bytes");
 
 constexpr char TYPE_REG = '0';
-constexpr char TYPE_DIR = '5';
+constexpr char TYPE_HARDLINK = '1';
 constexpr char TYPE_SYMLINK = '2';
+constexpr char TYPE_CHR = '3';
+constexpr char TYPE_BLK = '4';
+constexpr char TYPE_DIR = '5';
 
 // Write an octal field of `len` bytes (NUL-terminated, space-padded).
 void putOctal(char* dst, size_t len, uint64_t value) {
@@ -166,8 +171,10 @@ bool isSymlinkTo(const std::string& linkpath, const std::string& target) {
 }
 
 // Recursive directory walk, appending entries to the archive.
+// `seen_inodes` maps (dev, ino) -> first archive path for hard-link detection.
 Result walkAndAppend(FILE* f, const std::string& disk_root,
                      const std::string& rel, uint64_t& count,
+                     std::map<std::pair<dev_t, ino_t>, std::string>& seen_inodes,
                      ProgressCallback progress) {
     std::string full = disk_root + "/" + rel;
     struct stat st;
@@ -205,7 +212,7 @@ Result walkAndAppend(FILE* f, const std::string& disk_root,
         std::sort(children.begin(), children.end());
         for (const auto& c : children) {
             std::string child_rel = rel.empty() ? c : rel + "/" + c;
-            Result r = walkAndAppend(f, disk_root, child_rel, count, progress);
+            Result r = walkAndAppend(f, disk_root, child_rel, count, seen_inodes, progress);
             if (r.failed()) return r;
         }
         return Result::ok();
@@ -231,7 +238,47 @@ Result walkAndAppend(FILE* f, const std::string& disk_root,
         return Result::ok();
     }
 
+    if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
+        // Device node: stored as a ustar '3'/'4' entry with major/minor.
+        h.typeflag = S_ISCHR(st.st_mode) ? TYPE_CHR : TYPE_BLK;
+        putOctal(h.mode, sizeof(h.mode), st.st_mode & 07777);
+        putOctal(h.size, sizeof(h.size), 0);
+        putOctal(h.mtime, sizeof(h.mtime), static_cast<uint64_t>(st.st_mtime));
+        putOctal(h.devmajor, sizeof(h.devmajor),
+                 static_cast<uint64_t>(major(st.st_rdev)));
+        putOctal(h.devminor, sizeof(h.devminor),
+                 static_cast<uint64_t>(minor(st.st_rdev)));
+        std::snprintf(h.chksum, sizeof(h.chksum), "%06o", headerChecksum(h));
+        h.chksum[6] = '\0'; h.chksum[7] = ' ';
+        if (!writeFull(f, &h, sizeof(h))) return Result::error("write failed on " + full);
+        count++;
+        if (progress) progress(count, 0, "archiving " + entry_name);
+        return Result::ok();
+    }
+
     if (S_ISREG(st.st_mode)) {
+        // Hard link detection: same (dev,ino) already archived → write a
+        // TYPE_HARDLINK entry referencing the first archived path.
+        std::pair<dev_t, ino_t> id(st.st_dev, st.st_ino);
+        auto it = seen_inodes.find(id);
+        if (it != seen_inodes.end() && st.st_nlink > 1) {
+            h.typeflag = TYPE_HARDLINK;
+            putOctal(h.mode, sizeof(h.mode), st.st_mode & 07777);
+            putOctal(h.size, sizeof(h.size), 0);
+            putOctal(h.mtime, sizeof(h.mtime), static_cast<uint64_t>(st.st_mtime));
+            const std::string& first = it->second;
+            if (first.size() >= sizeof(h.linkname))
+                return Result::error("hard link target too long: " + full);
+            std::memcpy(h.linkname, first.c_str(), first.size());
+            std::snprintf(h.chksum, sizeof(h.chksum), "%06o", headerChecksum(h));
+            h.chksum[6] = '\0'; h.chksum[7] = ' ';
+            if (!writeFull(f, &h, sizeof(h))) return Result::error("write failed on " + full);
+            count++;
+            if (progress) progress(count, 0, "archiving " + entry_name);
+            return Result::ok();
+        }
+        seen_inodes[id] = entry_name;
+
         h.typeflag = TYPE_REG;
         putOctal(h.mode, sizeof(h.mode), st.st_mode & 07777);
         putOctal(h.size, sizeof(h.size), static_cast<uint64_t>(st.st_size));
@@ -262,7 +309,7 @@ Result walkAndAppend(FILE* f, const std::string& disk_root,
         return Result::ok();
     }
 
-    // Skip special files (fifo, device, socket) silently — documented scope.
+    // Skip other special files (fifo, socket) silently — documented scope.
     return Result::ok();
 }
 
@@ -290,7 +337,8 @@ Result tarCreate(const std::string& src_dir,
     if (!f) return Result::error("cannot open " + archive_path + " for writing");
 
     uint64_t count = 0;
-    Result r = walkAndAppend(f, src_dir, "", count, progress);
+    std::map<std::pair<dev_t, ino_t>, std::string> seen_inodes;
+    Result r = walkAndAppend(f, src_dir, "", count, seen_inodes, progress);
     if (r.failed()) { std::fclose(f); std::remove(archive_path.c_str()); return r; }
 
     // Two 512-byte zero blocks terminate the archive.
@@ -333,6 +381,11 @@ Result tarList(const std::string& archive_path, std::vector<TarEntryInfo>& out) 
         e.mode = static_cast<uint32_t>(parseOctal(h.mode, sizeof(h.mode)));
         e.is_dir = h.typeflag == TYPE_DIR;
         e.is_symlink = h.typeflag == TYPE_SYMLINK;
+        e.is_hardlink = h.typeflag == TYPE_HARDLINK;
+        e.is_device = (h.typeflag == TYPE_CHR || h.typeflag == TYPE_BLK);
+        e.is_blockdev = (h.typeflag == TYPE_BLK);
+        e.devmajor = static_cast<uint32_t>(parseOctal(h.devmajor, sizeof(h.devmajor)));
+        e.devminor = static_cast<uint32_t>(parseOctal(h.devminor, sizeof(h.devminor)));
         e.linkname = std::string(h.linkname, boundedStrlen(h.linkname, sizeof(h.linkname)));
         out.push_back(e);
         // skip data blocks (dirs/symlinks have size 0)
@@ -402,6 +455,30 @@ Result tarExtract(const std::string& archive_path,
                     std::fclose(f);
                     return Result::error("cannot create symlink " + out_path + ": " + std::strerror(errno));
                 }
+            }
+        } else if (h.typeflag == TYPE_HARDLINK) {
+            // Recreate a hard link: link to the archive path already extracted.
+            std::string target(h.linkname, boundedStrlen(h.linkname, sizeof(h.linkname)));
+            std::string safe_target;
+            if (target.empty() || !safeExtractPath(target, dest_dir, safe_target)) {
+                std::fclose(f);
+                return Result::error("refusing to create hard link to unsafe path: " + target);
+            }
+            std::remove(out_path.c_str());
+            if (link(safe_target.c_str(), out_path.c_str()) != 0 && errno != EEXIST) {
+                std::fclose(f);
+                return Result::error("cannot create hard link " + out_path + ": " + std::strerror(errno));
+            }
+        } else if (h.typeflag == TYPE_CHR || h.typeflag == TYPE_BLK) {
+            // Restore a device node. Requires mknod privileges (CAP_MKNOD).
+            uint64_t devmajor = parseOctal(h.devmajor, sizeof(h.devmajor));
+            uint64_t devminor = parseOctal(h.devminor, sizeof(h.devminor));
+            mode_t type = (h.typeflag == TYPE_BLK) ? S_IFBLK : S_IFCHR;
+            mode_t perms = static_cast<mode_t>(parseOctal(h.mode, sizeof(h.mode))) & 07777;
+            std::remove(out_path.c_str());
+            if (mknod(out_path.c_str(), type | perms, makedev(devmajor, devminor)) != 0) {
+                std::fclose(f);
+                return Result::error("cannot create device node " + out_path + ": " + std::strerror(errno));
             }
         } else if (h.typeflag == TYPE_REG) {
             // Ensure parent dir exists.

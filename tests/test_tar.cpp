@@ -7,6 +7,12 @@
 #include <sstream>
 #include <vector>
 
+#ifndef _WIN32
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <unistd.h>
+#endif
+
 using namespace opm;
 
 namespace {
@@ -149,6 +155,104 @@ TEST(TarTest, SymlinkRoundTrip) {
     r = tarExtract(arc, dst);
     ASSERT_TRUE(r.success()) << r.message;
     EXPECT_EQ(readFile(dst + "/alias"), "link target") << "extracted symlink must resolve";
+
+    std::system(("rm -rf " + src + " " + dst + " " + arc).c_str());
+}
+
+TEST(TarTest, HardLinkRoundTrip) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
+    std::string src = tmpDir("srchl");
+    std::string arc = src + ".tar";
+    std::string dst = tmpDir("dsthl");
+    writeFile(src + "/orig.txt", "shared content");
+    // hard link: same inode, different name
+    std::system(("ln " + src + "/orig.txt " + src + "/hard.txt").c_str());
+    // ensure we actually made a hard link (nlink == 2)
+    {
+        struct stat st;
+        ASSERT_EQ(::stat((src + "/orig.txt").c_str(), &st), 0);
+        ASSERT_EQ(st.st_nlink, 2);
+    }
+
+    Result r = tarCreate(src, arc);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    std::vector<TarEntryInfo> list;
+    r = tarList(arc, list);
+    ASSERT_TRUE(r.success()) << r.message;
+    // Exactly one entry is a data file, the other a hard-link entry pointing
+    // at it. Which name is the "live" file depends on traversal order, so
+    // assert that one hardlink exists with a valid linkname target.
+    std::string hard_target;
+    int hard_count = 0, reg_count = 0;
+    for (const auto& e : list) {
+        if (e.is_hardlink) { hard_count++; hard_target = e.linkname; EXPECT_EQ(e.size, 0u); }
+        else if (!e.is_dir && !e.is_symlink) { reg_count++; EXPECT_EQ(e.size, std::string("shared content").size()); }
+    }
+    EXPECT_EQ(hard_count, 1) << "second hard link must be archived as TYPE_HARDLINK";
+    EXPECT_EQ(reg_count, 1) << "first hard link archived as the data file";
+    // The hard-link target must reference the archived data file.
+    EXPECT_FALSE(hard_target.empty());
+    {
+        bool target_exists = false;
+        for (const auto& e : list)
+            if (e.name == hard_target) target_exists = true;
+        EXPECT_TRUE(target_exists) << "hard-link target '" << hard_target << "' must exist in archive";
+    }
+
+    r = tarExtract(arc, dst);
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_EQ(readFile(dst + "/orig.txt"), "shared content");
+    EXPECT_EQ(readFile(dst + "/hard.txt"), "shared content") << "hard link restored";
+    // Verify it's a real hard link (same inode), not a copy.
+    {
+        struct stat a, b;
+        ASSERT_EQ(::stat((dst + "/orig.txt").c_str(), &a), 0);
+        ASSERT_EQ(::stat((dst + "/hard.txt").c_str(), &b), 0);
+        EXPECT_EQ(a.st_ino, b.st_ino) << "extracted entries must share an inode";
+    }
+
+    std::system(("rm -rf " + src + " " + dst + " " + arc).c_str());
+}
+
+TEST(TarTest, DeviceNodeRoundTrip) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
+    // Creating a device node needs mknod privileges (CAP_MKNOD). If we can't,
+    // skip rather than fake success.
+    if (::geteuid() != 0) GTEST_SKIP() << "needs root for mknod";
+    std::string src = tmpDir("srcdev");
+    std::string arc = src + ".tar";
+    std::string dst = tmpDir("dstdev");
+    // null char device: major 1, minor 3
+    if (::mknod((src + "/null").c_str(), S_IFCHR | 0666, ::makedev(1, 3)) != 0)
+        GTEST_SKIP() << "cannot create device node";
+
+    Result r = tarCreate(src, arc);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    std::vector<TarEntryInfo> list;
+    r = tarList(arc, list);
+    ASSERT_TRUE(r.success()) << r.message;
+    bool found_dev = false;
+    for (const auto& e : list) {
+        if (e.name == "null" && e.is_device) {
+            found_dev = true;
+            EXPECT_FALSE(e.is_blockdev);
+            EXPECT_EQ(e.devmajor, 1u);
+            EXPECT_EQ(e.devminor, 3u);
+        }
+    }
+    EXPECT_TRUE(found_dev) << "char device must be archived";
+
+    r = tarExtract(arc, dst);
+    ASSERT_TRUE(r.success()) << r.message;
+    {
+        struct stat st;
+        ASSERT_EQ(::stat((dst + "/null").c_str(), &st), 0);
+        EXPECT_TRUE(S_ISCHR(st.st_mode));
+        EXPECT_EQ(::major(st.st_rdev), 1u);
+        EXPECT_EQ(::minor(st.st_rdev), 3u);
+    }
 
     std::system(("rm -rf " + src + " " + dst + " " + arc).c_str());
 }
