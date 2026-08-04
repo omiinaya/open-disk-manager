@@ -29,6 +29,7 @@
 | GPT recover from backup | ✅ | `GPTTable::recover()` + `restoreFromBackup()` |
 | MBR create / delete / resize | ✅ | 1MiB alignment, overlap validation |
 | Move partition (data-preserving) | ✅ | Copy sectors → re-create entry → drop old entry |
+| **Merge adjacent partitions** | ✅ | Empty-right table grow (any FS) + FAT32→FAT32 data move (`opm merge`) |
 | mklabel (MBR / GPT) | ✅ | Wipes stale GPT when labeling MBR |
 | APM / BSD disklabel | 📋 | Planned |
 
@@ -50,9 +51,10 @@
 | Sector-by-sector disk clone | ✅ | With verification |
 | Partition copy | ✅ | Checksum verify |
 | Clone with resize | ✅ | `cloneDiskWithResize` |
-| Secure erase | ✅ | Zeros, Random, DoD 5220.22-M, Gutmann, NIST 800-88 |
+| Secure erase | ✅ | **12 standards**: Zeros, Random, DoD 5220.22-M, DoD ECE, Gutmann, NIST Clear, NIST Purge, RCMP TSSIT, VSITR, GOST P50739, US Army AR380, ATA-erase |
+| SSD TRIM | ✅ | `opm trim` — BLKDISCARD, honest error on non-block |
 | Benchmark | ✅ | Sequential/random IOPS, latency, MB/s |
-| SMART read | 🚧 | `DiskIO::readSMART` exposed; device support varies |
+| SMART read | 🚧 | `DiskIO::readSMART` (HDIO_GET_IDENTITY); ATA-only, NVMe separate |
 
 ### CLI (opm)
 
@@ -61,6 +63,7 @@
 | `list` / `info` / `read` | ✅ |
 | `mklabel <mbr\|gpt>` | ✅ |
 | `create` / `delete` / `resize` / `move` | ✅ (all with `--dry-run`) |
+| `merge <dev> <numA> <numB>` | ✅ | Empty-right grow + FAT32→FAT32 data move |
 | `convert <mbr\|gpt>` | ✅ | `set-active`, `hide`, `unhide` | ✅ |
 | `format <fat32\|ntfs\|ext4\|exfat\|swap>` | ✅ |
 | `check` / `fsinfo` / `label` | ✅ |
@@ -68,6 +71,10 @@
 | `align [--fix]` / `cryptinfo` / `luks` / `bitlocker` | ✅ |
 | `boot-repair --uefi` / `reset-password --linux\|--windows` | ✅ |
 | `lvm` / `raid` | ✅ | `i18n` | ✅ |
+| `wipe [--method]` / `trim` | ✅ | 12 erase standards + BLKDISCARD |
+| **`backup create/incremental/differential/restore/info/verify`** | ✅ | Image backup (OPMIMG) |
+| **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar) |
+| **`backup schedule add/list/remove/show/run`** | ✅ | Cron + systemd-timer generation |
 | Progress indicators / scripting | 🚧 | Embedded in commands; JSON output planned |
 
 ### GUI (Qt, `-DBUILD_GUI=ON`)
@@ -128,6 +135,21 @@
 | 4K alignment **optimization** | ✅ | (`opm align --fix`, data-preserving) |
 
 ---
+
+## Backup & Restore
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Image backup** (block-level) | ✅ | `opm backup create` — OPMIMG format, SHA-256 per block, atomic commit |
+| **Incremental** | ✅ | `opm backup incremental` — stores only changed blocks vs. base |
+| **Differential** | ✅ | `opm backup differential` — changed blocks vs. a full base |
+| **Restore** | ✅ | `opm backup restore` — full + incremental apply on top of base |
+| **Verify** | ✅ | `opm backup verify` — re-hash stored blocks, detect corruption |
+| **File-level backup** | ✅ | `opm backup files` — self-contained ustar tar (GNU-tar interop verified) |
+| **File extract** | ✅ | `opm backup extract` — path-traversal guard |
+| **Scheduling** | ✅ | `opm backup schedule` — registry + cron line + systemd user timer |
+| **Windows PE recovery media** | 📋 | WinPE is Windows-only; `opm bootable` covers Linux live USB |
+| **Schedule GUI panel** | 📋 | CLI scheduling today; GUI panel planned |
 
 ## Usage Rights
 

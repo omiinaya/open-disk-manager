@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-04
+
+Competitor-gap release: the features that commercial partition managers
+(Paragon HDM, Acronis) ship that this project previously lacked — a real
+backup engine, merge, and expanded wiping — are now implemented, tested, and
+documented honestly.
+
+### Added
+- **Image backup engine**: `opm backup create/incremental/differential/restore/info/verify`
+  — OPMIMG format with per-block SHA-256, block bitmap, atomic commit; incremental
+  stores only changed blocks, differential requires a full base.
+- **File-level backup**: `opm backup files/listfiles/extract` — self-contained POSIX
+  ustar, GNU-tar interop verified both directions, path-traversal guard.
+- **Backup scheduling**: `opm backup schedule add|list|remove|show|run` — plain-text
+  registry plus cron-line and systemd user-timer generation.
+- **Merge partitions**: `opm merge <dev> <numA> <numB>` — adjacent validation; empty-right
+  table grow for any filesystem; FAT32→FAT32 data-preserving move.
+- **Secure erase v2**: `opm wipe` — 12 standards (Zeros, Random, DoD 5220.22-M, DoD ECE,
+  Gutmann, NIST Clear/Purge, RCMP TSSIT, VSITR, GOST P50739, US Army AR380, ATA-erase).
+- **SSD TRIM**: `opm trim` — BLKDISCARD; implemented previously-declared-but-missing
+  `DiskIO::trim/supportsTRIM/readSMART`.
+- Tests: 230 → 251 (backup 5, schedule 4, tar 3, merge 4, wipe 5).
+
 ## [0.2.0] - 2026-08-04
 
 The August 2026 audit-fix release: the CLI surface and GPT modification layer
