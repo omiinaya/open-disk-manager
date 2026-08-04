@@ -90,6 +90,7 @@ Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     const uint16_t bps = readLE16(boot + 11);
     const uint8_t spc = boot[13];
     const uint64_t mft_lcn = readLE64(boot + 48);
+    const uint64_t mft_mirr_lcn = readLE64(boot + 56);
     const int8_t cpmr = static_cast<int8_t>(boot[64]);
 
     uint32_t mft_record_size;
@@ -171,9 +172,20 @@ Result setLabel(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 
     fixupUpdateSequence(rec.data());
 
-    r = disk->write(rec.data(), record_byte, mft_record_size);
+    // Write the record to the main MFT and the MFT mirror (record 3), so the
+    // fsck mirror comparison stays consistent.
+    const uint64_t mft_byte = record_byte;
+    const uint64_t mirr_byte =
+        (start_sector + mft_mirr_lcn * spc) * bps + MFT_VOLUME * mft_record_size;
+    r = disk->write(rec.data(), mft_byte, mft_record_size);
     if (r.failed()) {
         return Result::error("Failed to write $Volume record: " + r.message);
+    }
+    if (mirr_byte != mft_byte) {
+        r = disk->write(rec.data(), mirr_byte, mft_record_size);
+        if (r.failed()) {
+            return Result::error("Failed to write $Volume mirror record: " + r.message);
+        }
     }
     r = disk->flush();
     if (r.failed()) {
