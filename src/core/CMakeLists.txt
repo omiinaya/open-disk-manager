@@ -48,6 +48,7 @@ set(CORE_SOURCES
     recovery.cpp
     undelete.cpp
     security_tools.cpp
+    backup.cpp
 )
 
 # Headers are automatically found, just add them for IDE support

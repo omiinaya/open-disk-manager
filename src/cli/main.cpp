@@ -36,6 +36,7 @@ int cmdLuks(const std::vector<std::string>& args);
 int cmdBitlocker(const std::vector<std::string>& args);
 int cmdBootRepair(const std::vector<std::string>& args);
 int cmdResetPassword(const std::vector<std::string>& args);
+int cmdBackup(const std::vector<std::string>& args);
 }
 }
 
@@ -76,6 +77,10 @@ void printUsage(const char* program) {
               << "  reset-password --windows <sam> [user]         Reset Windows (chntpw)\n"
               << "  lvm                              List LVM PVs/VGs/LVs\n"
               << "  raid                             List software RAID arrays\n"
+              << "  backup create <dev> <img>        Full image backup\n"
+              << "  backup incremental <dev> <base> <img> [--diff]  Changed-block backup\n"
+              << "  backup restore <img> <dev>       Restore an image\n"
+              << "  backup info|verify <img>         Inspect/verify an image\n"
               << "  i18n [locale] [catalog]          Manage message catalogs\n"
               << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
@@ -331,6 +336,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdBootRepair(args);
     } else if (command == "reset-password") {
         return cli::cmdResetPassword(args);
+    } else if (command == "backup") {
+        return cli::cmdBackup(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

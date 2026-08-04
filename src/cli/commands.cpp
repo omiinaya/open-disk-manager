@@ -21,6 +21,7 @@
 #include "opm/undelete.hpp"
 #include "opm/security.hpp"
 #include "opm/i18n.hpp"
+#include "opm/backup.hpp"
 
 namespace opm {
 namespace cli {
@@ -1375,6 +1376,113 @@ int cmdResetPassword(const std::vector<std::string>& args) {
         return 0;
     }
     std::cerr << "Error: unknown reset-password mode '" << args[0] << "'\n";
+    return 1;
+}
+
+int cmdBackup(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        std::cerr << "Usage:\n"
+                  << "  opm backup create <device> <image> [--block-size N]\n"
+                  << "  opm backup incremental <device> <base-image> <image> [--diff]\n"
+                  << "  opm backup differential <device> <base-image> <image>\n"
+                  << "  opm backup restore <image> <device>\n"
+                  << "  opm backup info <image>\n"
+                  << "  opm backup verify <image>\n";
+        return 1;
+    }
+    const std::string& sub = args[0];
+    BackupOptions opts;
+    auto extract = [&](const std::vector<std::string>& a, size_t& i) {
+        if (i + 1 < a.size() && a[i] == "--block-size") {
+            uint64_t v = 0;
+            if (parseSize(a[i + 1], v) && v > 0) opts.block_size = static_cast<uint32_t>(v);
+            i += 2;
+            return true;
+        }
+        return false;
+    };
+
+    if (sub == "create") {
+        if (args.size() < 3) {
+            std::cerr << "Usage: opm backup create <device> <image>\n";
+            return 1;
+        }
+        std::string dev = args[1], img = args[2];
+        size_t i = 3;
+        while (i < args.size()) extract(args, i);
+        auto disk = DiskIO::openReadWrite(dev);
+        if (!disk || !disk->isOpen()) {
+            std::cerr << "Error: cannot open " << dev << "\n";
+            return 1;
+        }
+        Result r = backupCreateFull(disk, img, opts);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Full backup of " << dev << " written to " << img << "\n";
+        return 0;
+    }
+    if (sub == "incremental" || sub == "differential") {
+        bool diff = sub == "differential";
+        if (args.size() < 4) {
+            std::cerr << "Usage: opm backup " << sub << " <device> <base-image> <image>\n";
+            return 1;
+        }
+        std::string dev = args[1], base = args[2], img = args[3];
+        size_t i = 4;
+        while (i < args.size()) extract(args, i);
+        auto disk = DiskIO::openReadWrite(dev);
+        if (!disk || !disk->isOpen()) {
+            std::cerr << "Error: cannot open " << dev << "\n";
+            return 1;
+        }
+        Result r = backupCreateIncremental(disk, base, img, diff, opts);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << (diff ? "Differential" : "Incremental") << " backup of " << dev
+                  << " written to " << img << " (base: " << base << ")\n";
+        return 0;
+    }
+    if (sub == "restore") {
+        if (args.size() < 3) {
+            std::cerr << "Usage: opm backup restore <image> <device>\n";
+            return 1;
+        }
+        auto disk = DiskIO::openReadWrite(args[2]);
+        if (!disk || !disk->isOpen()) {
+            std::cerr << "Error: cannot open " << args[2] << "\n";
+            return 1;
+        }
+        Result r = backupRestore(args[1], disk, opts);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Restored " << args[1] << " to " << args[2] << "\n";
+        return 0;
+    }
+    if (sub == "info") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm backup info <image>\n";
+            return 1;
+        }
+        BackupInfo info;
+        Result r = backupInfo(args[1], info);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Image:      " << args[1] << "\n"
+                  << "Mode:       " << info.mode_string() << "\n"
+                  << "Source:     " << info.source_name << "\n"
+                  << "Size:       " << info.source_size << " bytes\n"
+                  << "Blocks:     " << info.num_blocks << " (" << info.block_size << "B each)\n"
+                  << "Stored:     " << info.present_blocks << "\n"
+                  << "Created:    " << info.created_at << "\n";
+        return 0;
+    }
+    if (sub == "verify") {
+        if (args.size() < 2) {
+            std::cerr << "Usage: opm backup verify <image>\n";
+            return 1;
+        }
+        Result r = backupVerify(args[1]);
+        if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+        std::cout << "Image OK: all " << "stored blocks verified\n";
+        return 0;
+    }
+    std::cerr << "Error: unknown backup subcommand '" << sub << "'\n";
     return 1;
 }
 
