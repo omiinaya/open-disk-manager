@@ -40,6 +40,7 @@ set(TEST_SOURCES
     test_schedule.cpp
     test_tar.cpp
     test_merge.cpp
+    test_wipe.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

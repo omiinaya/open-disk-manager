@@ -296,6 +296,69 @@ Result DiskIO::sync() {
     return Result::ok();
 }
 
+// ============================================================================
+// TRIM (BLKDISCARD) support
+// ============================================================================
+
+bool DiskIO::supportsTRIM() const {
+#ifdef __linux__
+    if (fd_ < 0) return false;
+    // A discard of zero bytes is accepted on TRIM-capable devices; errno is
+    // set to EOPNOTSUPP/EINVAL otherwise. Probe conservatively.
+    uint64_t range[2] = {0, 0};
+    int ret = ioctl(fd_, BLKDISCARD, &range);
+    return ret == 0 || (ret < 0 && errno != EOPNOTSUPP && errno != ENOTTY && errno != EINVAL);
+#else
+    return false;
+#endif
+}
+
+Result DiskIO::trim(uint64_t start, uint64_t count) {
+#ifdef __linux__
+    if (fd_ < 0) return Result::error("Device not open");
+    uint64_t range[2] = {start * sector_size_, count * sector_size_};
+    if (ioctl(fd_, BLKDISCARD, &range) < 0) {
+        return Result::error("BLKDISCARD failed: " + std::string(strerror(errno)));
+    }
+    return Result::ok();
+#else
+    (void)start; (void)count;
+    return Result::error("TRIM is only supported on Linux block devices");
+#endif
+}
+
+// ============================================================================
+// SMART access
+// ============================================================================
+
+bool DiskIO::supportsSMART() const {
+#ifdef __linux__
+    if (fd_ < 0) return false;
+    return ioctl(fd_, BLKSSZGET) == 0;  // block device present; SMART probe is best-effort
+#else
+    return false;
+#endif
+}
+
+Result DiskIO::readSMART(void* data) {
+#ifdef __linux__
+    if (fd_ < 0) return Result::error("Device not open");
+    if (!data) return Result::error("Invalid SMART buffer");
+    // HDIO_GET_IDENTITY is ATA-specific; NVMe uses a different path. We expose
+    // what the kernel gives us and report when it is unavailable.
+    uint8_t id[512];
+    if (ioctl(fd_, HDIO_GET_IDENTITY, id) < 0) {
+        return Result::error("SMART identity unavailable for this device: " +
+                             std::string(strerror(errno)));
+    }
+    std::memcpy(data, id, 512);
+    return Result::ok();
+#else
+    (void)data;
+    return Result::error("SMART is only supported on Linux block devices");
+#endif
+}
+
 FileSystemType DiskIO::detectFilesystem(uint64_t start_sector) {
     uint8_t buffer[512];
     

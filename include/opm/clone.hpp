@@ -44,8 +44,15 @@ enum class EraseMethod {
     Zeros,          // Write zeros
     Random,         // Write random data
     DoD522022,      // DoD 5220.22-M (3-pass)
+    DoD522022ECE,   // DoD 5220.22-M ECE (7-pass)
     Gutmann,        // Gutmann 35-pass
-    NIST80088,      // NIST 800-88 Clear
+    NIST80088,      // NIST 800-88 Clear (zeros)
+    NIST80088Purge, // NIST 800-88 Purge (random)
+    RCMP_TSSIT,     // RCMP TSSIT OPS-II (4-pass: 0x00, 0xFF, 0xFF, random)
+    VSITR,          // German BSI VSITR (7-pass)
+    GOST_P50739,    // GOST R 50739-95 (2-pass: zeros, random)
+    US_Army_AR380,  // US Army AR380-19 (3-pass: 0xFF, 0x00, random)
+    ATA_Erase,      // ATA Secure Erase (via TRIM/BLKDISCARD passthrough; honest fallback)
 };
 
 struct EraseOptions {

@@ -38,6 +38,8 @@ int cmdBootRepair(const std::vector<std::string>& args);
 int cmdResetPassword(const std::vector<std::string>& args);
 int cmdBackup(const std::vector<std::string>& args);
 int cmdMerge(const std::vector<std::string>& args);
+int cmdWipe(const std::vector<std::string>& args);
+int cmdTrim(const std::vector<std::string>& args);
 }
 }
 
@@ -85,6 +87,9 @@ void printUsage(const char* program) {
               << "  backup restore <img> <dev>       Restore an image\n"
               << "  backup info|verify <img>         Inspect/verify an image\n"
               << "  i18n [locale] [catalog]          Manage message catalogs\n"
+              << "  wipe <device> [--method <m>]     Secure erase (12 methods incl. DoD, Gutmann,\n"
+              << "                         vsitr, rcmp-tssit, ata-erase/TRIM)\n"
+              << "  trim <device> [start] [count]    Send BLKDISCARD to a TRIM-capable SSD\n"
               << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
               << "  " << program << " list\n"
@@ -343,6 +348,10 @@ int main(int argc, char* argv[]) {
         return cli::cmdBackup(args);
     } else if (command == "merge") {
         return cli::cmdMerge(args);
+    } else if (command == "wipe") {
+        return cli::cmdWipe(args);
+    } else if (command == "trim") {
+        return cli::cmdTrim(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

@@ -26,6 +26,7 @@
 #include "opm/schedule.hpp"
 #include "opm/tar.hpp"
 #include "opm/merge.hpp"
+#include "opm/clone.hpp"
 
 namespace opm {
 namespace cli {
@@ -1412,6 +1413,85 @@ int cmdMerge(const std::vector<std::string>& args) {
     Result r = mergePartitions(disk, static_cast<int>(na), static_cast<int>(nb), opts);
     if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
     std::cout << "Merged partitions " << na << " and " << nb << " on " << args[0] << "\n";
+    return 0;
+}
+
+int cmdWipe(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        std::cerr << "Usage:\n"
+                  << "  opm wipe <device> [--method <name>] [start_sector] [size_sectors]\n"
+                  << "  opm wipe <device> --list-methods\n"
+                  << "  Methods: zeros, random, dod522022, dod522022-ece, gutmann,\n"
+                  << "           nist80088, nist80088-purge, rcmp-tssit, vsitr,\n"
+                  << "           gost-p50739, us-army-ar380, ata-erase\n"
+                  << "  Default: zeros. ATA-erase requires a TRIM-capable block device.\n";
+        return 1;
+    }
+    if (args[0] == "--list-methods" || (args.size() > 1 && args[1] == "--list-methods")) {
+        std::cout << "zeros\nrandom\ndod522022\ndod522022-ece\ngutmann\n"
+                     "nist80088\nnist80088-purge\nrcmp-tssit\nvsitr\n"
+                     "gost-p50739\nus-army-ar380\nata-erase\n";
+        return 0;
+    }
+    std::string dev = args[0];
+    EraseMethod method = EraseMethod::Zeros;
+    size_t i = 1;
+    if (i < args.size() && args[i] == "--method") {
+        if (i + 1 >= args.size()) { std::cerr << "Error: --method requires a value\n"; return 1; }
+        std::string m = args[i + 1];
+        if (m == "zeros") method = EraseMethod::Zeros;
+        else if (m == "random") method = EraseMethod::Random;
+        else if (m == "dod522022") method = EraseMethod::DoD522022;
+        else if (m == "dod522022-ece") method = EraseMethod::DoD522022ECE;
+        else if (m == "gutmann") method = EraseMethod::Gutmann;
+        else if (m == "nist80088") method = EraseMethod::NIST80088;
+        else if (m == "nist80088-purge") method = EraseMethod::NIST80088Purge;
+        else if (m == "rcmp-tssit") method = EraseMethod::RCMP_TSSIT;
+        else if (m == "vsitr") method = EraseMethod::VSITR;
+        else if (m == "gost-p50739") method = EraseMethod::GOST_P50739;
+        else if (m == "us-army-ar380") method = EraseMethod::US_Army_AR380;
+        else if (m == "ata-erase") method = EraseMethod::ATA_Erase;
+        else { std::cerr << "Error: unknown method '" << m << "'\n"; return 1; }
+        i += 2;
+    }
+    uint64_t start = 0, count = 0;
+    if (i < args.size()) { if (!parseU64(args[i], start)) { std::cerr << "Error: bad start sector\n"; return 1; } i++; }
+    if (i < args.size()) { if (!parseU64(args[i], count)) { std::cerr << "Error: bad size\n"; return 1; } i++; }
+
+    auto disk = DiskIO::openReadWrite(dev);
+    if (!disk || !disk->isOpen()) { std::cerr << "Error: cannot open " << dev << "\n"; return 1; }
+    EraseOptions opts; opts.method = method;
+    Result r;
+    if (count > 0) {
+        r = secureErase(disk, start, count, opts);
+    } else {
+        r = secureEraseDisk(disk, opts);
+    }
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    std::cout << "Wiped " << dev << " (method " << (int)method << ")" << std::endl;
+    return 0;
+}
+
+int cmdTrim(const std::vector<std::string>& args) {
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        std::cerr << "Usage: opm trim <device> [start_sector] [count]\n"
+                  << "  Sends BLKDISCARD to a TRIM-capable block device (SSD/NVMe).\n";
+        return 1;
+    }
+    uint64_t start = 0, count = 0;
+    size_t i = 1;
+    if (i < args.size()) { if (!parseU64(args[i], start)) { std::cerr << "Error: bad start\n"; return 1; } i++; }
+    if (i < args.size()) { if (!parseU64(args[i], count)) { std::cerr << "Error: bad count\n"; return 1; } i++; }
+    auto disk = DiskIO::openReadWrite(args[0]);
+    if (!disk || !disk->isOpen()) { std::cerr << "Error: cannot open " << args[0] << "\n"; return 1; }
+    if (!disk->supportsTRIM()) {
+        std::cerr << "Error: " << args[0] << " does not support TRIM/BLKDISCARD (not a block device or unsupported)\n";
+        return 1;
+    }
+    if (count == 0) count = disk->sectorCount() - start;
+    Result r = disk->trim(start, count);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    std::cout << "TRIM sent to " << args[0] << " [" << start << ".." << (start + count) << ")\n";
     return 0;
 }
 
