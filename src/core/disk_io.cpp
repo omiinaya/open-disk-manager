@@ -42,15 +42,10 @@ std::shared_ptr<DiskIO> DiskIO::openReadWrite(const std::string& device_path) {
 Result DiskIO::openDevice() {
     #ifdef __linux__
     int flags = readonly_ ? O_RDONLY : O_RDWR;
-    bool direct = true;
-    fd_ = ::open(device_path_.c_str(), flags | O_DIRECT);
-    
-    if (fd_ < 0) {
-        direct = false;
-        fd_ = ::open(device_path_.c_str(), flags); // Try without O_DIRECT
-    }
-    
-    if (fd_ < 0) {
+
+    // Open buffered first so we can inspect the inode type.
+    int plain_fd = ::open(device_path_.c_str(), flags);
+    if (plain_fd < 0) {
         switch (errno) {
             case EACCES:
                 return Result::error("Permission denied: " + device_path_);
@@ -63,23 +58,39 @@ Result DiskIO::openDevice() {
         }
     }
 
-    // Some filesystems (overlayfs, certain network mounts) accept an O_DIRECT
-    // open but fail every read/write with EINVAL. Probe with an aligned read
-    // and fall back to a buffered fd when that happens.
-    if (direct) {
-        static std::vector<uint8_t> aligned_pool(4096 + 512, 0);
-        uint8_t* aligned = aligned_pool.data() +
-            (512 - (reinterpret_cast<uintptr_t>(aligned_pool.data()) % 512));
-        ssize_t n = ::pread(fd_, aligned, 512, 0);
-        if (n < 0 && errno == EINVAL) {
-            ::close(fd_);
-            direct = false;
-            fd_ = ::open(device_path_.c_str(), flags);  // no O_DIRECT
-            if (fd_ < 0) {
-                return Result::error("Failed to open device without O_DIRECT: " +
-                                     std::string(strerror(errno)));
+    struct stat st;
+    bool buffered_only = true;  // default: buffered IO (safe everywhere)
+    if (fstat(plain_fd, &st) == 0 && S_ISBLK(st.st_mode)) {
+        buffered_only = false;  // raw block device: consider O_DIRECT
+    }
+
+    if (buffered_only) {
+        // Regular files (image-file testing) and other types always use
+        // buffered IO - O_DIRECT here fails on misaligned caller buffers.
+        fd_ = plain_fd;
+    } else {
+        // Block device: try O_DIRECT, but verify it actually works. Some
+        // filesystems accept the O_DIRECT open yet fail every IO with EINVAL.
+        ::close(plain_fd);
+        fd_ = ::open(device_path_.c_str(), flags | O_DIRECT);
+        if (fd_ < 0) {
+            fd_ = ::open(device_path_.c_str(), flags);
+        }
+        if (fd_ >= 0) {
+            static std::vector<uint8_t> aligned_pool(4096 + 512, 0);
+            uint8_t* aligned = aligned_pool.data() +
+                (512 - (reinterpret_cast<uintptr_t>(aligned_pool.data()) % 512));
+            ssize_t n = ::pread(fd_, aligned, 512, 0);
+            if (n < 0 && errno == EINVAL) {
+                ::close(fd_);
+                fd_ = ::open(device_path_.c_str(), flags);  // buffered fallback
             }
         }
+    }
+
+    if (fd_ < 0) {
+        return Result::error("Failed to open device: " +
+                             std::string(strerror(errno)));
     }
     
     // Detect device size
