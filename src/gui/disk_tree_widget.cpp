@@ -1,4 +1,5 @@
 #include "disk_tree_widget.hpp"
+#include "opm/utils.hpp"
 #include <QHeaderView>
 #include <QTreeWidgetItem>
 
@@ -46,9 +47,10 @@ void DiskTreeWidget::populateTree() {
     clear();
     
     for (size_t i = 0; i < disks_.size(); ++i) {
+        const auto& disk = disks_[i];
         auto* item = new QTreeWidgetItem(this);
-        item->setText(0, QString("/dev/sd%1").arg(QChar(static_cast<ushort>('a' + i))));
-        item->setText(1, QString("%1 GB").arg(100 + i * 50)); // Placeholder
+        item->setText(0, QString::fromStdString(disk->devicePath()));
+        item->setText(1, QString::fromStdString(utils::formatBytes(disk->size())));
         item->setText(2, "HDD");
         item->setData(0, Qt::UserRole, static_cast<int>(i));
     }

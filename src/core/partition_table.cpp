@@ -40,15 +40,25 @@ std::unique_ptr<PartitionTable> PartitionTable::load(std::shared_ptr<DiskIO> dis
             uint64_t gpt_signature = *reinterpret_cast<uint64_t*>(gpt_sector);
             if (gpt_signature == 0x5452415020494645ULL) {
                 // This is GPT
-                return std::make_unique<GPTTable>(disk);
+                try {
+                    return std::make_unique<GPTTable>(disk);
+                } catch (const std::exception&) {
+                    // Corrupt GPT header - fall through to recovery/repair
+                    // paths rather than throwing to the caller.
+                    return nullptr;
+                }
             }
         }
         
         // Check first partition entry for GPT protective (0xEE)
         uint8_t partition_type = sector[446 + 4]; // First partition entry type
         if (partition_type == 0xEE) {
-            // GPT protective MBR
-            return std::make_unique<GPTTable>(disk);
+            // GPT protective MBR - but the primary header may be corrupt.
+            try {
+                return std::make_unique<GPTTable>(disk);
+            } catch (const std::exception&) {
+                return nullptr;
+            }
         }
         
         // Regular MBR

@@ -204,6 +204,10 @@ public:
 
     // Create a fresh (empty) GPT table on the disk
     static std::unique_ptr<GPTTable> createNew(std::shared_ptr<DiskIO> disk);
+
+    // Recover a GPT table from the backup copy (no primary header required).
+    // Call restoreFromBackup() then commit() to rebuild the primary.
+    static std::unique_ptr<GPTTable> recover(std::shared_ptr<DiskIO> disk);
     
 private:
     void loadFromDisk();

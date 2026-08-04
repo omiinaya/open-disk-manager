@@ -1,5 +1,7 @@
 #include "benchmark_dialog.hpp"
 #include "opm/disk_io.hpp"
+#include "opm/clone.hpp"
+#include "opm/partition_table.hpp"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -250,16 +252,65 @@ void BenchmarkDialog::onStartClicked() {
     start_button_->setText("Running...");
     progress_label_->setText("Benchmark in progress...");
     
-    // Simulate benchmark (in real implementation, this would run the actual benchmark)
-    // For now, just show mock results after a delay
+    // Run the real benchmark from the core library. To keep the UI
+    // responsive, this runs synchronously (blocking) for now; a worker
+    // thread would be needed for very large test sizes.
+    BenchmarkOptions opts;
+    if (mode_combo_->currentData().toInt() == static_cast<int>(TestMode::Quick)) {
+        opts.quick_test = true;
+    }
+    opts.test_size = 512ULL * 1024 * 1024;  // 512MB test area
+    if (block_size_combo_->currentData().isValid()) {
+        opts.block_size = block_size_combo_->currentData().toULongLong();
+    }
+    if (opts.block_size == 0) opts.block_size = 4096;
     
-    // Update UI with mock results
-    results_.seq_read_speed = 245.6;
-    results_.seq_write_speed = 230.4;
-    results_.random_read_iops = 8500;
-    results_.random_write_iops = 7200;
-    results_.avg_read_latency = 2.3;
-    results_.avg_write_latency = 3.1;
+    BenchmarkResult result;
+    Result r;
+    try {
+        if (partition_number_ >= 0) {
+            // Resolve the partition extent for a bounded benchmark
+            uint64_t p_start = 0, p_size = 0;
+            try {
+                auto table = PartitionTable::load(disk_);
+                if (table) {
+                    auto parts = table->getPartitions();
+                    if (partition_number_ >= 1 &&
+                        partition_number_ <= static_cast<int>(parts.size())) {
+                        p_start = parts[partition_number_ - 1].startSector();
+                        p_size = parts[partition_number_ - 1].sectorCount();
+                    }
+                }
+            } catch (...) {}
+            if (p_size == 0) {
+                r = Result::error("could not resolve partition extent");
+            } else {
+                r = benchmarkPartition(disk_, p_start, p_size, result, opts);
+            }
+        } else {
+            r = benchmarkDisk(disk_, result, opts);
+        }
+    } catch (const std::exception& e) {
+        r = Result::error(e.what());
+    }
+    
+    if (r.failed()) {
+        progress_label_->setText(QString("Benchmark failed: %1")
+            .arg(r.message.c_str()));
+        test_running_ = false;
+        start_button_->setEnabled(true);
+        start_button_->setText("Start Benchmark");
+        QMessageBox::critical(this, "Error",
+            QString("Benchmark failed: %1").arg(r.message.c_str()));
+        return;
+    }
+    
+    results_.seq_read_speed = result.sequential_read_mbps;
+    results_.seq_write_speed = result.sequential_write_mbps;
+    results_.random_read_iops = result.random_read_iops;
+    results_.random_write_iops = result.random_write_iops;
+    results_.avg_read_latency = result.latency_ms;
+    results_.avg_write_latency = result.latency_ms;
     
     seq_read_label_->setText(QString::number(results_.seq_read_speed, 'f', 1));
     seq_write_label_->setText(QString::number(results_.seq_write_speed, 'f', 1));

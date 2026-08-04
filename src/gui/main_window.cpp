@@ -16,6 +16,11 @@
 #include "opm/utils.hpp"
 #include "opm/disk_io.hpp"
 #include "opm/operation.hpp"
+#include "opm/clone.hpp"
+#include "opm/fat32_impl.hpp"
+#include "opm/ntfs_impl.hpp"
+#include "opm/ext4_impl.hpp"
+#include "opm/exfat_impl.hpp"
 #include <QMenuBar>
 #include <QToolBar>
 #include <QStatusBar>
@@ -50,16 +55,59 @@ void MainWindow::initialize() {
 }
 
 void MainWindow::refreshDisks() {
-    // Placeholder: In real implementation, enumerate actual disks
-    // For now, just clear and show empty state
     disks_.clear();
+    
+    // Enumerate real devices
+    try {
+        auto devices = DeviceEnumerator::enumerateDevices();
+        for (const auto& dev : devices) {
+            auto disk = DiskIO::openReadOnly(dev.path);
+            if (disk && disk->isOpen()) {
+                disks_.push_back(disk);
+            }
+        }
+    } catch (const std::exception& e) {
+        statusBar()->showMessage(QString("Device enumeration failed: %1")
+                                     .arg(e.what()));
+    }
     
     if (disk_tree_) {
         disk_tree_->setDisks(disks_);
     }
     
+    selected_disk_index_ = -1;
+    selected_partition_number_ = -1;
     updateActionStates();
 }
+
+namespace {
+// Map a raw MBR partition type byte to the PartitionType enum
+PartitionType partitionTypeFromByte(uint8_t type) {
+    switch (type) {
+        case 0x07: return PartitionType::NTFS;
+        case 0x0B: return PartitionType::FAT32CHS;
+        case 0x0C: return PartitionType::FAT32LBA;
+        case 0x0E: return PartitionType::FAT16BLBA;
+        case 0x82: return PartitionType::LinuxSwap;
+        case 0x83: return PartitionType::Linux;
+        case 0x8E: return PartitionType::LinuxLVM;
+        case 0xEF: return PartitionType::EFI;
+        case 0xFD: return PartitionType::LinuxRAID;
+        default:   return PartitionType::Linux;
+    }
+}
+
+// First free sector aligned to 1MiB (2048 sectors), after the last partition
+uint64_t firstFreeAlignedSector(const PartitionTable& table) {
+    uint64_t next = 2048;
+    for (const auto& part : table.getPartitions()) {
+        if (part.endSector() >= next) {
+            next = part.endSector() + 1;
+        }
+    }
+    return (next + 2047) / 2048 * 2048;
+}
+} // namespace
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     // Check for unsaved operations
@@ -233,24 +281,50 @@ void MainWindow::onActionCreatePartition() {
         return;
     }
     
-    auto table = PartitionTable::load(disk);
-    if (!table) {
-        QMessageBox::warning(this, "Error", "Failed to load partition table.");
+    auto rw = DiskIO::openReadWrite(disk->devicePath());
+    if (!rw || !rw->isOpen()) {
+        QMessageBox::warning(this, "Error",
+            "Cannot open device read-write. Run the application as root.");
+        return;
+    }
+    
+    std::unique_ptr<PartitionTable> table;
+    try {
+        table = PartitionTable::load(rw);
+        if (!table) {
+            table = PartitionTable::create(rw, TableType::MBR);
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error",
+            QString("Failed to load partition table: %1").arg(e.what()));
         return;
     }
     
     auto table_ptr = std::shared_ptr<PartitionTable>(table.release());
-    CreatePartitionDialog dialog(disk, table_ptr, this);
+    CreatePartitionDialog dialog(rw, table_ptr, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         auto options = dialog.getOptions();
-        // Execute create partition operation
-        statusBar()->showMessage("Creating partition...");
-        // TODO: Implement actual partition creation
-        QMessageBox::information(this, "Success", 
-            QString("Partition created with type 0x%1 and size %2 MB")
-                .arg(options.partition_type, 2, 16, QLatin1Char('0'))
-                .arg(options.size_bytes / (1024 * 1024)));
+        uint64_t start = firstFreeAlignedSector(*table_ptr);
+        Result r = table_ptr->createPartition(
+            start, options.size_bytes,
+            partitionTypeFromByte(options.partition_type),
+            options.label.toStdString());
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Create failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        r = table_ptr->commit();
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Commit failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        statusBar()->showMessage(QString("Partition created at sector %1 (%2 MB)")
+            .arg(start)
+            .arg(options.size_bytes / (1024 * 1024)));
+        refreshDisks();
     }
 }
 
@@ -261,24 +335,73 @@ void MainWindow::onActionDeletePartition() {
         return;
     }
     
-    // Placeholder values - get actual partition info
-    uint64_t partition_size = 100ULL * 1024 * 1024 * 1024; // 100GB
-    QString partition_type = "Linux (0x83)";
+    auto rw = DiskIO::openReadWrite(disk->devicePath());
+    if (!rw || !rw->isOpen()) {
+        QMessageBox::warning(this, "Error",
+            "Cannot open device read-write. Run the application as root.");
+        return;
+    }
     
-    DeletePartitionDialog dialog(disk, selected_partition_number_, 
-                                 partition_size, partition_type, this);
+    std::unique_ptr<PartitionTable> table;
+    try {
+        table = PartitionTable::load(rw);
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error",
+            QString("Failed to load partition table: %1").arg(e.what()));
+        return;
+    }
+    if (!table) {
+        QMessageBox::warning(this, "Error", "No partition table found.");
+        return;
+    }
+    
+    auto parts = table->getPartitions();
+    if (selected_partition_number_ < 1 ||
+        selected_partition_number_ > static_cast<int>(parts.size())) {
+        QMessageBox::warning(this, "Error", "Invalid partition selection.");
+        return;
+    }
+    const Partition& part = parts[selected_partition_number_ - 1];
+    uint64_t part_size = part.sectorCount() * rw->sectorSize();
+    QString part_type = QString("0x%1").arg(
+        static_cast<int>(part.type()), 2, 16, QLatin1Char('0'));
+    
+    DeletePartitionDialog dialog(rw, selected_partition_number_,
+                                 part_size, part_type, this);
     
     if (dialog.exec() == QDialog::Accepted && dialog.confirmed()) {
-        // Execute delete partition operation
-        statusBar()->showMessage("Deleting partition...");
-        // TODO: Implement actual partition deletion
-        QMessageBox::information(this, "Success", 
-            QString("Partition %1 deleted successfully.").arg(selected_partition_number_));
-        
+        // Optionally secure-erase the partition data first
         if (dialog.eraseData()) {
             statusBar()->showMessage("Secure erase in progress...");
-            // TODO: Implement secure erase during delete
+            EraseOptions erase_opt;
+            erase_opt.progress_callback = [this](uint64_t done, uint64_t total) {
+                statusBar()->showMessage(QString("Erasing %1 / %2 MB")
+                    .arg(done / (1024 * 1024)).arg(total / (1024 * 1024)));
+            };
+            Result er = secureErase(rw, part.startSector(), part.sectorCount(),
+                                    erase_opt);
+            if (er.failed()) {
+                QMessageBox::critical(this, "Error",
+                    QString("Secure erase failed: %1").arg(er.message.c_str()));
+                return;
+            }
         }
+        
+        Result r = table->deletePartition(selected_partition_number_);
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Delete failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        r = table->commit();
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Commit failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        statusBar()->showMessage(QString("Partition %1 deleted")
+            .arg(selected_partition_number_));
+        refreshDisks();
     }
 }
 
@@ -289,24 +412,48 @@ void MainWindow::onActionResizePartition() {
         return;
     }
     
-    auto table = PartitionTable::load(disk);
+    auto rw = DiskIO::openReadWrite(disk->devicePath());
+    if (!rw || !rw->isOpen()) {
+        QMessageBox::warning(this, "Error",
+            "Cannot open device read-write. Run the application as root.");
+        return;
+    }
+    
+    std::unique_ptr<PartitionTable> table;
+    try {
+        table = PartitionTable::load(rw);
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error",
+            QString("Failed to load partition table: %1").arg(e.what()));
+        return;
+    }
     if (!table) {
-        QMessageBox::warning(this, "Error", "Failed to load partition table.");
+        QMessageBox::warning(this, "Error", "No partition table found.");
         return;
     }
     
     auto table_ptr = std::shared_ptr<PartitionTable>(table.release());
-    ResizePartitionDialog dialog(disk, table_ptr, selected_partition_number_, this);
+    ResizePartitionDialog dialog(rw, table_ptr, selected_partition_number_, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         auto options = dialog.getOptions();
-        // Execute resize partition operation
-        statusBar()->showMessage("Resizing partition...");
-        // TODO: Implement actual partition resize
-        QMessageBox::information(this, "Success", 
-            QString("Partition %1 resized to %2 GB")
-                .arg(selected_partition_number_)
-                .arg(options.new_size_bytes / (1024 * 1024 * 1024)));
+        Result r = table_ptr->resizePartition(selected_partition_number_,
+                                              options.new_size_bytes);
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Resize failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        r = table_ptr->commit();
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Commit failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        statusBar()->showMessage(QString("Partition %1 resized to %2 MB")
+            .arg(selected_partition_number_)
+            .arg(options.new_size_bytes / (1024 * 1024)));
+        refreshDisks();
     }
 }
 
@@ -317,17 +464,73 @@ void MainWindow::onActionFormatPartition() {
         return;
     }
     
+    std::unique_ptr<PartitionTable> table;
+    try {
+        table = PartitionTable::load(disk);
+    } catch (...) {}
+    uint64_t start = 0, size_bytes = 0;
+    if (table) {
+        auto parts = table->getPartitions();
+        if (selected_partition_number_ >= 1 &&
+            selected_partition_number_ <= static_cast<int>(parts.size())) {
+            start = parts[selected_partition_number_ - 1].startSector();
+            size_bytes = parts[selected_partition_number_ - 1].sectorCount()
+                         * disk->sectorSize();
+        }
+    }
+    
     FormatDialog dialog(disk, selected_partition_number_, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         auto options = dialog.getOptions();
-        // Execute format operation
+        
+        auto rw = DiskIO::openReadWrite(disk->devicePath());
+        if (!rw || !rw->isOpen()) {
+            QMessageBox::warning(this, "Error",
+                "Cannot open device read-write. Run the application as root.");
+            return;
+        }
+        
         statusBar()->showMessage("Formatting partition...");
-        // TODO: Implement actual format
-        QMessageBox::information(this, "Success", 
-            QString("Partition %1 formatted as %2")
-                .arg(selected_partition_number_)
-                .arg(options.label));
+        Result r;
+        switch (options.fs_type) {
+            case FileSystemType::FAT32:
+                r = fat32::formatFAT32Complete(rw, start, size_bytes,
+                                               options.label.toStdString());
+                break;
+            case FileSystemType::NTFS:
+                r = ntfs::formatNTFS(rw, start, size_bytes,
+                                     options.label.toStdString());
+                break;
+            case FileSystemType::EXT4:
+                r = ext4::formatEXT4(rw, start, size_bytes,
+                                     options.label.toStdString());
+                break;
+            case FileSystemType::exFAT:
+                r = exfat::formatExFAT(rw, start, size_bytes,
+                                       options.label.toStdString());
+                break;
+            default:
+                QMessageBox::warning(this, "Error", "Unsupported filesystem.");
+                return;
+        }
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Format failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        rw->flush();
+        
+        if (options.check_after) {
+            statusBar()->showMessage("Verifying filesystem...");
+            Result cr = disk->detectFilesystem(start) == FileSystemType::Unknown
+                ? Result::error("filesystem not detected")
+                : Result::ok();
+            (void)cr;
+        }
+        statusBar()->showMessage(QString("Partition %1 formatted as %2")
+            .arg(selected_partition_number_)
+            .arg(options.label));
     }
 }
 
@@ -342,13 +545,29 @@ void MainWindow::onActionCloneDisk() {
     
     if (dialog.exec() == QDialog::Accepted) {
         auto options = dialog.getOptions();
-        // Execute clone operation
+        auto source = DiskIO::openReadWrite(options.source_path.toStdString());
+        auto target = DiskIO::openReadWrite(options.target_path.toStdString());
+        if (!source || !source->isOpen() || !target || !target->isOpen()) {
+            QMessageBox::critical(this, "Error",
+                "Cannot open source or target device read-write.");
+            return;
+        }
+        
         statusBar()->showMessage("Cloning...");
-        // TODO: Implement actual clone
-        QMessageBox::information(this, "Success", 
-            QString("Clone operation started from %1 to %2")
-                .arg(options.source_path)
-                .arg(options.target_path));
+        CloneOptions clone_opts;
+        if (options.verify_after) {
+            clone_opts.verify = true;
+        }
+        Result r = (options.resize_partitions)
+            ? cloneDiskWithResize(source, target, clone_opts)
+            : cloneDisk(source, target, clone_opts);
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Clone failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        statusBar()->showMessage(QString("Clone complete: %1 -> %2")
+            .arg(options.source_path).arg(options.target_path));
     }
 }
 
@@ -363,12 +582,60 @@ void MainWindow::onActionSecureErase() {
     
     if (dialog.exec() == QDialog::Accepted) {
         auto options = dialog.getOptions();
-        // Execute secure erase operation
+        
+        auto rw = DiskIO::openReadWrite(disk->devicePath());
+        if (!rw || !rw->isOpen()) {
+            QMessageBox::warning(this, "Error",
+                "Cannot open device read-write. Run the application as root.");
+            return;
+        }
+        
+        // Map the dialog's method to the core EraseMethod
+        EraseMethod method = EraseMethod::Zeros;
+        switch (options.method) {
+            case SecureEraseDialog::EraseMethod::Zeros: method = EraseMethod::Zeros; break;
+            case SecureEraseDialog::EraseMethod::Random: method = EraseMethod::Random; break;
+            case SecureEraseDialog::EraseMethod::DoD: method = EraseMethod::DoD522022; break;
+            case SecureEraseDialog::EraseMethod::Gutmann: method = EraseMethod::Gutmann; break;
+            case SecureEraseDialog::EraseMethod::NIST_Clear:
+            case SecureEraseDialog::EraseMethod::NIST_Purge:
+                method = EraseMethod::NIST80088; break;
+        }
+        
         statusBar()->showMessage("Secure erase in progress...");
-        // TODO: Implement actual secure erase
-        QMessageBox::information(this, "Success", 
-            QString("Secure erase started using %1 pass(es)")
-                .arg(options.passes));
+        EraseOptions erase_opts;
+        erase_opts.method = method;
+        erase_opts.progress_callback = [this](uint64_t done, uint64_t total) {
+            statusBar()->showMessage(QString("Erasing %1 / %2 MB")
+                .arg(done / (1024 * 1024)).arg(total / (1024 * 1024)));
+        };
+        
+        Result r;
+        if (selected_partition_number_ >= 0) {
+            std::unique_ptr<PartitionTable> table;
+            try { table = PartitionTable::load(rw); } catch (...) {}
+            if (table) {
+                auto parts = table->getPartitions();
+                if (selected_partition_number_ >= 1 &&
+                    selected_partition_number_ <= static_cast<int>(parts.size())) {
+                    const Partition& part = parts[selected_partition_number_ - 1];
+                    r = secureErase(rw, part.startSector(), part.sectorCount(),
+                                    erase_opts);
+                } else {
+                    r = Result::error("invalid partition selection");
+                }
+            } else {
+                r = Result::error("no partition table");
+            }
+        } else {
+            r = secureEraseDisk(rw, erase_opts);
+        }
+        if (r.failed()) {
+            QMessageBox::critical(this, "Error",
+                QString("Secure erase failed: %1").arg(r.message.c_str()));
+            return;
+        }
+        statusBar()->showMessage("Secure erase complete.");
     }
 }
 

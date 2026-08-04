@@ -143,6 +143,16 @@ std::unique_ptr<GPTTable> GPTTable::createNew(std::shared_ptr<DiskIO> disk) {
     return table;
 }
 
+std::unique_ptr<GPTTable> GPTTable::recover(std::shared_ptr<DiskIO> disk) {
+    if (!disk || !disk->isOpen()) {
+        throw DeviceException("Disk not open");
+    }
+    auto table = std::make_unique<GPTTable>();
+    table->disk_ = disk;
+    table->device_path_ = disk->devicePath();
+    return table;
+}
+
 GPTTable::GPTTable(std::shared_ptr<DiskIO> disk) {
     disk_ = disk;
     device_path_ = disk->devicePath();

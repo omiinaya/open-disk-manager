@@ -28,6 +28,8 @@ dialogs/format_dialog.cpp
 dialogs/clone_dialog.cpp
 dialogs/secure_erase_dialog.cpp
 dialogs/benchmark_dialog.cpp
+dialogs/partition_properties_dialog.cpp
+dialogs/preferences_dialog.cpp
 )
 
 set(GUI_HEADERS
@@ -43,6 +45,8 @@ dialogs/format_dialog.hpp
 dialogs/clone_dialog.hpp
 dialogs/secure_erase_dialog.hpp
 dialogs/benchmark_dialog.hpp
+dialogs/partition_properties_dialog.hpp
+dialogs/preferences_dialog.hpp
 )
 
 # Create executable

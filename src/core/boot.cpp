@@ -66,6 +66,9 @@ size_t parseISORecord(const uint8_t* data, size_t offset, size_t max_len,
     if (offset + 33 + name_len > max_len) return 0;
 
     std::string raw(reinterpret_cast<const char*>(data + offset + 33), name_len);
+    // ISO9660 stores "." and ".." as single bytes 0x00 / 0x01
+    if (name_len == 1 && raw[0] == '\x00') raw = ".";
+    if (name_len == 1 && raw[0] == '\x01') raw = "..";
     // Strip ";version" suffix and trailing '.', skip "." and ".." entries
     size_t semi = raw.find(';');
     if (semi != std::string::npos) raw = raw.substr(0, semi);
