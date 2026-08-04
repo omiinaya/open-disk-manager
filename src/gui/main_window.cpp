@@ -137,16 +137,14 @@ void MainWindow::setupUI() {
     disk_tree_->setMaximumWidth(400);
     main_splitter_->addWidget(disk_tree_);
     
-    // Create placeholder for partition view (center)
+    // Create partition view (center)
     auto* right_panel = new QWidget(this);
     auto* right_layout = new QVBoxLayout(right_panel);
     right_layout->setSpacing(10);
     right_layout->setContentsMargins(10, 10, 10, 10);
     
-    // Add placeholder label
-    auto* placeholder = new QLabel("Select a disk to view partitions", right_panel);
-    placeholder->setAlignment(Qt::AlignCenter);
-    right_layout->addWidget(placeholder);
+    partition_view_ = new PartitionViewWidget(right_panel);
+    right_layout->addWidget(partition_view_);
     
     main_splitter_->addWidget(right_panel);
     main_splitter_->setStretchFactor(1, 1);
@@ -215,6 +213,13 @@ void MainWindow::setupConnections() {
     if (disk_tree_) {
         connect(disk_tree_, &DiskTreeWidget::diskSelected,
                 this, &MainWindow::onDiskSelected);
+    }
+    // Connect partition view signals
+    if (partition_view_) {
+        connect(partition_view_, &PartitionViewWidget::partitionSelected,
+                this, &MainWindow::onPartitionSelected);
+        connect(partition_view_, &PartitionViewWidget::partitionDoubleClicked,
+                this, &MainWindow::onPartitionDoubleClicked);
     }
 }
 
@@ -654,16 +659,58 @@ void MainWindow::onActionBenchmark() {
 void MainWindow::onDiskSelected(int index) {
     selected_disk_index_ = index;
     selected_partition_number_ = -1;
+    
+    // Load and display the partitions of the selected disk
+    std::vector<PartitionInfo> infos;
+    auto disk = selectedDisk();
+    if (disk && partition_view_) {
+        try {
+            auto table = PartitionTable::load(disk);
+            if (table) {
+                auto parts = table->getPartitions();
+                for (size_t i = 0; i < parts.size(); i++) {
+                    PartitionInfo info;
+                    info.partition_number = static_cast<int>(i + 1);
+                    info.size_bytes = parts[i].sectorCount() * disk->sectorSize();
+                    info.start_sector = parts[i].startSector();
+                    info.label = QString::fromStdString(parts[i].name());
+                    info.fs_type = parts[i].filesystem();
+                    info.mounted = false;
+                    infos.push_back(info);
+                }
+            }
+        } catch (const std::exception& e) {
+            statusBar()->showMessage(QString("Failed to load partitions: %1")
+                                         .arg(e.what()));
+        }
+        partition_view_->setPartitions(infos);
+    }
     updateActionStates();
 }
 
 void MainWindow::onPartitionSelected(int partition_number) {
     selected_partition_number_ = partition_number;
+    if (partition_view_) {
+        partition_view_->setSelectedPartition(partition_number);
+    }
     updateActionStates();
 }
 
-void MainWindow::onPartitionDoubleClicked(int /*partition_number*/) {
-    // TODO: Open partition properties
+void MainWindow::onPartitionDoubleClicked(int partition_number) {
+    auto disk = selectedDisk();
+    if (!disk || partition_number < 1) return;
+
+    try {
+        auto table = PartitionTable::load(disk);
+        if (!table) return;
+        auto parts = table->getPartitions();
+        if (partition_number > static_cast<int>(parts.size())) return;
+        auto partition = std::make_shared<Partition>(parts[partition_number - 1]);
+        PartitionPropertiesDialog dialog(partition, this);
+        dialog.exec();
+    } catch (const std::exception&) {
+        // ignore - properties dialog is informational
+    }
 }
 
 } // namespace opm::gui

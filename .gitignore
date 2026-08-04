@@ -28,8 +28,6 @@ install_manifest.txt
 *.profraw
 *.su
 *.stackdump
-core
-core.*
 
 # --- Docusaurus / docs site (accidentally merged from a sub-project) ---
 node_modules/
@@ -51,8 +49,10 @@ Thumbs.db
 nohup.out
 *.dmp
 hs_err_pid*.log
-
-# --- Secrets ---
+# core dumps (root-level only; must NOT exclude the src/core/ directory)
+/core
+/core.*
+core.[0-9]*
 .env
 .env.*
 !.env.example
