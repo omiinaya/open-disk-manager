@@ -42,9 +42,11 @@ std::shared_ptr<DiskIO> DiskIO::openReadWrite(const std::string& device_path) {
 Result DiskIO::openDevice() {
     #ifdef __linux__
     int flags = readonly_ ? O_RDONLY : O_RDWR;
+    bool direct = true;
     fd_ = ::open(device_path_.c_str(), flags | O_DIRECT);
     
     if (fd_ < 0) {
+        direct = false;
         fd_ = ::open(device_path_.c_str(), flags); // Try without O_DIRECT
     }
     
@@ -58,6 +60,25 @@ Result DiskIO::openDevice() {
                 return Result::error("Device busy: " + device_path_);
             default:
                 return Result::error("Failed to open device: " + std::string(strerror(errno)));
+        }
+    }
+
+    // Some filesystems (overlayfs, certain network mounts) accept an O_DIRECT
+    // open but fail every read/write with EINVAL. Probe with an aligned read
+    // and fall back to a buffered fd when that happens.
+    if (direct) {
+        static std::vector<uint8_t> aligned_pool(4096 + 512, 0);
+        uint8_t* aligned = aligned_pool.data() +
+            (512 - (reinterpret_cast<uintptr_t>(aligned_pool.data()) % 512));
+        ssize_t n = ::pread(fd_, aligned, 512, 0);
+        if (n < 0 && errno == EINVAL) {
+            ::close(fd_);
+            direct = false;
+            fd_ = ::open(device_path_.c_str(), flags);  // no O_DIRECT
+            if (fd_ < 0) {
+                return Result::error("Failed to open device without O_DIRECT: " +
+                                     std::string(strerror(errno)));
+            }
         }
     }
     
