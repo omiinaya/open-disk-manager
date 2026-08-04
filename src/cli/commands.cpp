@@ -851,12 +851,215 @@ int cmdAlign(const std::vector<std::string>& args) {
     }
     if (all_aligned) {
         std::cout << "All partitions are 4K/1MiB aligned.\n";
+    } else if (args.size() > 1 && args[1] == "--fix") {
+        std::cout << "Fixing alignment: moving unaligned partitions to the next\n"
+                     "1MiB boundary (data-preserving copy)...\n";
+        // Move each unaligned partition right to the next 1MiB boundary.
+        // Process in descending start order so later partitions don't collide
+        // with the ones being moved.
+        auto parts = table->getPartitions();
+        std::vector<size_t> unaligned;
+        for (size_t i = 0; i < parts.size(); i++) {
+            if (!parts[i].isAligned()) unaligned.push_back(i);
+        }
+        int fixed_count = 0;
+        for (size_t idx : unaligned) {
+            // Re-fetch since the table changes as we move.
+            auto cur = table->getPartitions();
+            if (idx >= cur.size()) continue;
+            const Partition& p = cur[idx];
+            if (p.isAligned()) continue;
+            uint64_t aligned_start = utils::alignUp(p.startSector(), ALIGNMENT_1MB);
+            uint64_t count = p.sectorCount();
+            uint64_t aligned_end = aligned_start + count - 1;
+            bool ok = true;
+            for (const auto& other : cur) {
+                if (other.startSector() == p.startSector()) continue;
+                if (aligned_start <= other.endSector() && aligned_end >= other.startSector()) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) {
+                std::cout << "  Partition " << (idx + 1) << ": cannot align (no free "
+                          << "space at sector " << aligned_start << ")\n";
+                continue;
+            }
+            if (aligned_start == p.startSector()) continue;
+            // Data-preserving move: chunked copy then re-create the entry.
+            const size_t chunk = 1024 * 1024;
+            std::vector<uint8_t> buffer(chunk);
+            uint64_t remaining = count;
+            uint64_t sector = 0;
+            bool failed = false;
+            while (remaining > 0) {
+                uint32_t to_copy = static_cast<uint32_t>(
+                    std::min<uint64_t>(chunk / disk->sectorSize(), remaining));
+                Result rr = disk->readSectors(buffer.data(), p.startSector() + sector, to_copy);
+                if (rr.failed()) { std::cerr << "  read error: " << rr.message << "\n"; failed = true; break; }
+                rr = disk->writeSectors(buffer.data(), aligned_start + sector, to_copy);
+                if (rr.failed()) { std::cerr << "  write error: " << rr.message << "\n"; failed = true; break; }
+                sector += to_copy;
+                remaining -= to_copy;
+            }
+            if (failed) continue;
+            uint64_t size_bytes = count * disk->sectorSize();
+            Result rr = table->createPartition(aligned_start, size_bytes, p.type(), p.name());
+            if (rr.failed()) { std::cerr << "  create failed: " << rr.message << "\n"; continue; }
+            int old_index = 0;
+            if (!findPartitionByStart(*table, p.startSector(), old_index)) continue;
+            rr = table->deletePartition(old_index);
+            if (rr.failed()) { std::cerr << "  delete old failed: " << rr.message << "\n"; continue; }
+            rr = table->commit();
+            if (rr.failed()) { std::cerr << "  commit failed: " << rr.message << "\n"; continue; }
+            std::cout << "  Partition " << (idx + 1) << ": moved " << p.startSector()
+                      << " -> " << aligned_start << "\n";
+            fixed_count++;
+        }
+        std::cout << "Alignment fix complete: " << fixed_count << " of "
+                  << unaligned.size() << " unaligned partition(s) moved.\n";
+        return 0;
     } else {
-        std::cout << "Unaligned partitions detected. Moving them to an aligned\n"
-                  << "boundary with 'opm move' will improve performance on "
-                     "4K-native SSDs.\n";
+        std::cout << "Unaligned partitions detected. Run 'opm align <device> --fix' to\n"
+                  << "move them to a 1MiB boundary (data-preserving).\n";
     }
     return all_aligned ? 0 : 1;
+}
+
+// ---------------------------------------------------------------------------
+// convert <device> <mbr|gpt> - convert the partition table in place
+// ---------------------------------------------------------------------------
+int cmdConvert(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm convert <device> <mbr|gpt>\n";
+        return 1;
+    }
+    TableType target;
+    if (args[1] == "mbr") {
+        target = TableType::MBR;
+    } else if (args[1] == "gpt") {
+        target = TableType::GPT;
+    } else {
+        std::cerr << "Error: target must be 'mbr' or 'gpt'\n";
+        return 1;
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    try {
+        auto source = PartitionTable::load(disk);
+        if (!source) {
+            std::cerr << "Error: no partition table found on " << args[0] << "\n";
+            return 1;
+        }
+        if (source->type() == target) {
+            std::cout << "Disk already uses a " << source->typeName() << " table.\n";
+            return 0;
+        }
+        std::cout << "Converting " << source->typeName() << " -> "
+                  << (target == TableType::MBR ? "MBR" : "GPT") << " ...\n";
+        Result r = source->convertTo(target);
+        if (r.failed()) {
+            std::cerr << "Error: " << r.message << "\n";
+            return 1;
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+
+    // Show the result.
+    auto reloaded = PartitionTable::load(disk);
+    if (reloaded) {
+        std::cout << "Converted successfully: " << reloaded->typeName()
+                  << " table with " << reloaded->getPartitionCount()
+                  << " partition(s).\n";
+    } else {
+        std::cout << "Converted successfully.\n";
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// set-active <device> <number> [on|off] - toggle the MBR bootable flag
+// ---------------------------------------------------------------------------
+int cmdSetActive(const std::vector<std::string>& args) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm set-active <device> <partition_number> [on|off]\n";
+        return 1;
+    }
+    uint64_t number = 0;
+    if (!parseU64(args[1], number) || number == 0) {
+        std::cerr << "Error: invalid partition number: " << args[1] << "\n";
+        return 1;
+    }
+    bool on = true;
+    if (args.size() > 2) {
+        if (args[2] == "on") on = true;
+        else if (args[2] == "off") on = false;
+        else { std::cerr << "Error: flag must be 'on' or 'off'\n"; return 1; }
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+    std::unique_ptr<PartitionTable> table;
+    if (!loadTable(disk, table, err)) { std::cerr << err << "\n"; return 1; }
+
+    if (table->type() != TableType::MBR) {
+        std::cerr << "Error: the active/bootable flag is an MBR concept; "
+                  << "this disk uses " << table->typeName() << ".\n";
+        return 1;
+    }
+    auto mbr = dynamic_cast<MBRTable*>(table.get());
+    if (!mbr) { std::cerr << "Error: internal table mismatch\n"; return 1; }
+
+    Result r = mbr->setPartitionBootable(static_cast<int>(number), on);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    r = mbr->commit();
+    if (r.failed()) { std::cerr << "Error: commit failed: " << r.message << "\n"; return 1; }
+    std::cout << "Partition " << number << " is now "
+              << (on ? "active (bootable)" : "inactive") << ".\n";
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// hide <device> <number> | unhide <device> <number> - MBR FAT-family hidden bit
+// ---------------------------------------------------------------------------
+int cmdHideUnhide(const std::vector<std::string>& args, bool hide) {
+    if (args.size() < 2) {
+        std::cerr << "Usage: opm " << (hide ? "hide" : "unhide")
+                  << " <device> <partition_number>\n";
+        return 1;
+    }
+    uint64_t number = 0;
+    if (!parseU64(args[1], number) || number == 0) {
+        std::cerr << "Error: invalid partition number: " << args[1] << "\n";
+        return 1;
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+    std::unique_ptr<PartitionTable> table;
+    if (!loadTable(disk, table, err)) { std::cerr << err << "\n"; return 1; }
+
+    if (table->type() != TableType::MBR) {
+        std::cerr << "Error: hiding is an MBR concept; this disk uses "
+                  << table->typeName() << ".\n";
+        return 1;
+    }
+    auto mbr = dynamic_cast<MBRTable*>(table.get());
+    if (!mbr) { std::cerr << "Error: internal table mismatch\n"; return 1; }
+
+    Result r = mbr->setPartitionHidden(static_cast<int>(number), hide);
+    if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+    r = mbr->commit();
+    if (r.failed()) { std::cerr << "Error: commit failed: " << r.message << "\n"; return 1; }
+    std::cout << "Partition " << number << (hide ? " hidden." : " unhidden.") << "\n";
+    return 0;
 }
 
 } // namespace cli

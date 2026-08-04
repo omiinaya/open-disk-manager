@@ -26,6 +26,9 @@ int cmdRAID(const std::vector<std::string>& args);
 int cmdCryptInfo(const std::vector<std::string>& args);
 int cmdAlign(const std::vector<std::string>& args);
 int cmdI18n(const std::vector<std::string>& args);
+int cmdConvert(const std::vector<std::string>& args);
+int cmdSetActive(const std::vector<std::string>& args);
+int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
 }
 }
 
@@ -44,6 +47,9 @@ void printUsage(const char* program) {
               << "  delete <device> <number>          Delete a partition\n"
               << "  resize <device> <number> <size>   Resize a partition\n"
               << "  move <device> <number> <start>    Move a partition (copies data)\n"
+              << "  convert <device> <mbr|gpt>        Convert the partition table in place\n"
+              << "  set-active <device> <n> [on|off]  Toggle the MBR bootable flag\n"
+              << "  hide/unhide <device> <n>          Hide/unhide a FAT-family partition\n"
               << "\nFilesystem commands:\n"
               << "  format <device> <fs> <start_sector> [size] [label]\n"
               << "                         Format a partition (fs: fat32, ntfs,\n"
@@ -288,6 +294,14 @@ int main(int argc, char* argv[]) {
         return cli::cmdAlign(args);
     } else if (command == "i18n") {
         return cli::cmdI18n(args);
+    } else if (command == "convert") {
+        return cli::cmdConvert(args);
+    } else if (command == "set-active" || command == "active" || command == "bootable") {
+        return cli::cmdSetActive(args);
+    } else if (command == "hide") {
+        return cli::cmdHideUnhide(args, true);
+    } else if (command == "unhide") {
+        return cli::cmdHideUnhide(args, false);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

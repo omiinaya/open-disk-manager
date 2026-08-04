@@ -814,8 +814,16 @@ void GPTTable::revert() {
 
 Result GPTTable::convertTo(TableType type) {
     if (type == TableType::MBR) {
-        // Convert GPT to MBR
-        return Result::error("Conversion not implemented");
+        Result r = convertPartitionTable(disk_, TableType::MBR);
+        if (r.failed()) {
+            return r;
+        }
+        // The disk now holds an MBR. This object can no longer describe it:
+        // mark it inert so a stale commit() is a no-op. Callers must reload
+        // via PartitionTable::load() to inspect the new table.
+        modified_ = false;
+        partitions_.clear();
+        return Result::ok();
     }
     return Result::error("Cannot convert to this type");
 }

@@ -30,6 +30,7 @@ set(TEST_SOURCES
     test_iso.cpp
     test_encryption.cpp
     test_i18n.cpp
+    test_conversion.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})

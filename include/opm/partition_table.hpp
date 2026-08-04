@@ -82,7 +82,7 @@ public:
     // Conversion
     virtual bool canConvertTo(TableType type) const;
     virtual Result convertTo(TableType type) = 0;
-    
+
 protected:
     std::string device_path_;
     std::shared_ptr<DiskIO> disk_;
@@ -90,6 +90,13 @@ protected:
     std::vector<Partition> partitions_;
     std::vector<std::string> errors_;
 };
+
+// Convert a disk's partition table in place (e.g. MBR <-> GPT).
+// The disk must be open read-write. Partition data is preserved; only
+// the table itself is rewritten. Returns an error when the conversion is
+// not representable in the target format (e.g. >4 partitions for MBR, or
+// a partition beyond the 2 TiB LBA limit).
+Result convertPartitionTable(std::shared_ptr<DiskIO> disk, TableType target);
 
 // MBR partition table
 class MBRTable : public PartitionTable {
@@ -125,6 +132,8 @@ public:
     bool hasExtendedPartition() const;
     std::vector<Partition> getLogicalPartitions() const;
     uint32_t getDiskSignature() const { return disk_signature_; }
+    Result setPartitionBootable(int number, bool bootable);
+    Result setPartitionHidden(int number, bool hidden);
 
     // Create a fresh (empty) MBR table on the disk
     static std::unique_ptr<MBRTable> createNew(std::shared_ptr<DiskIO> disk);

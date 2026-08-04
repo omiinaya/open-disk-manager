@@ -44,6 +44,7 @@ public:
     void setType(PartitionType type) { type_ = type; }
     void setFilesystem(FileSystemType fs) { filesystem_ = fs; }
     void setBootable(bool bootable) { bootable_ = bootable; }
+    void setHidden(bool hidden) { hidden_ = hidden; }
     void setName(const std::string& name) { name_ = name; }
     void setUuid(const std::string& uuid) { uuid_ = uuid; }
     void setPartitionUuid(const std::string& uuid) { partition_uuid_ = uuid; }

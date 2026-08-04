@@ -4,6 +4,7 @@ set(CORE_SOURCES
     partition_table.cpp
     mbr.cpp
     gpt.cpp
+    conversion.cpp
     disk_io.cpp
     partition.cpp
     utils.cpp

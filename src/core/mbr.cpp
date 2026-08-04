@@ -123,6 +123,7 @@ void MBRTable::loadFromDisk() {
             partition.setEndSector(entry.start_lba + entry.sector_count - 1);
             partition.setType(static_cast<PartitionType>(entry.type));
             partition.setBootable(entry.status == 0x80);
+            partition.setHidden((entry.type & 0x10) != 0);
             
             // Detect file system
             auto fs_type = disk_->detectFilesystem(entry.start_lba);
@@ -186,6 +187,7 @@ void MBRTable::loadExtendedPartitions() {
             partition.setEndSector(current_ebr + start_lba + sector_count - 1);
             partition.setType(static_cast<PartitionType>(type1));
             partition.setBootable(entry1[0] == 0x80);
+            partition.setHidden((type1 & 0x10) != 0);
             
             auto fs_type = disk_->detectFilesystem(partition.startSector());
             partition.setFilesystem(fs_type);
@@ -279,16 +281,14 @@ bool MBRTable::hasExtendedPartition() const {
 }
 
 Result MBRTable::createPartition(uint64_t start, uint64_t size,
-                                  PartitionType type,
-                                  const std::string& name) {
-    // Check alignment
-    if (!utils::isAligned(start, ALIGNMENT_1MB)) {
-        return Result::error("Start sector must be aligned to 1MB boundary");
-    }
-    
+                                 PartitionType type,
+                                 const std::string& name) {
+    // Note: LBA MBR entries can represent any start sector. Alignment is a
+    // performance policy enforced by the CLI layer (see `opm align`), not a
+    // correctness requirement of the table format.
     uint64_t sector_count = size / disk_->sectorSize();
-    if (sector_count < ALIGNMENT_1MB) {
-        return Result::error("Partition must be at least 1MB");
+    if (sector_count == 0) {
+        return Result::error("Partition smaller than one sector");
     }
     uint64_t end = start + sector_count - 1;
 
@@ -517,10 +517,89 @@ void MBRTable::revert() {
     modified_ = false;
 }
 
+Result MBRTable::setPartitionBootable(int number, bool bootable) {
+    if (number < 1 || number > static_cast<int>(partitions_.size())) {
+        return Result::error("Invalid partition number");
+    }
+
+    int partition_index = number - 1;
+    uint64_t start = partitions_[partition_index].startSector();
+
+    int mbr_entry_index = -1;
+    for (size_t i = 0; i < PARTITION_ENTRY_COUNT; i++) {
+        if (mbr_entries_[i].start_lba == start) {
+            mbr_entry_index = static_cast<int>(i);
+            break;
+        }
+    }
+    if (mbr_entry_index == -1) {
+        return Result::error("MBR entry not found for partition");
+    }
+
+    mbr_entries_[mbr_entry_index].status = bootable ? 0x80 : 0x00;
+    partitions_[partition_index].setBootable(bootable);
+    modified_ = true;
+    return Result::ok();
+}
+
+Result MBRTable::setPartitionHidden(int number, bool hidden) {
+    if (number < 1 || number > static_cast<int>(partitions_.size())) {
+        return Result::error("Invalid partition number");
+    }
+
+    int partition_index = number - 1;
+    uint64_t start = partitions_[partition_index].startSector();
+
+    int mbr_entry_index = -1;
+    for (size_t i = 0; i < PARTITION_ENTRY_COUNT; i++) {
+        if (mbr_entries_[i].start_lba == start) {
+            mbr_entry_index = static_cast<int>(i);
+            break;
+        }
+    }
+    if (mbr_entry_index == -1) {
+        return Result::error("MBR entry not found for partition");
+    }
+
+    uint8_t current = mbr_entries_[mbr_entry_index].type;
+    // The hidden bit (0x10) only applies to FAT-family type bytes.
+    uint8_t visible = static_cast<uint8_t>(current & 0x0F);
+    switch (visible) {
+        case 0x01:  // FAT12
+        case 0x04:  // FAT16 <32M
+        case 0x06:  // FAT16
+        case 0x07:  // NTFS/exFAT
+        case 0x0B:  // FAT32 CHS
+        case 0x0C:  // FAT32 LBA
+        case 0x0E:  // FAT16 LBA
+            break;
+        default:
+            return Result::error(
+                "Hiding is only supported for FAT-family partitions "
+                "(types 0x01/0x04/0x06/0x07/0x0B/0x0C/0x0E)");
+    }
+
+    uint8_t target = hidden ? static_cast<uint8_t>(current | 0x10)
+                            : static_cast<uint8_t>(current & ~0x10);
+    mbr_entries_[mbr_entry_index].type = target;
+    partitions_[partition_index].setType(static_cast<PartitionType>(target));
+    partitions_[partition_index].setHidden(hidden);
+    modified_ = true;
+    return Result::ok();
+}
+
 Result MBRTable::convertTo(TableType type) {
     if (type == TableType::GPT) {
-        // Convert MBR to GPT
-        return Result::error("Conversion not implemented");
+        Result r = convertPartitionTable(disk_, TableType::GPT);
+        if (r.failed()) {
+            return r;
+        }
+        // The disk now holds a GPT. This object can no longer describe it:
+        // mark it inert so a stale commit() is a no-op. Callers must reload
+        // via PartitionTable::load() to inspect the new table.
+        modified_ = false;
+        partitions_.clear();
+        return Result::ok();
     }
     return Result::error("Cannot convert to this type");
 }
