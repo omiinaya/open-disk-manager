@@ -32,6 +32,11 @@ public:
     static std::unique_ptr<PartitionTable> load(const std::string& device_path);
     static std::unique_ptr<PartitionTable> load(std::shared_ptr<DiskIO> disk);
     
+    // Create a new (empty) partition table of the given type on the disk.
+    // The table is marked modified; callers add partitions then commit().
+    static std::unique_ptr<PartitionTable> create(std::shared_ptr<DiskIO> disk,
+                                                  TableType type);
+    
     // Pure virtual methods
     virtual TableType type() const = 0;
     virtual std::string typeName() const = 0;
@@ -120,6 +125,9 @@ public:
     bool hasExtendedPartition() const;
     std::vector<Partition> getLogicalPartitions() const;
     uint32_t getDiskSignature() const { return disk_signature_; }
+
+    // Create a fresh (empty) MBR table on the disk
+    static std::unique_ptr<MBRTable> createNew(std::shared_ptr<DiskIO> disk);
     
 private:
     void loadFromDisk();
@@ -193,6 +201,9 @@ public:
     // Backup GPT
     Result restoreFromBackup();
     Result createBackup();
+
+    // Create a fresh (empty) GPT table on the disk
+    static std::unique_ptr<GPTTable> createNew(std::shared_ptr<DiskIO> disk);
     
 private:
     void loadFromDisk();

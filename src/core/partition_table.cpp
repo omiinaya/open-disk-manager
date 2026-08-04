@@ -59,6 +59,18 @@ std::unique_ptr<PartitionTable> PartitionTable::load(std::shared_ptr<DiskIO> dis
     return nullptr;
 }
 
+std::unique_ptr<PartitionTable> PartitionTable::create(std::shared_ptr<DiskIO> disk,
+                                                       TableType type) {
+    switch (type) {
+        case TableType::MBR:
+            return MBRTable::createNew(disk);
+        case TableType::GPT:
+            return GPTTable::createNew(disk);
+        default:
+            throw ValidationException("Cannot create a partition table of this type");
+    }
+}
+
 // Default implementations for base class
 std::optional<Partition> PartitionTable::getPartition(int number) const {
     auto parts = getPartitions();

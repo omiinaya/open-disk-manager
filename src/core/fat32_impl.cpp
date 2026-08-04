@@ -157,9 +157,12 @@ void FAT32Layout::calculate(uint64_t volume_size_bytes, uint32_t sector_size) {
     // Calculate clusters
     total_clusters = data_sectors / sectors_per_cluster;
     
-    // Ensure we have minimum clusters for FAT32
-    if (total_clusters < FAT32_MIN_CLUSTERS) {
-        total_clusters = FAT32_MIN_CLUSTERS;
+    // If the volume is too small for the selected cluster size, retry with
+    // the smallest cluster size (512B). If it still can't reach the FAT32
+    // minimum, leave the honest value so validate() rejects the volume.
+    if (total_clusters < FAT32_MIN_CLUSTERS && sectors_per_cluster > 1) {
+        sectors_per_cluster = 1;
+        total_clusters = data_sectors / sectors_per_cluster;
     }
     
     // Ensure we don't exceed maximum
@@ -172,14 +175,22 @@ void FAT32Layout::calculate(uint64_t volume_size_bytes, uint32_t sector_size) {
     uint64_t fat_size_bytes = (total_clusters + 2) * 4;  // +2 for entries 0 and 1
     sectors_per_fat = static_cast<uint32_t>((fat_size_bytes + sector_size - 1) / sector_size);
     
-    // Recalculate total clusters accounting for FAT space
-    uint64_t fat_sectors_total = num_fats * sectors_per_fat;
-    data_sectors = total_sectors - reserved_sectors - fat_sectors_total;
-    total_clusters = static_cast<uint32_t>(data_sectors / sectors_per_cluster);
-    
-    // Recalculate FAT size with updated cluster count
-    fat_size_bytes = (total_clusters + 2) * 4;
-    sectors_per_fat = static_cast<uint32_t>((fat_size_bytes + sector_size - 1) / sector_size);
+    // Iterate until sectors_per_fat and total_clusters are consistent:
+    // the FAT must physically cover every cluster it describes, and the
+    // cluster count must reflect the space left after the FATs.
+    for (int iter = 0; iter < 16; iter++) {
+        uint64_t fat_sectors_total = static_cast<uint64_t>(num_fats) * sectors_per_fat;
+        uint64_t data_sectors = total_sectors - reserved_sectors - fat_sectors_total;
+        uint32_t new_clusters = static_cast<uint32_t>(data_sectors / sectors_per_cluster);
+        fat_size_bytes = (static_cast<uint64_t>(new_clusters) + 2) * 4;
+        uint32_t new_spf = static_cast<uint32_t>(
+            (fat_size_bytes + sector_size - 1) / sector_size);
+        if (new_clusters == total_clusters && new_spf == sectors_per_fat) {
+            break;
+        }
+        total_clusters = new_clusters;
+        sectors_per_fat = new_spf;
+    }
     
     // Calculate sector positions
     fat_start_sector = reserved_sectors;

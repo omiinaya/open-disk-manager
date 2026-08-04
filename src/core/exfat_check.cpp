@@ -145,12 +145,13 @@ Result checkExFATAllocationBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_s
     }
     
     // Check system clusters are marked as allocated
+    // exFAT bitmap bit N corresponds to cluster N (bits 0-1 are reserved)
     bool bitmap_ok = true;
     for (uint32_t cluster = EXFAT_FIRST_DATA_CLUSTER; 
          cluster < EXFAT_FIRST_DATA_CLUSTER + 3 && cluster < layout.cluster_count; 
          cluster++) {
-        uint64_t byte_idx = (cluster - EXFAT_FIRST_DATA_CLUSTER) / 8;
-        uint64_t bit_idx = (cluster - EXFAT_FIRST_DATA_CLUSTER) % 8;
+        uint64_t byte_idx = cluster / 8;
+        uint64_t bit_idx = cluster % 8;
         
         if (byte_idx < bitmap_size) {
             if (!(bitmap[byte_idx] & (1 << bit_idx))) {

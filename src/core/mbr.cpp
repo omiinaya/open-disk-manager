@@ -41,6 +41,23 @@ T readLE(const uint8_t* data) {
 
 MBRTable::MBRTable() = default;
 
+std::unique_ptr<MBRTable> MBRTable::createNew(std::shared_ptr<DiskIO> disk) {
+    if (!disk || !disk->isOpen()) {
+        throw DeviceException("Disk not open");
+    }
+    auto table = std::make_unique<MBRTable>();
+    table->disk_ = disk;
+    table->device_path_ = disk->devicePath();
+    table->mbr_entries_.clear();
+    table->mbr_entries_.resize(PARTITION_ENTRY_COUNT, MBRPartitionEntry{});
+    table->partitions_.clear();
+    table->extended_start_ = 0;
+    table->disk_signature_ = 0;
+    std::memset(table->boot_code_, 0, sizeof(table->boot_code_));
+    table->modified_ = true;
+    return table;
+}
+
 MBRTable::MBRTable(std::shared_ptr<DiskIO> disk) {
     disk_ = disk;
     device_path_ = disk->devicePath();
@@ -62,7 +79,12 @@ void MBRTable::loadFromDisk() {
     // Check signature
     uint16_t signature = readLE<uint16_t>(&mbr[510]);
     if (signature != MBR_SIGNATURE) {
-        // Not a valid MBR
+        // Not a valid MBR yet - initialize a fresh 4-entry table so that
+        // createPartition/commit can operate on a new disk without OOB.
+        mbr_entries_.clear();
+        mbr_entries_.resize(PARTITION_ENTRY_COUNT, MBRPartitionEntry{});
+        partitions_.clear();
+        extended_start_ = 0;
         return;
     }
     
@@ -268,6 +290,17 @@ Result MBRTable::createPartition(uint64_t start, uint64_t size,
     if (sector_count < ALIGNMENT_1MB) {
         return Result::error("Partition must be at least 1MB");
     }
+    uint64_t end = start + sector_count - 1;
+
+    // Check for overlap with existing partitions
+    Partition candidate;
+    candidate.setStartSector(start);
+    candidate.setEndSector(end);
+    for (const auto& part : partitions_) {
+        if (candidate.overlaps(part)) {
+            return Result::error("Partition overlaps existing partition");
+        }
+    }
     
     // Find free partition slot
     int free_slot = -1;
@@ -319,23 +352,13 @@ Result MBRTable::deletePartition(int number) {
         return Result::error("Invalid partition number");
     }
     
-    // Find partition in our list
-    int partition_index = -1;
-    int mbr_entry_index = -1;
-    
-    for (size_t i = 0; i < partitions_.size(); i++) {
-        if (partitions_[i].number() == number) {
-            partition_index = static_cast<int>(i);
-            break;
-        }
-    }
-    
-    if (partition_index == -1) {
-        return Result::error("Partition not found");
-    }
+    // Partitions are kept sorted by start sector; the CLI numbers them
+    // positionally (1-based), so match by index.
+    int partition_index = number - 1;
+    uint64_t start = partitions_[partition_index].startSector();
     
     // Find the corresponding MBR entry
-    uint64_t start = partitions_[partition_index].startSector();
+    int mbr_entry_index = -1;
     for (size_t i = 0; i < PARTITION_ENTRY_COUNT; i++) {
         if (mbr_entries_[i].start_lba == start) {
             mbr_entry_index = static_cast<int>(i);
@@ -372,23 +395,13 @@ Result MBRTable::resizePartition(int number, uint64_t new_size) {
         return Result::error("Invalid partition number");
     }
     
-    // Find partition
-    int partition_index = -1;
-    int mbr_entry_index = -1;
-    
-    for (size_t i = 0; i < partitions_.size(); i++) {
-        if (partitions_[i].number() == number) {
-            partition_index = static_cast<int>(i);
-            break;
-        }
-    }
-    
-    if (partition_index == -1) {
-        return Result::error("Partition not found");
-    }
+    // Partitions are kept sorted by start sector; the CLI numbers them
+    // positionally (1-based), so match by index.
+    int partition_index = number - 1;
     
     // Find the corresponding MBR entry
     uint64_t start = partitions_[partition_index].startSector();
+    int mbr_entry_index = -1;
     for (size_t i = 0; i < PARTITION_ENTRY_COUNT; i++) {
         if (mbr_entries_[i].start_lba == start) {
             mbr_entry_index = static_cast<int>(i);
@@ -401,6 +414,9 @@ Result MBRTable::resizePartition(int number, uint64_t new_size) {
     }
     
     uint64_t new_sector_count = new_size / disk_->sectorSize();
+    if (new_sector_count == 0) {
+        return Result::error("New size is smaller than one sector");
+    }
     
     // Update MBR entry
     auto& entry = mbr_entries_[mbr_entry_index];

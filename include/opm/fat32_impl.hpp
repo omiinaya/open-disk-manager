@@ -53,18 +53,24 @@ constexpr uint32_t FAT32_MIN_CLUSTERS = 65525;  // Minimum for FAT32
 constexpr uint32_t ROOT_DIR_CLUSTER = 2;
 
 // Cluster size selection (sectors per cluster)
-// Based on volume size according to Microsoft FAT spec
+// Based on volume size according to Microsoft FAT32 spec:
+//   <260MB -> 512B clusters (1 sector)
+//   260MB-8GB -> 4KB (8 sectors)
+//   8-16GB -> 8KB (16 sectors)
+//   16-32GB -> 16KB (32 sectors)
+//   >32GB -> 32KB (64 sectors)
 constexpr uint32_t getSectorsPerCluster(uint64_t volume_size_bytes, uint32_t sector_size) {
-    uint64_t volume_size_sectors = volume_size_bytes / sector_size;
-    
-    if (volume_size_sectors <= 16777216) {      // <= 8GB
-        return 8;   // 4KB clusters (512 * 8)
-    } else if (volume_size_sectors <= 33554432) {  // <= 16GB
-        return 16;  // 8KB clusters
-    } else if (volume_size_sectors <= 67108864) {  // <= 32GB
-        return 32;  // 16KB clusters
+    uint64_t mb = volume_size_bytes / (1024 * 1024);
+    if (mb < 260) {
+        return 1;    // 512B clusters
+    } else if (mb < 8192) {
+        return 8;    // 4KB clusters
+    } else if (mb < 16384) {
+        return 16;   // 8KB clusters
+    } else if (mb < 32768) {
+        return 32;   // 16KB clusters
     } else {
-        return 64;  // 32KB clusters
+        return 64;   // 32KB clusters
     }
 }
 

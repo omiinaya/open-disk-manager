@@ -124,12 +124,6 @@ void NTFSBootSector::init(uint64_t total_sectors_val, uint8_t sectors_per_cluste
     bpb_unused_2 = 0;
     bpb_total_sectors = total_sectors_val;
     
-    // Physical drive
-    bs_physical_drive = 0x80;  // First hard disk
-    bs_reserved_1 = 0;
-    bs_extended_boot_sig = 0x80;
-    std::memset(bs_reserved_2, 0, 4);
-    
     // MFT information
     bs_mft_lcn = mft_lcn_val;
     bs_mft_mirr_lcn = mft_mirr_lcn_val;

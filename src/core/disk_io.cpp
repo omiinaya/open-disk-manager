@@ -3,6 +3,7 @@
 #include "opm/utils.hpp"
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <dirent.h>
 #include <linux/fs.h>
@@ -89,6 +90,13 @@ Result DiskIO::detectDeviceSize() {
     unsigned long size_sectors;
     if (ioctl(fd_, BLKGETSIZE, &size_sectors) >= 0) {
         device_size_ = static_cast<uint64_t>(size_sectors) * 512;
+        return Result::ok();
+    }
+
+    // Regular-file fallback (virtual disk images used in tests)
+    struct stat st;
+    if (fstat(fd_, &st) == 0 && S_ISREG(st.st_mode)) {
+        device_size_ = static_cast<uint64_t>(st.st_size);
         return Result::ok();
     }
     
@@ -240,8 +248,8 @@ FileSystemType DiskIO::detectFilesystem(uint64_t start_sector) {
         return FileSystemType::FAT12;
     }
     
-    // Check for exFAT
-    if (memcmp(buffer, "EXFAT   ", 8) == 0) {
+    // Check for exFAT (name at offset 3, after the 3-byte jump instruction)
+    if (memcmp(&buffer[3], "EXFAT   ", 8) == 0) {
         return FileSystemType::exFAT;
     }
     

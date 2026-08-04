@@ -100,46 +100,40 @@ struct __attribute__((packed)) NTFSBootSector {
     // OEM ID (8 bytes)
     char bs_oem[8];
     
-    // BIOS Parameter Block (BPB) - 25 bytes
-    uint16_t bpb_bytes_per_sector;
-    uint8_t bpb_sectors_per_cluster;
-    uint16_t bpb_reserved_sectors;
-    uint8_t bpb_always_zero_0[3];
-    uint16_t bpb_unused_0;
-    uint8_t bpb_media_descriptor;
-    uint16_t bpb_always_zero_1;
-    uint16_t bpb_sectors_per_track;
-    uint16_t bpb_number_of_heads;
-    uint32_t bpb_hidden_sectors;
-    uint32_t bpb_unused_1;
-    uint32_t bpb_unused_2;
-    uint64_t bpb_total_sectors;
+    // BIOS Parameter Block (BPB) - offsets 11-47 per NTFS spec
+    uint16_t bpb_bytes_per_sector;      // 11
+    uint8_t bpb_sectors_per_cluster;    // 13
+    uint16_t bpb_reserved_sectors;      // 14
+    uint8_t bpb_always_zero_0[3];       // 16
+    uint16_t bpb_unused_0;              // 19
+    uint8_t bpb_media_descriptor;       // 21
+    uint16_t bpb_always_zero_1;         // 22
+    uint16_t bpb_sectors_per_track;     // 24
+    uint16_t bpb_number_of_heads;       // 26
+    uint32_t bpb_hidden_sectors;        // 28
+    uint32_t bpb_unused_1;              // 32
+    uint32_t bpb_unused_2;              // 36
+    uint64_t bpb_total_sectors;         // 40
     
-    // Physical drive
-    uint8_t bs_physical_drive;
-    uint8_t bs_reserved_1;
-    uint8_t bs_extended_boot_sig;
-    uint8_t bs_reserved_2[4];
-    
-    // MFT information
-    uint64_t bs_mft_lcn;             // Logical cluster number for MFT
-    uint64_t bs_mft_mirr_lcn;        // Logical cluster number for MFT mirror
-    int8_t bs_clusters_per_mft_record;
-    uint8_t bs_reserved_3[3];
-    int8_t bs_clusters_per_index_record;
-    uint8_t bs_reserved_4[3];
+    // MFT information (spec offsets 48+)
+    uint64_t bs_mft_lcn;                // 48 Logical cluster number for MFT
+    uint64_t bs_mft_mirr_lcn;           // 56 Logical cluster number for MFT mirror
+    int8_t bs_clusters_per_mft_record;  // 64 (negative = 2^abs clusters)
+    uint8_t bs_reserved_3[3];           // 65
+    int8_t bs_clusters_per_index_record;// 68 (negative = 2^abs clusters)
+    uint8_t bs_reserved_4[3];           // 69
     
     // Volume serial number
-    uint64_t bs_volume_serial;
+    uint64_t bs_volume_serial;          // 72
     
     // Checksum
-    uint32_t bs_checksum;
+    uint32_t bs_checksum;               // 80
     
-    // Boot code (426 bytes)
-    uint8_t bs_boot_code[426];
+    // Bootstrap code (426 bytes)
+    uint8_t bs_boot_code[426];          // 84
     
     // Boot signature
-    uint16_t bs_boot_signature;
+    uint16_t bs_boot_signature;         // 510
     
     void init(uint64_t total_sectors, uint8_t sectors_per_cluster, 
               uint64_t mft_lcn, uint64_t mft_mirr_lcn, uint64_t serial);
@@ -348,6 +342,13 @@ Result createMFT(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 
 Result createSystemFiles(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                           const NTFSLayout& layout);
+
+// System-file cluster allocation helpers. Format and check MUST agree on
+// these, otherwise the checker reads the wrong location.
+uint64_t getBitmapCluster(const NTFSLayout& layout);   // $Bitmap
+uint64_t getLogFileCluster(const NTFSLayout& layout);  // $LogFile
+uint64_t getUpCaseCluster(const NTFSLayout& layout);   // $UpCase
+uint64_t getLogFileClusters(const NTFSLayout& layout); // $LogFile size in clusters
 
 Result createBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                       const NTFSLayout& layout);

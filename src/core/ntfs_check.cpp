@@ -296,10 +296,8 @@ Result checkMFT(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 
 Result checkBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                    const NTFSLayout& layout, bool repair, std::vector<std::string>* errors) {
-    // Bitmap is typically at MFT record 6
-    // Calculate expected bitmap location
-    uint64_t bitmap_cluster = layout.mft_lcn + 
-        (16 * layout.mft_record_size / layout.bytes_per_cluster) + 10;
+    // Calculate expected bitmap location (shared with the format path)
+    uint64_t bitmap_cluster = getBitmapCluster(layout);
     uint64_t bitmap_sector = start_sector + bitmap_cluster * layout.sectors_per_cluster;
     uint64_t bitmap_offset = bitmap_sector * layout.bytes_per_sector;
     

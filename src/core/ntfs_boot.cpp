@@ -121,6 +121,40 @@ Result createSystemFiles(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 }
 
 // ============================================================================
+// System-file cluster allocation helpers
+// ============================================================================
+
+uint64_t getBitmapCluster(const NTFSLayout& layout) {
+    // $Bitmap sits immediately after the MFT's 16 system records
+    uint64_t mft_clusters = (16ULL * layout.mft_record_size +
+                             layout.bytes_per_cluster - 1) /
+                            layout.bytes_per_cluster;
+    return layout.mft_lcn + mft_clusters;
+}
+
+uint64_t getLogFileClusters(const NTFSLayout& layout) {
+    uint64_t log_size = 4ULL * 1024 * 1024;
+    if (layout.total_size < 100ULL * 1024 * 1024) {
+        log_size = 1ULL * 1024 * 1024;  // 1MB for small volumes
+    }
+    uint64_t clusters = log_size / layout.bytes_per_cluster;
+    return clusters == 0 ? 1 : clusters;
+}
+
+uint64_t getLogFileCluster(const NTFSLayout& layout) {
+    // $LogFile goes after $Bitmap
+    uint64_t bitmap_bytes = (layout.total_clusters + 7) / 8;
+    uint64_t bitmap_clusters = (bitmap_bytes + layout.bytes_per_cluster - 1) /
+                               layout.bytes_per_cluster;
+    return getBitmapCluster(layout) + bitmap_clusters;
+}
+
+uint64_t getUpCaseCluster(const NTFSLayout& layout) {
+    // $UpCase goes after $LogFile
+    return getLogFileCluster(layout) + getLogFileClusters(layout);
+}
+
+// ============================================================================
 // Create Bitmap ($Bitmap)
 // ============================================================================
 
@@ -136,7 +170,6 @@ Result createBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     
     // Mark system clusters as used
     // Boot sector (cluster 0), MFT clusters, etc.
-    // For simplicity, mark first few clusters as used
     uint64_t used_clusters = layout.mft_lcn + (16 * layout.mft_record_size / layout.bytes_per_cluster);
     used_clusters = std::max(used_clusters, static_cast<uint64_t>(10));
     
@@ -148,11 +181,8 @@ Result createBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
         }
     }
     
-    // Allocate space for bitmap (use first available clusters after MFT)
-    // In real implementation, would need to allocate from free space
-    // For now, place it after MFT
-    uint64_t bitmap_cluster = layout.mft_lcn + 
-                               (16 * layout.mft_record_size / layout.bytes_per_cluster) + 10;
+    // Allocate bitmap right after the MFT records
+    uint64_t bitmap_cluster = getBitmapCluster(layout);
     uint64_t bitmap_sector = start_sector + bitmap_cluster * layout.sectors_per_cluster;
     uint64_t bitmap_offset = bitmap_sector * layout.bytes_per_sector;
     
@@ -183,9 +213,8 @@ Result createLogFile(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     uint64_t log_clusters = log_size / layout.bytes_per_cluster;
     if (log_clusters == 0) log_clusters = 1;
     
-    // Allocate log file after MFT
-    uint64_t log_cluster = layout.mft_lcn + 
-                            (16 * layout.mft_record_size / layout.bytes_per_cluster) + 2;
+    // Allocate log file after the $Bitmap
+    uint64_t log_cluster = getLogFileCluster(layout);
     uint64_t log_sector = start_sector + log_cluster * layout.sectors_per_cluster;
     uint64_t log_offset = log_sector * layout.bytes_per_sector;
     
@@ -227,9 +256,8 @@ Result createUpCase(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
         }
     }
     
-    // Allocate space
-    uint64_t upcase_cluster = layout.mft_lcn + 
-                               (16 * layout.mft_record_size / layout.bytes_per_cluster) + 5;
+    // Allocate space after $LogFile (no collision with $Bitmap)
+    uint64_t upcase_cluster = getUpCaseCluster(layout);
     uint64_t upcase_sector = start_sector + upcase_cluster * layout.sectors_per_cluster;
     uint64_t upcase_offset = upcase_sector * layout.bytes_per_sector;
     

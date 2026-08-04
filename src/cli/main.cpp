@@ -9,17 +9,47 @@
 
 using namespace opm;
 
+namespace opm {
+namespace cli {
+int cmdCreate(const std::vector<std::string>& args);
+int cmdDelete(const std::vector<std::string>& args);
+int cmdResize(const std::vector<std::string>& args);
+int cmdMove(const std::vector<std::string>& args);
+int cmdFormat(const std::vector<std::string>& args);
+int cmdCheck(const std::vector<std::string>& args);
+int cmdFSInfo(const std::vector<std::string>& args);
+int cmdMklabel(const std::vector<std::string>& args);
+}
+}
+
 void printUsage(const char* program) {
     std::cout << "Open Partition Manager - CLI Tool\n"
               << "Usage: " << program << " <command> [options]\n\n"
-              << "Commands:\n"
+              << "Device commands:\n"
               << "  list                  List all disks and partitions\n"
               << "  info <device>         Show device information\n"
               << "  read <device>         Read and display partition table\n"
+              << "Partition commands:\n"
+              << "  mklabel <device> <mbr|gpt>        Write a new partition table\n"
+              << "  create <device> <start_sector> <size> <type> [name]\n"
+              << "                         Create a partition (type: ntfs, fat32,\n"
+              << "                         linux, swap, efi, lvm, raid)\n"
+              << "  delete <device> <number>          Delete a partition\n"
+              << "  resize <device> <number> <size>   Resize a partition\n"
+              << "  move <device> <number> <start>    Move a partition (copies data)\n"
+              << "\nFilesystem commands:\n"
+              << "  format <device> <fs> <start_sector> [size] [label]\n"
+              << "                         Format a partition (fs: fat32, ntfs,\n"
+              << "                         ext4, exfat)\n"
+              << "  check <device> <start_sector>     Check a filesystem\n"
+              << "  fsinfo <device> <start_sector>    Show filesystem information\n"
+              << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
               << "  " << program << " list\n"
-              << "  " << program << " info /dev/sda\n"
-              << "  " << program << " read /dev/sda\n";
+              << "  " << program << " read /dev/sda\n"
+              << "  " << program << " create /dev/sdb 2048 10G linux mydata\n"
+              << "  " << program << " format /dev/sdb ext4 2048 10G data\n"
+              << "  " << program << " check /dev/sdb 2048\n";
 }
 
 void printPartition(const Partition& part, int number) {
@@ -184,6 +214,12 @@ int main(int argc, char* argv[]) {
     
     std::string command = argv[1];
     
+    // Collect remaining args
+    std::vector<std::string> args;
+    for (int i = 2; i < argc; i++) {
+        args.push_back(argv[i]);
+    }
+    
     if (command == "list" || command == "ls") {
         cmdList();
     } else if (command == "info") {
@@ -202,6 +238,22 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         cmdRead(argv[2]);
+    } else if (command == "mklabel") {
+        return cli::cmdMklabel(args);
+    } else if (command == "create") {
+        return cli::cmdCreate(args);
+    } else if (command == "delete" || command == "rm") {
+        return cli::cmdDelete(args);
+    } else if (command == "resize") {
+        return cli::cmdResize(args);
+    } else if (command == "move" || command == "mv") {
+        return cli::cmdMove(args);
+    } else if (command == "format" || command == "mkfs") {
+        return cli::cmdFormat(args);
+    } else if (command == "check" || command == "fsck") {
+        return cli::cmdCheck(args);
+    } else if (command == "fsinfo") {
+        return cli::cmdFSInfo(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

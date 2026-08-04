@@ -43,6 +43,14 @@ Result formatFAT32(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     if (result.failed()) {
         return Result::error("Failed to write backup boot sector: " + result.message);
     }
+
+    // Step 6: Write FSInfo sector (sector 1)
+    FAT32FSInfo fs_info;
+    initFSInfoSector(fs_info, layout);
+    result = disk->writeSector(&fs_info, start_sector + layout.fs_info_sector);
+    if (result.failed()) {
+        return Result::error("Failed to write FSInfo sector: " + result.message);
+    }
     
     return Result::ok();
 }

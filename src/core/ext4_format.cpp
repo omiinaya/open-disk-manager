@@ -19,6 +19,17 @@ Result formatEXT4(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     if (!layout.validate()) {
         return Result::error("Invalid ext4 layout");
     }
+
+    // Step 1b: Clear the boot area (first 1024 bytes) so stale signatures
+    // from a previous filesystem cannot confuse detection.
+    {
+        std::vector<uint8_t> boot_area(1024, 0);
+        Result r = disk->write(boot_area.data(),
+                               start_sector * layout.bytes_per_sector, 1024);
+        if (r.failed()) {
+            return Result::error("Failed to clear boot area: " + r.message);
+        }
+    }
     
     // Step 2: Create superblock
     Result result = createSuperblock(disk, start_sector, layout, label);
