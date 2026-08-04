@@ -12,6 +12,7 @@
 #include "dialogs/benchmark_dialog.hpp"
 #include "dialogs/preferences_dialog.hpp"
 #include "dialogs/partition_properties_dialog.hpp"
+#include "wizards/wizards.hpp"
 #include "opm/partition_table.hpp"
 #include "opm/utils.hpp"
 #include "opm/disk_io.hpp"
@@ -24,6 +25,8 @@
 #include <QMenuBar>
 #include <QToolBar>
 #include <QStatusBar>
+#include <QDockWidget>
+#include <QPlainTextEdit>
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QHBoxLayout>
@@ -33,6 +36,10 @@
 #include <QApplication>
 #include <QInputDialog>
 #include <QSettings>
+#include <QTime>
+#include <QPalette>
+#include <QStyleFactory>
+#include <QScrollBar>
 
 namespace opm::gui {
 
@@ -42,8 +49,14 @@ MainWindow::MainWindow(QWidget* parent)
     , disk_tree_(nullptr)
     , partition_view_(nullptr)
     , operation_panel_(nullptr)
-    , status_bar_(nullptr) {
+    , status_bar_(nullptr)
+    , log_dock_(nullptr)
+    , log_view_(nullptr) {
+    // Apply the saved theme before building widgets.
+    QSettings settings;
+    applyTheme(settings.value("darkMode", false).toBool());
     setupUI();
+    logMessage("Open Partition Manager started");
 }
 
 MainWindow::~MainWindow() = default;
@@ -67,7 +80,7 @@ void MainWindow::refreshDisks() {
             }
         }
     } catch (const std::exception& e) {
-        statusBar()->showMessage(QString("Device enumeration failed: %1")
+        status_bar_->setStatus(QString("Device enumeration failed: %1")
                                      .arg(e.what()));
     }
     
@@ -153,7 +166,69 @@ void MainWindow::setupUI() {
     setupMenuBar();
     setupToolBar();
     setupStatusBar();
+    setupLogDock();
     setupConnections();
+}
+
+void MainWindow::setupLogDock() {
+    log_dock_ = new QDockWidget(tr("Operation Log"), this);
+    log_dock_->setObjectName("operationLogDock");
+    log_dock_->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea);
+
+    log_view_ = new QPlainTextEdit(log_dock_);
+    log_view_->setReadOnly(true);
+    log_view_->setMaximumBlockCount(5000);
+    log_view_->setPlaceholderText(tr("Operations and errors are logged here."));
+    log_dock_->setWidget(log_view_);
+
+    addDockWidget(Qt::BottomDockWidgetArea, log_dock_);
+    if (action_view_log_) {
+        action_view_log_->setChecked(true);
+    }
+}
+
+// Append a timestamped line to the log dock and mirror it in the status bar.
+void MainWindow::logMessage(const QString& message) {
+    if (log_view_) {
+        QString stamp = QTime::currentTime().toString("HH:mm:ss");
+        log_view_->appendPlainText(QString("[%1] %2").arg(stamp, message));
+        log_view_->verticalScrollBar()->setValue(log_view_->verticalScrollBar()->maximum());
+    }
+    if (status_bar_) {
+        status_bar_->setStatus(message);
+    }
+}
+
+void MainWindow::applyTheme(bool dark) {
+    QSettings settings;
+    settings.setValue("darkMode", dark);
+    if (dark) {
+        QPalette p;
+        p.setColor(QPalette::Window, QColor(45, 45, 48));
+        p.setColor(QPalette::WindowText, QColor(220, 220, 220));
+        p.setColor(QPalette::Base, QColor(30, 30, 30));
+        p.setColor(QPalette::AlternateBase, QColor(45, 45, 48));
+        p.setColor(QPalette::Text, QColor(220, 220, 220));
+        p.setColor(QPalette::Button, QColor(55, 55, 58));
+        p.setColor(QPalette::ButtonText, QColor(220, 220, 220));
+        p.setColor(QPalette::Highlight, QColor(42, 130, 218));
+        p.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
+        qApp->setStyle(QStyleFactory::create("Fusion"));
+        qApp->setPalette(p);
+    } else {
+        qApp->setStyle(QStyleFactory::create("Fusion"));
+        qApp->setPalette(QApplication::style()->standardPalette());
+    }
+    if (log_view_) log_view_->setStyleSheet(QString());
+}
+
+void MainWindow::setProgress(uint64_t done, uint64_t total) {
+    if (status_bar_) status_bar_->setProgress(done, total);
+}
+
+void MainWindow::setProgressDone() {
+    if (status_bar_) status_bar_->setProgressVisible(false);
+    logMessage("Operation completed");
 }
 
 void MainWindow::setupMenuBar() {
@@ -171,6 +246,15 @@ void MainWindow::setupMenuBar() {
     // Edit menu
     auto* edit_menu = menuBar()->addMenu("&Edit");
     action_preferences_ = edit_menu->addAction("&Preferences", this, &MainWindow::onActionPreferences);
+
+    // View menu
+    auto* view_menu = menuBar()->addMenu("&View");
+    action_view_log_ = view_menu->addAction("&Operation Log");
+    action_view_log_->setCheckable(true);
+    action_view_log_->setChecked(true);
+    connect(action_view_log_, &QAction::toggled, this, [this](bool on) {
+        if (log_dock_) log_dock_->setVisible(on);
+    });
     
     // Device menu
     auto* device_menu = menuBar()->addMenu("&Device");
@@ -185,6 +269,13 @@ void MainWindow::setupMenuBar() {
     action_clone_disk_ = device_menu->addAction("&Clone Disk...", this, &MainWindow::onActionCloneDisk);
     action_secure_erase_ = device_menu->addAction("&Secure Erase...", this, &MainWindow::onActionSecureErase);
     action_benchmark_ = device_menu->addAction("&Benchmark...", this, &MainWindow::onActionBenchmark);
+
+    // Wizards menu
+    auto* wizards_menu = menuBar()->addMenu("&Wizards");
+    action_wizard_clone_ = wizards_menu->addAction("&Clone Disk Wizard...", this, &MainWindow::onActionCloneWizard);
+    action_wizard_migrate_ = wizards_menu->addAction("&Migrate OS Wizard...", this, &MainWindow::onActionMigrateOSWizard);
+    action_wizard_bootable_ = wizards_menu->addAction("&Bootable Media Wizard...", this, &MainWindow::onActionBootableMediaWizard);
+    action_wizard_recovery_ = wizards_menu->addAction("&Recovery Wizard...", this, &MainWindow::onActionRecoveryWizard);
     
     // Help menu
     auto* help_menu = menuBar()->addMenu("&Help");
@@ -205,7 +296,9 @@ void MainWindow::setupToolBar() {
 }
 
 void MainWindow::setupStatusBar() {
-    statusBar()->showMessage("Ready");
+    status_bar_ = new StatusBarWidget(this);
+    statusBar()->addWidget(status_bar_, 1);
+    status_bar_->setStatus("Ready");
 }
 
 void MainWindow::setupConnections() {
@@ -273,6 +366,9 @@ void MainWindow::onActionAbout() {
 void MainWindow::onActionPreferences() {
     PreferencesDialog dialog(this);
     connect(&dialog, &PreferencesDialog::settingsChanged, [this]() {
+        QSettings settings;
+        applyTheme(settings.value("darkMode", false).toBool());
+        logMessage("Preferences applied");
         updateWindowTitle();
         refreshDisks();
     });
@@ -326,9 +422,11 @@ void MainWindow::onActionCreatePartition() {
                 QString("Commit failed: %1").arg(r.message.c_str()));
             return;
         }
-        statusBar()->showMessage(QString("Partition created at sector %1 (%2 MB)")
+        status_bar_->setStatus(QString("Partition created at sector %1 (%2 MB)")
             .arg(start)
             .arg(options.size_bytes / (1024 * 1024)));
+        logMessage(QString("Created partition at sector %1 (%2 MB)")
+            .arg(start).arg(options.size_bytes / (1024 * 1024)));
         refreshDisks();
     }
 }
@@ -377,19 +475,20 @@ void MainWindow::onActionDeletePartition() {
     if (dialog.exec() == QDialog::Accepted && dialog.confirmed()) {
         // Optionally secure-erase the partition data first
         if (dialog.eraseData()) {
-            statusBar()->showMessage("Secure erase in progress...");
+            status_bar_->setStatus("Secure erase in progress...");
             EraseOptions erase_opt;
             erase_opt.progress_callback = [this](uint64_t done, uint64_t total) {
-                statusBar()->showMessage(QString("Erasing %1 / %2 MB")
-                    .arg(done / (1024 * 1024)).arg(total / (1024 * 1024)));
+                setProgress(done, total);
             };
             Result er = secureErase(rw, part.startSector(), part.sectorCount(),
                                     erase_opt);
+            setProgressDone();
             if (er.failed()) {
                 QMessageBox::critical(this, "Error",
                     QString("Secure erase failed: %1").arg(er.message.c_str()));
                 return;
             }
+            logMessage(QString("Secure-erased partition %1 data").arg(selected_partition_number_));
         }
         
         Result r = table->deletePartition(selected_partition_number_);
@@ -404,8 +503,9 @@ void MainWindow::onActionDeletePartition() {
                 QString("Commit failed: %1").arg(r.message.c_str()));
             return;
         }
-        statusBar()->showMessage(QString("Partition %1 deleted")
+        status_bar_->setStatus(QString("Partition %1 deleted")
             .arg(selected_partition_number_));
+        logMessage(QString("Deleted partition %1").arg(selected_partition_number_));
         refreshDisks();
     }
 }
@@ -455,7 +555,10 @@ void MainWindow::onActionResizePartition() {
                 QString("Commit failed: %1").arg(r.message.c_str()));
             return;
         }
-        statusBar()->showMessage(QString("Partition %1 resized to %2 MB")
+        status_bar_->setStatus(QString("Partition %1 resized to %2 MB")
+            .arg(selected_partition_number_)
+            .arg(options.new_size_bytes / (1024 * 1024)));
+        logMessage(QString("Resized partition %1 to %2 MB")
             .arg(selected_partition_number_)
             .arg(options.new_size_bytes / (1024 * 1024)));
         refreshDisks();
@@ -496,7 +599,7 @@ void MainWindow::onActionFormatPartition() {
             return;
         }
         
-        statusBar()->showMessage("Formatting partition...");
+        status_bar_->setStatus("Formatting partition...");
         Result r;
         switch (options.fs_type) {
             case FileSystemType::FAT32:
@@ -527,15 +630,17 @@ void MainWindow::onActionFormatPartition() {
         rw->flush();
         
         if (options.check_after) {
-            statusBar()->showMessage("Verifying filesystem...");
+            status_bar_->setStatus("Verifying filesystem...");
             Result cr = disk->detectFilesystem(start) == FileSystemType::Unknown
                 ? Result::error("filesystem not detected")
                 : Result::ok();
             (void)cr;
         }
-        statusBar()->showMessage(QString("Partition %1 formatted as %2")
+        status_bar_->setStatus(QString("Partition %1 formatted as %2")
             .arg(selected_partition_number_)
             .arg(options.label));
+        logMessage(QString("Formatted partition %1 as %2")
+            .arg(selected_partition_number_).arg(options.label));
     }
 }
 
@@ -558,7 +663,7 @@ void MainWindow::onActionCloneDisk() {
             return;
         }
         
-        statusBar()->showMessage("Cloning...");
+        status_bar_->setStatus("Cloning...");
         CloneOptions clone_opts;
         if (options.verify_after) {
             clone_opts.verify = true;
@@ -571,8 +676,9 @@ void MainWindow::onActionCloneDisk() {
                 QString("Clone failed: %1").arg(r.message.c_str()));
             return;
         }
-        statusBar()->showMessage(QString("Clone complete: %1 -> %2")
+        status_bar_->setStatus(QString("Clone complete: %1 -> %2")
             .arg(options.source_path).arg(options.target_path));
+        logMessage(QString("Cloned %1 -> %2").arg(options.source_path).arg(options.target_path));
     }
 }
 
@@ -607,12 +713,11 @@ void MainWindow::onActionSecureErase() {
                 method = EraseMethod::NIST80088; break;
         }
         
-        statusBar()->showMessage("Secure erase in progress...");
+        status_bar_->setStatus("Secure erase in progress...");
         EraseOptions erase_opts;
         erase_opts.method = method;
         erase_opts.progress_callback = [this](uint64_t done, uint64_t total) {
-            statusBar()->showMessage(QString("Erasing %1 / %2 MB")
-                .arg(done / (1024 * 1024)).arg(total / (1024 * 1024)));
+            setProgress(done, total);
         };
         
         Result r;
@@ -640,7 +745,8 @@ void MainWindow::onActionSecureErase() {
                 QString("Secure erase failed: %1").arg(r.message.c_str()));
             return;
         }
-        statusBar()->showMessage("Secure erase complete.");
+        setProgressDone();
+        status_bar_->setStatus("Secure erase complete.");
     }
 }
 
@@ -680,7 +786,7 @@ void MainWindow::onDiskSelected(int index) {
                 }
             }
         } catch (const std::exception& e) {
-            statusBar()->showMessage(QString("Failed to load partitions: %1")
+            status_bar_->setStatus(QString("Failed to load partitions: %1")
                                          .arg(e.what()));
         }
         partition_view_->setPartitions(infos);
@@ -710,6 +816,36 @@ void MainWindow::onPartitionDoubleClicked(int partition_number) {
         dialog.exec();
     } catch (const std::exception&) {
         // ignore - properties dialog is informational
+    }
+}
+
+// Wizard handlers
+void MainWindow::onActionCloneWizard() {
+    CloneDiskWizard wizard(disks_, this);
+    if (wizard.exec() == QDialog::Accepted) {
+        logMessage("Clone wizard finished");
+        refreshDisks();
+    }
+}
+
+void MainWindow::onActionMigrateOSWizard() {
+    MigrateOSWizard wizard(disks_, this);
+    if (wizard.exec() == QDialog::Accepted) {
+        logMessage("Migrate OS wizard finished");
+        refreshDisks();
+    }
+}
+
+void MainWindow::onActionBootableMediaWizard() {
+    BootableMediaWizard wizard(disks_, this);
+    wizard.exec();
+}
+
+void MainWindow::onActionRecoveryWizard() {
+    RecoveryWizard wizard(disks_, this);
+    if (wizard.exec() == QDialog::Accepted) {
+        logMessage("Recovery wizard finished");
+        refreshDisks();
     }
 }
 

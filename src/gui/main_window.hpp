@@ -6,6 +6,9 @@
 #include <memory>
 #include <vector>
 
+class QDockWidget;
+class QPlainTextEdit;
+
 namespace opm {
 class PartitionTable;
 class DiskIO;
@@ -29,6 +32,9 @@ public:
 
     // Initialize the application
     void initialize();
+
+    // Append a timestamped line to the log dock (and mirror it in the status bar).
+    void logMessage(const QString& message);
 
     // Refresh disk information
     void refreshDisks();
@@ -61,15 +67,27 @@ private slots:
     void onPartitionSelected(int partition_number);
     void onPartitionDoubleClicked(int partition_number);
 
+    // Wizards
+    void onActionCloneWizard();
+    void onActionMigrateOSWizard();
+    void onActionBootableMediaWizard();
+    void onActionRecoveryWizard();
+
 private:
     void setupUI();
     void setupMenuBar();
     void setupToolBar();
     void setupStatusBar();
     void setupConnections();
+    void setupLogDock();
     
     void updateWindowTitle();
     void updateActionStates();
+    void applyTheme(bool dark);
+
+    // Report operation progress through the status bar widget.
+    void setProgress(uint64_t done, uint64_t total);
+    void setProgressDone();
     
     // Widgets
     QSplitter* main_splitter_;
@@ -77,6 +95,8 @@ private:
     PartitionViewWidget* partition_view_;
     OperationPanelWidget* operation_panel_;
     StatusBarWidget* status_bar_;
+    QDockWidget* log_dock_;
+    QPlainTextEdit* log_view_;
     
     // Data
     std::vector<std::shared_ptr<DiskIO>> disks_;
@@ -88,6 +108,7 @@ private:
     QAction* action_quit_;
     QAction* action_about_;
     QAction* action_preferences_;
+    QAction* action_view_log_;
     QAction* action_create_partition_;
     QAction* action_delete_partition_;
     QAction* action_resize_partition_;
@@ -95,6 +116,10 @@ private:
     QAction* action_clone_disk_;
     QAction* action_secure_erase_;
     QAction* action_benchmark_;
+    QAction* action_wizard_clone_;
+    QAction* action_wizard_migrate_;
+    QAction* action_wizard_bootable_;
+    QAction* action_wizard_recovery_;
 };
 
 } // namespace opm::gui

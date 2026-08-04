@@ -4,6 +4,7 @@
 #include <cstdint>
 
 class QLabel;
+class QProgressBar;
 
 namespace opm::gui {
 
@@ -17,6 +18,8 @@ public:
     void setStatus(const QString& message);
     void setDeviceInfo(const QString& device_path);
     void setSpaceInfo(uint64_t used, uint64_t total);
+    void setProgress(uint64_t done, uint64_t total);
+    void setProgressVisible(bool visible);
     void clear();
 
 private:
@@ -25,6 +28,7 @@ private:
     QLabel* status_label_;
     QLabel* device_label_;
     QLabel* space_label_;
+    QProgressBar* progress_bar_;
 };
 
 } // namespace opm::gui

@@ -30,6 +30,7 @@ dialogs/secure_erase_dialog.cpp
 dialogs/benchmark_dialog.cpp
 dialogs/partition_properties_dialog.cpp
 dialogs/preferences_dialog.cpp
+wizards/wizards.cpp
 )
 
 set(GUI_HEADERS
@@ -47,6 +48,7 @@ dialogs/secure_erase_dialog.hpp
 dialogs/benchmark_dialog.hpp
 dialogs/partition_properties_dialog.hpp
 dialogs/preferences_dialog.hpp
+wizards/wizards.hpp
 )
 
 # Create executable
