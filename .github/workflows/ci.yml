@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build
+
+      - name: Configure (Release)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+
+      - name: Build
+        run: cmake --build build -j $(nproc)
+
+      - name: Run unit tests
+        working-directory: build
+        run: |
+          ./tests/opm_tests
+
+      - name: Run CTest (CLI E2E on image files, root-free)
+        working-directory: build
+        run: ctest --output-on-failure -E integration_disk_detection
+
+      # GUI build is verified when Qt is available; skip silently otherwise.
+      - name: GUI build (if Qt available)
+        run: |
+          if cmake -S . -B build-gui -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON -DBUILD_TESTS=OFF -G Ninja > /tmp/gui_cfg.log 2>&1; then
+            cmake --build build-gui -j $(nproc) || exit 1
+          else
+            echo "Qt not available - GUI build skipped"
+            tail -3 /tmp/gui_cfg.log
+          fi

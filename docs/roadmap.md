@@ -30,15 +30,16 @@ sidebar_position: 99
 - ✅ Secure erase (Zeros, Random, DoD, Gutmann, NIST)
 - ✅ Benchmarking (sequential/random I/O, latency)
 
-### Phase 5: Boot Environment ✅
-- ✅ Live USB creation from ISO
-- ✅ Boot repair tools (MBR, GPT, GRUB, BCD)
-- ✅ Bootloader installation
-- ✅ USB device detection
+### Phase 5: Boot Environment 🚧
+- ✅ Live USB creation from ISO (real)
+- ✅ Boot repair tools (MBR signature + GPT restore-from-backup)
+- 🚧 Bootloader installation (honest error: stage files not bundled)
+- ✅ USB device detection (sysfs)
+- ✅ ISO mount/extract/create (real)
 
 ### Phase 6: GUI 🚧
 - ✅ Qt interface framework (requires Qt5/6 installation)
-- 🚧 Dialogs: Create/Delete/Resize/Format/Clone/Secure Erase/Benchmark
+- ✅ Dialogs: Create/Delete/Resize/Format/Clone/Secure Erase/Benchmark (real core ops)
 - 📋 Visual partition map
 - 📋 Drag-and-drop operations
 - 📋 Wizards
