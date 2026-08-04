@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <sstream>
 #include "opm/partition_table.hpp"
 #include "opm/disk_io.hpp"
 #include "opm/utils.hpp"
@@ -22,6 +23,7 @@
 #include "opm/security.hpp"
 #include "opm/i18n.hpp"
 #include "opm/backup.hpp"
+#include "opm/schedule.hpp"
 
 namespace opm {
 namespace cli {
@@ -1481,6 +1483,119 @@ int cmdBackup(const std::vector<std::string>& args) {
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
         std::cout << "Image OK: all " << "stored blocks verified\n";
         return 0;
+    }
+    if (sub == "schedule") {
+        if (args.size() < 2 || args[1] == "--help" || args[1] == "-h") {
+            std::cerr << "Usage:\n"
+                      << "  opm backup schedule add <name> <cron> <command...>\n"
+                      << "                         e.g. opm backup schedule add nightly '0 2 * * *' 'opm backup create /dev/sda /backup/img'\n"
+                      << "  opm backup schedule list\n"
+                      << "  opm backup schedule remove <name>\n"
+                      << "  opm backup schedule show <name> [--cron|--systemd]\n"
+                      << "  opm backup schedule run <name>\n"
+                      << "  (cron fields: minute hour day-of-month month day-of-week; * and */N supported)\n";
+            return 1;
+        }
+        const std::string& sub2 = args[1];
+        if (sub2 == "add") {
+            if (args.size() < 5) {
+                std::cerr << "Usage: opm backup schedule add <name> '<minute hour dom month dow>' <command...>\n";
+                return 1;
+            }
+            ScheduleEntry e;
+            e.name = args[2];
+            // Parse the quoted cron expression (single arg) into 5 fields.
+            std::istringstream cron(args[3]);
+            std::vector<std::string> fields;
+            std::string f;
+            while (cron >> f) fields.push_back(f);
+            if (fields.size() != 5) {
+                std::cerr << "Error: cron expression must have exactly 5 fields\n";
+                return 1;
+            }
+            e.minute = fields[0]; e.hour = fields[1]; e.dom = fields[2];
+            e.month = fields[3]; e.dow = fields[4];
+            for (size_t i = 4; i < args.size(); ++i) {
+                if (i > 4) e.command += " ";
+                e.command += args[i];
+            }
+            std::string err;
+            if (!e.valid(err)) { std::cerr << "Error: " << err << "\n"; return 1; }
+            Result r = scheduleAdd(e);
+            if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+            std::cout << "Schedule '" << e.name << "' saved: " << e.describe() << "\n";
+            std::cout << "  cron line: " << e.cronLine() << "\n";
+            std::cout << "  registry:  " << scheduleRegistryPath() << "\n";
+            std::cout << "Install the live backend with:\n"
+                      << "  opm backup schedule install-systemd " << e.name << "\n"
+                      << "  opm backup schedule install-crontab " << e.name << "\n";
+            return 0;
+        }
+        if (sub2 == "list") {
+            std::vector<ScheduleEntry> entries;
+            Result r = scheduleList(entries);
+            if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+            if (entries.empty()) { std::cout << "No schedules configured.\n"; return 0; }
+            std::cout << "Schedules (" << scheduleRegistryPath() << "):\n";
+            for (const auto& e : entries) {
+                std::cout << "  " << e.name << "  " << e.describe() << "  ->  " << e.command << "\n";
+            }
+            return 0;
+        }
+        if (sub2 == "remove") {
+            if (args.size() < 3) { std::cerr << "Usage: opm backup schedule remove <name>\n"; return 1; }
+            Result r = scheduleRemove(args[2]);
+            if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
+            std::cout << "Removed schedule '" << args[2] << "' (registry). Disable any live timer with:\n"
+                      << "  systemctl --user disable --now opm-backup-" << args[2] << ".timer\n";
+            return 0;
+        }
+        if (sub2 == "show") {
+            if (args.size() < 3) { std::cerr << "Usage: opm backup schedule show <name> [--cron|--systemd]\n"; return 1; }
+            ScheduleEntry e;
+            if (!scheduleFind(args[2], e)) { std::cerr << "Error: schedule '" << args[2] << "' not found\n"; return 1; }
+            bool want_cron = args.size() > 3 && args[3] == "--cron";
+            bool want_systemd = args.size() > 3 && args[3] == "--systemd";
+            if (want_cron) { std::cout << e.cronLine() << "\n"; return 0; }
+            if (want_systemd) {
+                auto inst = scheduleInstallSystemd(e);
+                std::cout << "units:\n  " << inst.written_units << "\nnote: " << inst.note << "\n";
+                return 0;
+            }
+            std::cout << "Name:    " << e.name << "\n"
+                      << "Cron:    " << e.cronLine() << "\n"
+                      << "Runs:    " << e.describe() << "\n"
+                      << "Command: " << e.command << "\n";
+            return 0;
+        }
+        if (sub2 == "install-systemd") {
+            if (args.size() < 3) { std::cerr << "Usage: opm backup schedule install-systemd <name>\n"; return 1; }
+            ScheduleEntry e;
+            if (!scheduleFind(args[2], e)) { std::cerr << "Error: schedule '" << args[2] << "' not found\n"; return 1; }
+            auto inst = scheduleInstallSystemd(e);
+            if (inst.status.failed()) { std::cerr << "Error: " << inst.status.message << "\n"; return 1; }
+            std::cout << inst.note << "\n";
+            return 0;
+        }
+        if (sub2 == "install-crontab") {
+            if (args.size() < 3) { std::cerr << "Usage: opm backup schedule install-crontab <name>\n"; return 1; }
+            ScheduleEntry e;
+            if (!scheduleFind(args[2], e)) { std::cerr << "Error: schedule '" << args[2] << "' not found\n"; return 1; }
+            auto inst = scheduleInstallCrontab(e);
+            if (inst.status.failed()) { std::cerr << "Error: " << inst.status.message << "\n"; return 1; }
+            std::cout << inst.note << "\n";
+            return 0;
+        }
+        if (sub2 == "run") {
+            if (args.size() < 3) { std::cerr << "Usage: opm backup schedule run <name>\n"; return 1; }
+            ScheduleEntry e;
+            if (!scheduleFind(args[2], e)) { std::cerr << "Error: schedule '" << args[2] << "' not found\n"; return 1; }
+            std::cout << "Running schedule '" << e.name << "': " << e.command << "\n";
+            int rc = std::system(e.command.c_str());
+            return rc == 0 ? 0 : 1;
+        }
+        std::cerr << "Error: unknown schedule subcommand '" << sub2 << "'\n";
+        return 1;
     }
     std::cerr << "Error: unknown backup subcommand '" << sub << "'\n";
     return 1;

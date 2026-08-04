@@ -37,6 +37,7 @@ set(TEST_SOURCES
     test_undelete.cpp
     test_security.cpp
     test_backup.cpp
+    test_schedule.cpp
 )
 
 add_executable(opm_tests ${TEST_SOURCES})
