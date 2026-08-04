@@ -73,6 +73,9 @@ private slots:
     void onActionBootableMediaWizard();
     void onActionRecoveryWizard();
 
+    // Tools
+    void onActionSchedules();
+
 private:
     void setupUI();
     void setupMenuBar();
@@ -108,6 +111,7 @@ private:
     QAction* action_quit_;
     QAction* action_about_;
     QAction* action_preferences_;
+    QAction* action_schedules_;
     QAction* action_view_log_;
     QAction* action_create_partition_;
     QAction* action_delete_partition_;

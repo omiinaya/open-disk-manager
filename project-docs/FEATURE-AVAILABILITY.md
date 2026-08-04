@@ -76,7 +76,7 @@
 | **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar, hard links + device nodes) |
 | **`backup schedule add/list/remove/show/run`** | ✅ | Cron + systemd-timer generation |
 | **`backup list` / `backup prune`** | ✅ | Backup-set listing + retention (`--keep-full`, `--older-than`) |
-| Progress indicators / scripting | 🚧 | Embedded in commands; JSON output planned |
+| Progress indicators / scripting | ✅ | embedded progress; `--json` on list/info/backup info/backup list |
 
 ### GUI (Qt, `-DBUILD_GUI=ON`)
 
@@ -153,8 +153,8 @@
 | **Hard links / device nodes** | ✅ | `backup files` preserves hard links (dedup) + char/block nodes (mknod on restore) |
 | **File extract** | ✅ | `opm backup extract` — path-traversal guard |
 | **Scheduling** | ✅ | `opm backup schedule` — registry + cron line + systemd user timer |
+| **Schedule GUI panel** | ✅ | Tools → Backup Schedules (view/add/remove; same registry as CLI) |
 | **Windows PE recovery media** | 📋 | WinPE is Windows-only; `opm bootable` covers Linux live USB |
-| **Schedule GUI panel** | 📋 | CLI scheduling today; GUI panel planned |
 
 ## Usage Rights
 

@@ -11,6 +11,7 @@
 #include "dialogs/secure_erase_dialog.hpp"
 #include "dialogs/benchmark_dialog.hpp"
 #include "dialogs/preferences_dialog.hpp"
+#include "dialogs/schedules_dialog.hpp"
 #include "dialogs/partition_properties_dialog.hpp"
 #include "wizards/wizards.hpp"
 #include "opm/partition_table.hpp"
@@ -277,6 +278,10 @@ void MainWindow::setupMenuBar() {
     action_wizard_bootable_ = wizards_menu->addAction("&Bootable Media Wizard...", this, &MainWindow::onActionBootableMediaWizard);
     action_wizard_recovery_ = wizards_menu->addAction("&Recovery Wizard...", this, &MainWindow::onActionRecoveryWizard);
     
+    // Tools menu
+    auto* tools_menu = menuBar()->addMenu("&Tools");
+    action_schedules_ = tools_menu->addAction("&Backup Schedules...", this, &MainWindow::onActionSchedules);
+    
     // Help menu
     auto* help_menu = menuBar()->addMenu("&Help");
     action_about_ = help_menu->addAction("&About", this, &MainWindow::onActionAbout);
@@ -358,7 +363,7 @@ void MainWindow::onActionQuit() {
 
 void MainWindow::onActionAbout() {
     QMessageBox::about(this, "About Open Partition Manager",
-        "<h2>Open Partition Manager 0.2.0</h2>"
+        "<h2>Open Partition Manager 0.3.1</h2>"
         "<p>An open-source partition management tool for Linux.</p>"
         "<p>Built with Qt and modern C++.</p>");
 }
@@ -372,6 +377,11 @@ void MainWindow::onActionPreferences() {
         updateWindowTitle();
         refreshDisks();
     });
+    dialog.exec();
+}
+
+void MainWindow::onActionSchedules() {
+    SchedulesDialog dialog(this);
     dialog.exec();
 }
 

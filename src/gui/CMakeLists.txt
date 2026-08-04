@@ -30,6 +30,7 @@ dialogs/secure_erase_dialog.cpp
 dialogs/benchmark_dialog.cpp
 dialogs/partition_properties_dialog.cpp
 dialogs/preferences_dialog.cpp
+dialogs/schedules_dialog.cpp
 wizards/wizards.cpp
 )
 
@@ -48,6 +49,7 @@ dialogs/secure_erase_dialog.hpp
 dialogs/benchmark_dialog.hpp
 dialogs/partition_properties_dialog.hpp
 dialogs/preferences_dialog.hpp
+dialogs/schedules_dialog.hpp
 wizards/wizards.hpp
 )
 
