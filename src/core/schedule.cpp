@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -112,9 +113,10 @@ static std::string registryDir(const std::string& reg) {
 
 static bool writeRegistry(const std::string& path, const std::vector<ScheduleEntry>& entries, Result& r) {
     std::string dir = registryDir(path);
-    std::string mkdir = std::string("mkdir -p ") + dir;
-    if (std::system(mkdir.c_str()) != 0) {
-        r = Result::error("cannot create registry directory " + dir);
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    if (ec) {
+        r = Result::error("cannot create registry directory " + dir + ": " + ec.message());
         return false;
     }
     std::ofstream f(path, std::ios::trunc);

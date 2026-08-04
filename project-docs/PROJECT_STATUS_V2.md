@@ -59,7 +59,7 @@ System:       recover [--rebuild] | align [--fix] | lvm | raid | i18n
 ```
 ✅ Compiling: SUCCESS (Linux gcc 12 / MinGW / macOS)
 ✅ Tests: 251/251 unit + CLI E2E PASSING
-✅ Windows (MinGW, wine): 228/228 pass + 1 skip (openssl unavailable under wine)
+✅ Windows (MinGW, wine): 246/246 pass + 5 skips (tar/systemd Linux-only, openssl absent)
 ✅ CI: ubuntu + macos + windows matrix; GUI build job; packaging job
 ✅ CPack: opm-0.2.0-x86_64.deb generated and verified
 ```

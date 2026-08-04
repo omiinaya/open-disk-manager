@@ -11,6 +11,15 @@ using namespace opm;
 
 namespace {
 
+#ifdef _WIN32
+// The self-contained tar module and systemd unit generation are documented as
+// Linux-focused (honest "not supported on this build" returns, not silent
+// no-ops). Skip their platform-specific tests when cross-compiling for Windows.
+#define OPM_SKIP_PLATFORM_SPECIFIC() GTEST_SKIP() << "Linux-only feature (documented); skipped on Windows"
+#else
+#define OPM_SKIP_PLATFORM_SPECIFIC() ((void)0)
+#endif
+
 std::string tmpDir(const char* tag) {
     std::string d = std::string("/tmp/opm_tar_") + tag + "_" +
                     std::to_string(::getpid()) + "_" + std::to_string(std::rand());
@@ -41,6 +50,7 @@ bool pathExists(const std::string& p) {
 } // namespace
 
 TEST(TarTest, CreateListExtractRoundTrip) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
     std::string src = tmpDir("src");
     std::string arc = src + ".tar";
     std::string dst = tmpDir("dst");
@@ -87,6 +97,7 @@ TEST(TarTest, CreateListExtractRoundTrip) {
 }
 
 TEST(TarTest, RejectsUnsafeExtractionPaths) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
     std::string src = tmpDir("src2");
     std::string arc = src + ".tar";
     std::string dst = tmpDir("dst2");
@@ -116,6 +127,7 @@ TEST(TarTest, RejectsUnsafeExtractionPaths) {
 }
 
 TEST(TarTest, SymlinkRoundTrip) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
     std::string src = tmpDir("src3");
     std::string arc = src + ".tar";
     std::string dst = tmpDir("dst3");

@@ -8,6 +8,12 @@
 using namespace opm;
 
 namespace {
+#ifdef _WIN32
+// systemd unit generation is Linux-only; skip on Windows cross-builds.
+#define OPM_SKIP_PLATFORM_SPECIFIC() GTEST_SKIP() << "Linux-only feature (documented); skipped on Windows"
+#else
+#define OPM_SKIP_PLATFORM_SPECIFIC() ((void)0)
+#endif
 std::string tmpRegistry(const char* tag) {
     return std::string("/tmp/opm_sched_") + tag + "_" +
            std::to_string(::getpid()) + "_" + std::to_string(std::rand()) + ".conf";
@@ -99,6 +105,7 @@ TEST(ScheduleTest, EscapedPipeInCommandSurvivesRegistry) {
 }
 
 TEST(ScheduleTest, SystemdUnitGeneration) {
+    OPM_SKIP_PLATFORM_SPECIFIC();
     ScheduleEntry e;
     e.name = "weekly"; e.minute = "30"; e.hour = "4";
     e.dom = "*"; e.month = "*"; e.dow = "1";  // Monday
