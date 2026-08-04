@@ -64,12 +64,30 @@ install(DIRECTORY include/
     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
 
+# Man page
+install(FILES man/opm.1
+    DESTINATION share/man/man1
+)
+
+# Documentation
+install(FILES README.md CHANGELOG.md LICENSE
+    DESTINATION share/doc/OpenPartitionManager
+)
+
 # CPack configuration
-set(CPACK_PACKAGE_NAME "OpenPartitionManager")
+set(CPACK_PACKAGE_NAME "opm")
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open Source Partition Management Tool")
 set(CPACK_PACKAGE_VENDOR "OpenPartitionManager Contributors")
+set(CPACK_PACKAGE_CONTACT "https://github.com/omiinaya/open-disk-manager")
+set(CPACK_PACKAGE_LICENSE "GPL-3.0-or-later")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_GENERATOR "DEB;RPM")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenPartitionManager Contributors")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_RPM_PACKAGE_LICENSE "GPL-3.0-or-later")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
+set(CPACK_PACKAGE_FILE_NAME "opm-${PROJECT_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 include(CPack)

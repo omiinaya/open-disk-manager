@@ -8,6 +8,57 @@ on:
 
 jobs:
   build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build libblkid-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja
+
+      - name: Install dependencies (Windows, MSYS2/MinGW)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+
+      - name: Provide /tmp for native Windows tests
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path C:\tmp | Out-Null
+
+      - name: Configure (Release, core + CLI)
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=OFF -DBUILD_TESTS=ON -G Ninja
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Run unit tests
+        working-directory: build
+        run: ./tests/opm_tests
+
+      - name: Run CTest (CLI E2E on image files, root-free)
+        working-directory: build
+        run: ctest --output-on-failure -E integration_disk_detection
+
+  gui-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,29 +66,38 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake g++ ninja-build libblkid-dev
+          sudo apt-get install -y cmake g++ ninja-build libblkid-dev qt6-base-dev
 
-      - name: Configure (Release)
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
-
-      - name: Build
-        run: cmake --build build -j $(nproc)
-
-      - name: Run unit tests
-        working-directory: build
+      - name: Configure + build GUI
         run: |
-          ./tests/opm_tests
+          cmake -S . -B build-gui -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON -DBUILD_TESTS=OFF -G Ninja
+          cmake --build build-gui -j
 
-      - name: Run CTest (CLI E2E on image files, root-free)
-        working-directory: build
-        run: ctest --output-on-failure -E integration_disk_detection
+  packaging:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
 
-      # GUI build is verified when Qt is available; skip silently otherwise.
-      - name: GUI build (if Qt available)
+      - name: Install dependencies
         run: |
-          if cmake -S . -B build-gui -DCMAKE_BUILD_TYPE=Release -DBUILD_GUI=ON -DBUILD_TESTS=OFF -G Ninja > /tmp/gui_cfg.log 2>&1; then
-            cmake --build build-gui -j $(nproc) || exit 1
-          else
-            echo "Qt not available - GUI build skipped"
-            tail -3 /tmp/gui_cfg.log
-          fi
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build libblkid-dev rpm
+
+      - name: Build Release
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -G Ninja
+          cmake --build build -j
+
+      - name: Package (DEB + RPM)
+        run: |
+          cd build
+          cpack -G DEB
+          cpack -G RPM
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opm-packages
+          path: build/*.deb
+          if-no-files-found: error

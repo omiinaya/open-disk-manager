@@ -1,46 +1,36 @@
-# Dockerfile for Coolify deployment
-# This builds the Docusaurus documentation site
+# Open Partition Manager — build image
+#
+# Build:
+#   docker build -t opm .
+# Run (device access required for real partition work):
+#   docker run --rm -it --privileged -v /dev:/dev opm opm list
+#
+# The image builds the CLI + core library. The GUI needs Qt and is intended
+# for desktop use, so it is not included here.
 
-# Build stage
-FROM node:18-alpine AS builder
+FROM debian:bookworm-slim AS builder
 
-WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake g++ ninja-build libblkid-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy package files first for better layer caching
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy the rest of the application
+WORKDIR /src
 COPY . .
+RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -G Ninja \
+    && cmake --build build -j"$(nproc)"
 
-# Build the static site
-RUN npm run build
+FROM debian:bookworm-slim
 
-# Production stage with nginx
-FROM nginx:alpine
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libblkid1 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy built static files from builder stage
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /src/build/src/cli/opm /usr/local/bin/opm
+COPY --from=builder /src/man/opm.1 /usr/local/share/man/man1/opm.1
 
-# Create a simple nginx config for SPA
-RUN echo 'server { \
-    listen 80; \
-    server_name _; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /assets/ { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# External tools used for optional features (honest errors when absent).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cryptsetup dislocker efibootmgr chntpw testdisk openssl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Expose port 80
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["opm"]

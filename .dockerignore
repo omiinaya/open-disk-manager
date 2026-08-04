@@ -1,39 +1,30 @@
-# Ignore C++ build files
+# Build artifacts
 build/
-CMakeFiles/
-*.cmake
-Makefile
-
-# Ignore C++ source (not needed for docs site)
-src/core/
-src/cli/
-src/gui/
-include/
-tests/
+build-*/
 Testing/
-scripts/
-project-docs/
+*.o
+*.a
+*.exe
+CMakeCache.txt
 
-# Ignore git
-.git/
-.gitignore
-
-# Ignore node_modules (will be installed fresh)
+# Node/docusaurus junk that historically polluted the repo
 node_modules/
+.docusaurus/
+static/docusaurus
 
-# Ignore IDE files
+# Qt / IDE
+*.user
+*.autosave
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
 
-# Ignore OS files
+# Tests
+__pycache__/
+*.pyc
+
+# Local images
+*.img
+*.iso
+
+# OS
 .DS_Store
-Thumbs.db
-
-# Ignore docusaurus cache
-.docusaurus/
-
-# Ignore nixpacks
-nixpacks.toml

@@ -1,0 +1,107 @@
+.TH OPM 1 "August 2026" "Open Partition Manager 0.2.0" "User Commands"
+.SH NAME
+opm \- open-source partition management tool
+.SH SYNOPSIS
+.B opm
+\fIcommand\fR [options]
+.SH DESCRIPTION
+.B Open Partition Manager
+is an open-source tool for creating, deleting, resizing, moving, formatting,
+checking, cloning, and recovering partitions on Linux, macOS, and Windows.
+It reads and writes MBR and GPT partition tables and supports the FAT32,
+NTFS, ext4, exFAT, and Linux swap filesystems.
+.SH DEVICE COMMANDS
+.TP
+.B list
+List all disks and partitions.
+.TP
+.B info \fIdevice\fR
+Show device information.
+.TP
+.B read \fIdevice\fR
+Read and display the partition table.
+.TP
+.B mklabel \fIdevice\fR \fImbr|gpt\fR
+Write a new (empty) partition table.
+.SH PARTITION COMMANDS
+.TP
+.B create \fIdevice\fR \fIstart\fR \fIsize\fR \fItype\fR [name]
+Create a partition (type: ntfs, fat32, linux, swap, efi, lvm, raid).
+.TP
+.B delete \fIdevice\fR \fInumber\fR
+Delete a partition.
+.TP
+.B resize \fIdevice\fR \fInumber\fR \fIsize\fR
+Resize a partition.
+.TP
+.B move \fIdevice\fR \fInumber\fR \fIstart\fR
+Move a partition, preserving its data.
+.TP
+.B convert \fIdevice\fR \fImbr|gpt\fR
+Convert the partition table in place (data preserved).
+.TP
+.B set-active \fIdevice\fR \fInumber\fR [on|off]
+Toggle the MBR bootable flag.
+.TP
+.B hide / unhide \fIdevice\fR \fInumber\fR
+Hide or unhide a FAT-family partition.
+.SH FILESYSTEM COMMANDS
+.TP
+.B format \fIdevice\fR \fIfs\fR \fIstart\fR [size] [label]
+Format a partition (fs: fat32, ntfs, ext4, exfat, swap).
+.TP
+.B check \fIdevice\fR \fIstart\fR
+Check a filesystem.
+.TP
+.B fsinfo \fIdevice\fR \fIstart\fR
+Show filesystem information.
+.TP
+.B label \fIdevice\fR \fIstart\fR \fIname\fR
+Set the volume label.
+.TP
+.B undelete \fIdevice\fR \fIstart\fR [\-\-restore \fIindex\fR]
+List and recover deleted FAT files.
+.TP
+.B cryptinfo \fIdevice\fR \fIstart\fR
+Detect encryption (BitLocker/LUKS).
+.TP
+.B align \fIdevice\fR [\-\-fix]
+Report 4K alignment; \fB\-\-fix\fR moves unaligned partitions.
+.SH SYSTEM COMMANDS
+.TP
+.B recover \fIdevice\fR [\-\-rebuild]
+Scan for lost partitions; rebuild an MBR table with \fB\-\-rebuild\fR.
+.TP
+.B luks open|close|status
+Manage LUKS volumes via cryptsetup.
+.TP
+.B bitlocker unlock \fIdevice\fR [mount]
+Unlock a BitLocker volume via dislocker.
+.TP
+.B boot-repair \-\-uefi [\-\-add ...]
+List or create UEFI boot entries via efibootmgr.
+.TP
+.B reset-password \-\-linux \fIshadow\fR \fIuser\fR [pass]
+Reset a Linux password (SHA-512 hash, atomic write).
+.TP
+.B reset-password \-\-windows \fIsam\fR [user]
+Reset a Windows password via chntpw.
+.TP
+.B lvm, raid
+List LVM physical volumes / software RAID arrays.
+.TP
+.B i18n [locale] [catalog]
+Manage message catalogs.
+.SH SIZES
+Sizes accept byte suffixes: \fB512M\fR, \fB10G\fR, \fB2T\fR, or plain bytes.
+.SH GUI
+Run \fBopm-gui\fR for the graphical interface with wizards, a visual
+partition map, operation log, and light/dark themes.
+.SH EXIT STATUS
+0 on success, non-zero on error.
+.SH SEE ALSO
+.BR gdisk (8),
+.BR fdisk (8),
+.BR mkfs (8)
+.SH AUTHOR
+Open Partition Manager contributors (https://github.com/omiinaya/open-disk-manager)
