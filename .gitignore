@@ -1,0 +1,60 @@
+# --- Build artifacts ---
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+*.cmake
+!cmake/Modules/*.cmake
+install_manifest.txt
+
+# --- Compiler / IDE ---
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.lib
+*.d
+*.gcda
+*.gcno
+*.profraw
+*.su
+*.stackdump
+core
+core.*
+
+# --- Docusaurus / docs site (accidentally merged from a sub-project) ---
+node_modules/
+.docusaurus/
+.yarn/
+.pnpm-store/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Runtime / logs ---
+*.log
+nohup.out
+*.dmp
+hs_err_pid*.log
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
