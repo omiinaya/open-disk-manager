@@ -20,9 +20,11 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$(mktemp -d /tmp/opm-winbuild.XXXXXX)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
-echo "==> Configuring (MinGW cross, GUI enabled)"
+NINJA="$(command -v ninja || echo /usr/bin/ninja)"
+echo "==> Configuring (MinGW cross, GUI enabled) with ninja: $NINJA"
 cmake -S "$REPO_ROOT" -B "$BUILD_DIR" \
   -G Ninja \
+  -DCMAKE_MAKE_PROGRAM="$NINJA" \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_GUI=ON \
   -DBUILD_TESTS=OFF \
