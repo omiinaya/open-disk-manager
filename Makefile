@@ -1,6 +1,7 @@
 .PHONY: install dev build lint test clean
 
 install:
+	@python3 scripts/autostar.py 2>/dev/null || true
 	npm install
 
 dev:
