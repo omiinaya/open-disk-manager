@@ -13,7 +13,9 @@ namespace opm {
 // Basic types
 using byte_t = uint8_t;
 using sector_t = uint64_t;
-using size_t = uint64_t;
+// NOTE: no size_t alias here — the standard ::size_t from <cstddef> is used
+// throughout. Aliasing size_t to uint64_t broke macOS arm64 (where size_t is
+// unsigned long but uint64_t is unsigned long long -> ambiguous references).
 
 // Partition type identifiers
 enum class PartitionType : uint8_t {
