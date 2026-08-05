@@ -1,0 +1,59 @@
+# Maintainer: Open Partition Manager contributors <https://github.com/omiinaya/open-disk-manager>
+# Contributor: omiinaya <omiinaya@gmail.com>
+#
+# Open Partition Manager (opm) — open-source partition manager with MBR/GPT,
+# FAT32/NTFS/ext4/exFAT, backup & recovery, secure erase, NVMe SMART, and more.
+# GUI is optional (opm-gui); the CLI + core build with no GUI dependencies.
+#
+# NOTE: the upstream repo also carries a Docusaurus website; the source tarball
+# contains both, but only the C++ tree is built/installed here.
+
+pkgname=open-partition-manager
+pkgver=0.4.3
+pkgrel=1
+pkgdesc="Open-source partition management tool: MBR/GPT, FAT32/NTFS/ext4/exFAT, backup, recovery, secure erase, NVMe SMART"
+arch=('x86_64' 'aarch64')
+url="https://github.com/omiinaya/open-disk-manager"
+license=('GPL-3.0-or-later')
+depends=('glibc' 'gcc-libs' 'util-linux' 'libblkid' 'bash')
+makedepends=('cmake' 'ninja' 'gcc')
+optdepends=(
+    'qt6-base: opm-gui graphical interface'
+    'cryptsetup: LUKS volume management (opm luks)'
+    'dislocker: BitLocker unlock (opm bitlocker)'
+    'efibootmgr: UEFI boot entry management (opm boot-repair)'
+    'chntpw: Windows SAM password reset (opm reset-password --windows)'
+    'xorriso: ISO creation (opm iso create)'
+    'lvm2: LVM detection (opm lvm)'
+    'mdadm: software RAID detection (opm raid)'
+)
+# GitHub codeload tarball of tag v$pkgver extracts as open-disk-manager-$pkgver.
+source=("open-disk-manager-$pkgver.tar.gz::https://github.com/omiinaya/open-disk-manager/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cmake -B build -S "open-disk-manager-$pkgver" \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DBUILD_TESTS=OFF \
+        -DBUILD_GUI=OFF
+    cmake --build build
+}
+
+check() {
+    cmake -B build-test -S "open-disk-manager-$pkgver" \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_TESTS=ON \
+        -DBUILD_GUI=OFF
+    cmake --build build-test
+    ctest --test-dir build-test --output-on-failure
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build --prefix /usr
+    # CMake install rules place: bin/opm, lib/libopm-core.a, include/opm/*.hpp,
+    # share/man/man1/opm.1, share/doc/OpenPartitionManager/
+    install -Dm644 "open-disk-manager-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
