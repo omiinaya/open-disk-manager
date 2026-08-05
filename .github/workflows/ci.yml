@@ -116,28 +116,22 @@ jobs:
       - name: Set up Python 3.11 (aqtinstall compatibility)
         uses: actions/setup-python@v5
         with:
-          # aqtinstall's Qt-repo XML parsing is broken on Python 3.12
-          # regardless of aqt version ("qt_base not found"); 3.11 works.
+          # aqtinstall's Qt-repo XML parsing for 6.9.3 fails on Python 3.12
+          # ("qt_base not found") and install-qt-action's --autodesktop flag
+          # breaks it even on 3.11. Both must be avoided; verified working:
+          # aqtinstall 3.2.1 on Python 3.11 WITHOUT --autodesktop.
           python-version: '3.11'
 
       - name: Install Qt (Windows kit + Linux host kit)
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.9.3'
-          host: 'linux'
-          target: 'desktop'
-          arch: 'win64_mingw'
-          # aqtinstall >= 3.3.0 regressed parsing Qt's online repository XML
-          # ("The packages ['qt_base'] were not found"); pin the last good one.
-          aqtversion: '==3.2.1'
-          dir: '/opt/qt'
-          install-deps: 'true'
-          set-env: 'true'
-
-      - name: Install Qt Linux host kit (moc/uic for AUTOMOC)
         run: |
-          python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt || \
-            python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt --base https://download.qt.io/online/qtsdkrepository
+          python3 -m pip install --user --force-reinstall --no-warn-script-location 'aqtinstall==3.2.1'
+          python3 -c "import aqt, sys; print('aqt', getattr(aqt, '__version__', '?'), 'on', sys.version.split()[0])"
+          set -e
+          for target in windows:win64_mingw linux:gcc_64; do
+            host="${target%%:*}"; arch="${target##*:}"
+            python3 -m aqt install-qt "$host" desktop 6.9.3 "$arch" -O /opt/qt || \
+              python3 -m aqt install-qt "$host" desktop 6.9.3 "$arch" -O /opt/qt --base https://download.qt.io/online/qtsdkrepository
+          done
 
       - name: Build Windows bundle
         run: |
