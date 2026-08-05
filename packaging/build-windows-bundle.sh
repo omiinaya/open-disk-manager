@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   x86_64-w64-mingw32-g++ (Debian: g++-mingw-w64-x86-64-posix)
-#   Qt 6.x Windows kit (e.g. via aqtinstall: aqt install-qt windows desktop 6.9.3 win64_mingw)
+#   Qt 6.x Windows kit (e.g. via aqtinstall: aqt install-qt windows desktop 6.5.3 win64_mingw)
 #   Qt 6.x Linux kit for host tools (QT_HOST_PATH)
 #   wine (only needed to run windeployqt)
 #

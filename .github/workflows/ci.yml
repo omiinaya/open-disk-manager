@@ -116,27 +116,25 @@ jobs:
       - name: Set up Python 3.11 (aqtinstall compatibility)
         uses: actions/setup-python@v5
         with:
-          # aqtinstall's Qt-repo XML parsing for 6.9.3 fails on Python 3.12
-          # ("qt_base not found") and install-qt-action's --autodesktop flag
-          # breaks it even on 3.11. Both must be avoided; verified working:
-          # aqtinstall 3.2.1 on Python 3.11 WITHOUT --autodesktop.
+          # Qt's online repo no longer serves installable metadata for the
+          # Linux gcc_64 kit on recent 6.9.x (aqt fails "qt_base not found"),
+          # and aqtinstall's XML parsing breaks on Python 3.12. Verified
+          # working: aqtinstall 3.2.1 on Python 3.11 with Qt 6.5.3 for BOTH
+          # the Windows mingw target and the Linux gcc_64 host kit (matching
+          # versions are required for AUTOMOC's cross host-tool resolution).
           python-version: '3.11'
 
-      - name: Install Qt (Windows kit + Linux host kit)
+      - name: Install Qt (Windows target + Linux host kits, 6.5.3)
         run: |
           python3 -m pip install --user --force-reinstall --no-warn-script-location 'aqtinstall==3.2.1'
-          python3 -c "import aqt, sys; print('aqt', getattr(aqt, '__version__', '?'), 'on', sys.version.split()[0])"
-          set -e
-          for target in windows:win64_mingw linux:gcc_64; do
-            host="${target%%:*}"; arch="${target##*:}"
-            python3 -m aqt install-qt "$host" desktop 6.9.3 "$arch" -O /opt/qt || \
-              python3 -m aqt install-qt "$host" desktop 6.9.3 "$arch" -O /opt/qt --base https://download.qt.io/online/qtsdkrepository
-          done
+          python3 -m aqt install-qt windows desktop 6.5.3 win64_mingw -O /opt/qt
+          python3 -m aqt install-qt linux desktop 6.5.3 gcc_64 -O /opt/qt
+          ls /opt/qt/6.5.3/mingw_64/bin/moc.exe /opt/qt/6.5.3/gcc_64/libexec/moc >/dev/null 2>&1
 
       - name: Build Windows bundle
         run: |
           chmod +x packaging/build-windows-bundle.sh
-          packaging/build-windows-bundle.sh /opt/qt/6.9.3/mingw_64 /opt/qt/6.9.3/gcc_64 dist-win
+          packaging/build-windows-bundle.sh /opt/qt/6.5.3/mingw_64 /opt/qt/6.5.3/gcc_64 dist-win
 
       - name: Smoke test CLI from bundle (under Wine)
         run: |
