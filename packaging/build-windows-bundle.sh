@@ -22,6 +22,7 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 
 echo "==> Configuring (MinGW cross, GUI enabled)"
 cmake -S "$REPO_ROOT" -B "$BUILD_DIR" \
+  -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_GUI=ON \
   -DBUILD_TESTS=OFF \
