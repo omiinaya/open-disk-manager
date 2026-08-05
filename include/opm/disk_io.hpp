@@ -64,6 +64,7 @@ public:
     // SMART data (if available)
     bool supportsSMART() const;
     Result readSMART(void* data);
+    Result readNvmeSMART(void* data);  // NVMe Get Log Page 0x02 (512-byte log)
     
     // TRIM support
     bool supportsTRIM() const;

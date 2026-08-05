@@ -54,7 +54,7 @@
 | Secure erase | ✅ | **12 standards**: Zeros, Random, DoD 5220.22-M, DoD ECE, Gutmann, NIST Clear, NIST Purge, RCMP TSSIT, VSITR, GOST P50739, US Army AR380, ATA-erase |
 | SSD TRIM | ✅ | `opm trim` — BLKDISCARD, honest error on non-block |
 | Benchmark | ✅ | Sequential/random IOPS, latency, MB/s |
-| SMART read | 🚧 | `DiskIO::readSMART` (HDIO_GET_IDENTITY); ATA-only, NVMe separate |
+| SMART read | ✅ | `opm smart` — ATA HDIO identity + **NVMe Get Log Page 0x02 SMART/Health** (structured parse: temp, spare, % used, power cycles/hours, unsafe shutdowns, media errors) |
 
 ### CLI (opm)
 
@@ -73,6 +73,7 @@
 | `boot-repair --uefi` / `reset-password --linux\|--windows` | ✅ |
 | `lvm` / `raid` | ✅ | `i18n` | ✅ |
 | `wipe [--method]` / `trim` | ✅ | 12 erase standards + BLKDISCARD |
+| **`smart`** | ✅ | **NVMe SMART/Health log (Get Log Page 0x02) + ATA HDIO identity** |
 | **`backup create/incremental/differential/restore/info/verify`** | ✅ | Image backup (OPMIMG) + `--compress` |
 | **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar, hard links + device nodes) |
 | **`backup schedule add/list/remove/show/run`** | ✅ | Cron + systemd-timer generation |

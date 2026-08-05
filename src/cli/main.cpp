@@ -44,6 +44,7 @@ int cmdBackup(const std::vector<std::string>& args);
 int cmdMerge(const std::vector<std::string>& args);
 int cmdWipe(const std::vector<std::string>& args);
 int cmdTrim(const std::vector<std::string>& args);
+int cmdSmart(const std::vector<std::string>& args);
 }
 }
 
@@ -96,6 +97,7 @@ void printUsage(const char* program) {
               << "  wipe <device> [--method <m>]     Secure erase (12 methods incl. DoD, Gutmann,\n"
               << "                         vsitr, rcmp-tssit, ata-erase/TRIM)\n"
               << "  trim <device> [start] [count]    Send BLKDISCARD to a TRIM-capable SSD\n"
+              << "  smart <device>                   Read SMART data (NVMe log / ATA identity)\n"
               << "\n<size> accepts byte suffixes: 512M, 10G, 2T, or plain bytes.\n"
               << "\nExamples:\n"
               << "  " << program << " list\n"
@@ -436,6 +438,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdWipe(args);
     } else if (command == "trim") {
         return cli::cmdTrim(args);
+    } else if (command == "smart") {
+        return cli::cmdSmart(args);
     } else if (command == "help" || command == "--help" || command == "-h") {
         printUsage(argv[0]);
     } else {

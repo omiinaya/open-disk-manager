@@ -22,6 +22,7 @@
 #include "opm/raid.hpp"
 #include "opm/boot.hpp"
 #include "opm/swap.hpp"
+#include "opm/smart.hpp"
 #include "opm/recovery.hpp"
 #include "opm/undelete.hpp"
 #include "opm/ntfs_undelete.hpp"
@@ -114,6 +115,16 @@ bool openReadWrite(const std::string& device, std::shared_ptr<DiskIO>& disk,
     if (!disk || !disk->isOpen()) {
         err = "Failed to open device read-write: " + device +
               " (are you root?)";
+        return false;
+    }
+    return true;
+}
+
+bool openReadOnly(const std::string& device, std::shared_ptr<DiskIO>& disk,
+                  std::string& err) {
+    disk = DiskIO::openReadOnly(device);
+    if (!disk || !disk->isOpen()) {
+        err = "Failed to open device read-only: " + device;
         return false;
     }
     return true;
@@ -1621,6 +1632,85 @@ int cmdTrim(const std::vector<std::string>& args) {
     Result r = disk->trim(start, count);
     if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
     std::cout << "TRIM sent to " << args[0] << " [" << start << ".." << (start + count) << ")\n";
+    return 0;
+}
+
+
+// ---------------------------------------------------------------------------
+// smart <device> - read SMART data (ATA identity or NVMe SMART/Health log)
+// ---------------------------------------------------------------------------
+int cmdSmart(const std::vector<std::string>& args) {
+    if (args.size() < 1) {
+        std::cerr << "Usage: opm smart <device>\n"
+                  << "       Reads SMART data: NVMe devices (nvme*) get the\n"
+                  << "       SMART/Health log page; ATA devices get HDIO identity.\n";
+        return 1;
+    }
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadOnly(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    const std::string dev = args[0];
+    const bool is_nvme = (dev.find("nvme") != std::string::npos);
+
+    try {
+        if (is_nvme) {
+            uint8_t log[512];
+            Result r = disk->readNvmeSMART(log);
+            if (r.failed()) {
+                std::cerr << "Error: " << r.message << "\n";
+                return 1;
+            }
+            NvmeSmartInfo info;
+            if (!parseNvmeSmartLog(log, sizeof(log), info)) {
+                std::cerr << "Error: malformed NVMe SMART log page\n";
+                return 1;
+            }
+            std::cout << "NVMe SMART/Health information for " << dev << ":\n";
+            for (const auto& line : nvmeSmartLines(info)) {
+                std::cout << "  " << line << "\n";
+            }
+            return 0;
+        }
+        uint8_t id[512];
+        Result r = disk->readSMART(id);
+        if (r.failed()) {
+            std::cerr << "Error: " << r.message << "\n";
+            return 1;
+        }
+        std::cout << "ATA identity for " << dev << ":\n";
+        // ATA IDENTIFY DEVICE: model (54-55), serial (20-21), firmware (46-47)
+        char model[41] = {0}, serial[21] = {0}, fw[9] = {0};
+        for (int i = 0; i < 20; i++) {
+            uint16_t w = static_cast<uint16_t>(id[54 + i * 2] |
+                                               (id[54 + i * 2 + 1] << 8));
+            model[i * 2] = static_cast<char>(w & 0xFF);
+            model[i * 2 + 1] = static_cast<char>(w >> 8);
+        }
+        for (int i = 0; i < 10; i++) {
+            uint16_t w = static_cast<uint16_t>(id[20 + i * 2] |
+                                               (id[20 + i * 2 + 1] << 8));
+            serial[i * 2] = static_cast<char>(w & 0xFF);
+            serial[i * 2 + 1] = static_cast<char>(w >> 8);
+        }
+        for (int i = 0; i < 4; i++) {
+            uint16_t w = static_cast<uint16_t>(id[46 + i * 2] |
+                                               (id[46 + i * 2 + 1] << 8));
+            fw[i * 2] = static_cast<char>(w & 0xFF);
+            fw[i * 2 + 1] = static_cast<char>(w >> 8);
+        }
+        auto trim = [](char* s) { while (*s && *s == ' ') s++; };
+        char* mp = model; trim(mp);
+        char* sp = serial; trim(sp);
+        char* fp = fw; trim(fp);
+        std::cout << "  Model: " << mp << "\n";
+        std::cout << "  Serial: " << sp << "\n";
+        std::cout << "  Firmware: " << fp << "\n";
+        std::cout << "  (Use a SMART tool for detailed ATA attributes.)\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
     return 0;
 }
 

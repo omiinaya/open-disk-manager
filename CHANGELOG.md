@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-08-04
+
+NVMe SMART/Health support (real gap: SMART was ATA-only and not even exposed in the CLI).
+
+### Added
+- **`opm smart <device>`** — read SMART data:
+  - NVMe devices (`nvme*`): NVMe Get Log Page admin command (opcode 0x02),
+    Log Page ID 0x02 SMART/Health Information (the 512-byte log every NVMe
+    device must support). Structured parse (`NvmeSmartInfo`):
+    critical-warning bits, temperature (K + C), available spare + threshold,
+    percentage used, data units read/written, host read/write commands,
+    controller busy time, power cycles, power-on hours, unsafe shutdowns,
+    media/integrity errors, error-log entries, warning/critical temp time.
+  - ATA devices: `HDIO_GET_IDENTITY` with model/serial/firmware decode.
+- `DiskIO::readNvmeSMART()` — Linux ioctl path (`NVME_IOCTL_ADMIN_CMD`,
+  auto-adapts to the kernel's `nvme_admin_cmd` layout via `nvme_passthru_cmd`).
+
+### Tests
+- New `tests/test_smart.cpp` (5 tests): full-log field decode, all warning
+  bits + counters, short-buffer rejection, zero-temperature handling, and
+  render-line spot checks. 275 total unit tests.
+
 ## [0.4.1] - 2026-08-04
 
 NTFS file-undelete (MFT scan + in-place restore + data export).

@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include <linux/fs.h>
 #include <linux/hdreg.h>
+#include <linux/nvme_ioctl.h>
 #endif
 #include <cstring>
 #include <cerrno>
@@ -353,6 +354,41 @@ Result DiskIO::readSMART(void* data) {
     }
     std::memcpy(data, id, 512);
     return Result::ok();
+#else
+    (void)data;
+    return Result::error("SMART is only supported on Linux block devices");
+#endif
+}
+
+Result DiskIO::readNvmeSMART(void* data) {
+#ifdef __linux__
+    if (fd_ < 0) return Result::error("Device not open");
+    if (!data) return Result::error("Invalid SMART buffer");
+#if defined(__linux__) && __has_include(<linux/nvme_ioctl.h>)
+    // NVMe Get Log Page (admin command opcode 0x02), Log Page ID 0x02 =
+    // SMART/Health Information. The 512-byte log is the standard structure
+    // every NVMe device must support (NVMe 1.0+).
+    // Note: nvme_admin_cmd is a typedef-macro of nvme_passthru_cmd whose data
+    // fields are addr + data_len (not the older prp1/prp2 layout).
+    struct nvme_admin_cmd cmd;
+    std::memset(&cmd, 0, sizeof(cmd));
+    cmd.opcode = 0x02;          // Get Log Page
+    cmd.nsid = 0;               // controller-wide log
+    // CDW10: bits 7:0 = LID (0x02 SMART), bits 15:8 = NUMDL (num dwords - 1)
+    cmd.cdw10 = 0x02 | ((512 / 4 - 1) << 8);
+    cmd.cdw11 = 0;              // no specific lid offset
+    cmd.timeout_ms = 3000;
+    cmd.addr = reinterpret_cast<uint64_t>(data);
+    cmd.data_len = 512;
+    if (ioctl(fd_, NVME_IOCTL_ADMIN_CMD, &cmd) < 0) {
+        return Result::error("NVMe SMART log unavailable: " +
+                             std::string(strerror(errno)));
+    }
+    return Result::ok();
+#else
+    (void)data;
+    return Result::error("NVMe SMART requires linux/nvme_ioctl.h");
+#endif
 #else
     (void)data;
     return Result::error("SMART is only supported on Linux block devices");
