@@ -12,6 +12,7 @@
 #include <sys/sysmacros.h>
 #include <unistd.h>
 #endif
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -27,7 +28,7 @@ namespace {
 #endif
 
 std::string tmpDir(const char* tag) {
-    std::string d = std::string("/tmp/opm_tar_") + tag + "_" +
+    std::string d = std::string(test_tmp_dir() + "/opm_tar_") + tag + "_" +
                     std::to_string(::getpid()) + "_" + std::to_string(std::rand());
     std::string mk = "mkdir -p " + d;
     std::system(mk.c_str());

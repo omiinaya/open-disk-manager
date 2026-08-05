@@ -4,13 +4,14 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include "test_util.hpp"
 
 using namespace opm;
 
 namespace {
 
 std::string makeImage(const std::vector<std::pair<uint64_t, std::vector<uint8_t>>>& writes) {
-    std::string path = "/tmp/opm_crypt_" + std::to_string(::getpid()) + ".img";
+    std::string path = test_tmp_dir() + "/opm_crypt_" + std::to_string(::getpid()) + ".img";
     std::FILE* f = std::fopen(path.c_str(), "wb");
     if (!f) return "";
     std::vector<uint8_t> zero(64 * 1024 * 1024, 0);

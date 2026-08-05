@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -12,7 +13,7 @@ namespace {
 
 // Build a real GPT on an image file via the public API, then reload it.
 bool makeImage(uint64_t mb, std::string& path) {
-    path = "/tmp/opm_gpt_ops_" + std::to_string(::getpid()) + ".img";
+    path = test_tmp_dir() + "/opm_gpt_ops_" + std::to_string(::getpid()) + ".img";
     std::FILE* f = std::fopen(path.c_str(), "wb");
     if (!f) return false;
     std::vector<uint8_t> zero(1024 * 1024, 0);

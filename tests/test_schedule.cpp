@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -15,7 +16,7 @@ namespace {
 #define OPM_SKIP_PLATFORM_SPECIFIC() ((void)0)
 #endif
 std::string tmpRegistry(const char* tag) {
-    return std::string("/tmp/opm_sched_") + tag + "_" +
+    return std::string(test_tmp_dir() + "/opm_sched_") + tag + "_" +
            std::to_string(::getpid()) + "_" + std::to_string(std::rand()) + ".conf";
 }
 } // namespace

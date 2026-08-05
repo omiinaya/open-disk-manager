@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -64,7 +65,7 @@ struct BuiltVolume {
 
 // Build a populated FAT32 partition, then convert it to a live NTFS volume.
 void buildNtfsVolume(BuiltVolume& out) {
-    out.path = "/tmp/opm_nundelete_" + std::to_string(::getpid()) + "_" +
+    out.path = test_tmp_dir() + "/opm_nundelete_" + std::to_string(::getpid()) + "_" +
                std::to_string(std::rand()) + ".img";
     std::FILE* f = std::fopen(out.path.c_str(), "wb");
     ASSERT_TRUE(f);
@@ -331,7 +332,7 @@ TEST(NtfsUndeleteTest, ScanAndExport) {
     ASSERT_TRUE(found) << "deleted HELLO.TXT must be found by the scan";
 
     // Export to a temp dir and verify bytes.
-    std::string out_dir = "/tmp/opm_nundelete_exp_" + std::to_string(::getpid());
+    std::string out_dir = test_tmp_dir() + "/opm_nundelete_exp_" + std::to_string(::getpid());
     for (const auto& f : deleted) {
         if (f.mft_record == rec_hello) {
             Result r = ntfs::exportDeletedNTFS(v.disk, v.start, f, out_dir);

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -85,8 +86,8 @@ std::string makeTestISO(const std::string& path) {
 } // namespace
 
 TEST(BootTest, ExtractISOSingleFile) {
-    std::string iso = "/tmp/opm_test_iso_" + std::to_string(::getpid()) + ".iso";
-    std::string outdir = "/tmp/opm_test_iso_out_" + std::to_string(::getpid());
+    std::string iso = test_tmp_dir() + "/opm_test_iso_" + std::to_string(::getpid()) + ".iso";
+    std::string outdir = test_tmp_dir() + "/opm_test_iso_out_" + std::to_string(::getpid());
     makeTestISO(iso);
 
     Result r = extractISO(iso, outdir);
@@ -108,14 +109,14 @@ TEST(BootTest, ExtractISOSingleFile) {
 }
 
 TEST(BootTest, ExtractISORejectsInvalid) {
-    std::string bad = "/tmp/opm_test_bad.iso";
+    std::string bad = test_tmp_dir() + "/opm_test_bad.iso";
     std::ofstream out(bad, std::ios::binary);
     out.write("this is not an iso image", 24);
     out.close();
 
-    Result r = extractISO(bad, "/tmp/opm_test_bad_out");
+    Result r = extractISO(bad, test_tmp_dir() + "/opm_test_bad_out");
     EXPECT_TRUE(r.failed());
 
     std::remove(bad.c_str());
-    std::filesystem::remove_all("/tmp/opm_test_bad_out");
+    std::filesystem::remove_all(test_tmp_dir() + "/opm_test_bad_out");
 }

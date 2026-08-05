@@ -12,13 +12,14 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "test_util.hpp"
 
 using namespace opm;
 
 namespace {
 
 bool makeImage(uint64_t mb, std::string& path) {
-    path = "/tmp/opm_conv_" + std::to_string(::getpid()) + "_" +
+    path = test_tmp_dir() + "/opm_conv_" + std::to_string(::getpid()) + "_" +
            std::to_string(std::rand()) + ".img";
     std::FILE* f = std::fopen(path.c_str(), "wb");
     if (!f) return false;

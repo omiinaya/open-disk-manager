@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <vector>
+#include "test_util.hpp"
 
 using namespace opm;
 
@@ -66,7 +67,7 @@ bool filesEqual(const std::string& a, const std::string& b) {
 }
 
 std::string tmpPath(const char* tag) {
-    return std::string("/tmp/opm_bk_") + tag + "_" +
+    return std::string(test_tmp_dir() + "/opm_bk_") + tag + "_" +
            std::to_string(::getpid()) + "_" + std::to_string(std::rand()) + ".img";
 }
 
@@ -365,7 +366,7 @@ bool makeFakeImage(const std::string& path, uint32_t mode, uint64_t created_at) 
 }
 
 TEST(BackupTest, ListSkipsNonImagesAndSortsNewestFirst) {
-    std::string dir = std::string("/tmp/opm_bk_list_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_list_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     ASSERT_TRUE(makeFakeImage(dir + "/a_full.img", 0, 1000));
     ASSERT_TRUE(makeFakeImage(dir + "/b_incr.img", 1, 3000));
@@ -387,7 +388,7 @@ TEST(BackupTest, ListSkipsNonImagesAndSortsNewestFirst) {
 }
 
 TEST(BackupTest, PruneKeepsNewestFullAndItsChain) {
-    std::string dir = std::string("/tmp/opm_bk_prune_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_prune_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     // timeline: f1(100) inc1(200) f2(300) inc2(400) f3(500) inc3(600)
     ASSERT_TRUE(makeFakeImage(dir + "/f1.img", 0, 100));
@@ -420,7 +421,7 @@ TEST(BackupTest, PruneKeepsNewestFullAndItsChain) {
 }
 
 TEST(BackupTest, PruneOlderThanDays) {
-    std::string dir = std::string("/tmp/opm_bk_age_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_age_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     uint64_t now = static_cast<uint64_t>(std::time(nullptr));
     ASSERT_TRUE(makeFakeImage(dir + "/old.img", 0, now - 10 * 86400ULL));  // 10 days old
@@ -449,7 +450,7 @@ TEST(BackupTest, PruneOlderThanDays) {
 // A Unix day is 86400s. Build a set of daily fulls over ~40 days, then check
 // GFS keeps 1 full per day for the daily window, 1 per week for weekly, etc.
 TEST(BackupTest, GfsKeepsDailyWeeklyMonthlyAnchors) {
-    std::string dir = std::string("/tmp/opm_bk_gfs_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_gfs_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     uint64_t now = static_cast<uint64_t>(std::time(nullptr));
     // 40 daily full backups, one per day, oldest first name.
@@ -511,7 +512,7 @@ TEST(BackupTest, GfsKeepsDailyWeeklyMonthlyAnchors) {
 }
 
 TEST(BackupTest, GfsChainSafetyKeepsBaseOfIncremental) {
-    std::string dir = std::string("/tmp/opm_bk_gfs_chain_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_gfs_chain_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     uint64_t now = static_cast<uint64_t>(std::time(nullptr));
     // Old full + its incremental, then a NEWER full + its incremental.
@@ -545,7 +546,7 @@ TEST(BackupTest, GfsChainSafetyKeepsBaseOfIncremental) {
 }
 
 TEST(BackupTest, GfsNothingWhenAllWindowsZero) {
-    std::string dir = std::string("/tmp/opm_bk_gfs_zero_") + std::to_string(::getpid());
+    std::string dir = std::string(test_tmp_dir() + "/opm_bk_gfs_zero_") + std::to_string(::getpid());
     std::filesystem::create_directories(dir);
     ASSERT_TRUE(makeFakeImage(dir + "/f.img", 0, static_cast<uint64_t>(std::time(nullptr))));
     GfsOptions go; go.daily = 0; go.weekly = 0; go.monthly = 0;
