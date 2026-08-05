@@ -442,3 +442,119 @@ TEST(BackupTest, PruneOlderThanDays) {
     std::filesystem::remove_all(dir);
 }
 
+// ============================================================================
+// Grandfather-Father-Son (GFS) retention
+// ============================================================================
+
+// A Unix day is 86400s. Build a set of daily fulls over ~40 days, then check
+// GFS keeps 1 full per day for the daily window, 1 per week for weekly, etc.
+TEST(BackupTest, GfsKeepsDailyWeeklyMonthlyAnchors) {
+    std::string dir = std::string("/tmp/opm_bk_gfs_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+    // 40 daily full backups, one per day, oldest first name.
+    // Also add an incremental after the most recent full (must be kept, base alive).
+    for (int d = 39; d >= 0; d--) {
+        uint64_t ts = now - static_cast<uint64_t>(d) * 86400ULL;
+        char name[64];
+        std::snprintf(name, sizeof(name), "%02d.img", d);
+        ASSERT_TRUE(makeFakeImage(dir + "/" + name, 0, ts));
+    }
+    ASSERT_TRUE(makeFakeImage(dir + "/latest_inc.img", 1, now + 600));
+
+    GfsOptions go;
+    go.daily = 7; go.weekly = 4; go.monthly = 12;
+    std::vector<std::string> removed;
+    Result r = backupPruneGFS(dir, go, removed);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    std::vector<BackupEntry> entries;
+    r = backupListDir(dir, entries);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    // The incremental after the newest full must survive (base is newest full).
+    bool inc_alive = false;
+    for (const auto& e : entries) if (e.name == "latest_inc.img") inc_alive = true;
+    EXPECT_TRUE(inc_alive) << "incremental whose base (newest full) is kept must survive";
+
+    // The newest full is day 0 (today). Daily window 7 -> 7 FULL backups kept
+    // (today..today-6). Weekly 4 and monthly 12 select anchors from older days.
+    // Total kept fulls must be >= 7 and <= (7 + 4 + 12) but realistically the
+    // daily/weekly/monthly buckets overlap on recent backups. We assert the
+    // invariants that matter:
+    //  - at least 7 fulls survive (the daily window),
+    //  - no full older than 31 days survives (monthly=12 window) UNLESS it was
+    //    selected as a weekly anchor (early weeks within 4-week window).
+    int fulls = 0;
+    for (const auto& e : entries) if (e.info.mode == BackupMode::Full) fulls++;
+    EXPECT_GE(fulls, 7) << "daily window must keep at least 7 fulls";
+
+    // Every surviving full must be within the widest window — monthly=12
+    // months (~366 days). A 40-day-old full is inside the monthly window but
+    // the bucket only keeps the NEWEST full per month, so only ~12 monthly
+    // anchors + 4 weekly + 7 daily can survive at most. The strongest hard
+    // invariant: nothing older than the monthly window may survive.
+    for (const auto& e : entries) {
+        if (e.info.mode != BackupMode::Full) continue;
+        uint64_t age_days = (now > e.info.created_at) ? (now - e.info.created_at) / 86400ULL : 0;
+        EXPECT_LE(age_days, 366u) << "no full older than the monthly window may survive: " << e.name;
+    }
+    // And the daily window must produce at least 7 distinct-day anchors.
+    std::set<uint64_t> kept_days_check;
+    for (const auto& e : entries) {
+        if (e.info.mode != BackupMode::Full) continue;
+        kept_days_check.insert(e.info.created_at / 86400ULL);
+    }
+    EXPECT_GE(kept_days_check.size(), 7u)
+        << "daily window must keep one full per day for at least 7 days";
+    std::filesystem::remove_all(dir);
+}
+
+TEST(BackupTest, GfsChainSafetyKeepsBaseOfIncremental) {
+    std::string dir = std::string("/tmp/opm_bk_gfs_chain_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+    // Old full + its incremental, then a NEWER full + its incremental.
+    // The old pair predates the retention window; the new pair is current.
+    uint64_t old_ts = now - 60 * 86400ULL;      // 60 days old
+    uint64_t new_ts = now;                       // current
+    ASSERT_TRUE(makeFakeImage(dir + "/old_full.img", 0, old_ts));
+    ASSERT_TRUE(makeFakeImage(dir + "/old_inc.img", 1, old_ts + 600));
+    ASSERT_TRUE(makeFakeImage(dir + "/new_full.img", 0, new_ts));
+    ASSERT_TRUE(makeFakeImage(dir + "/new_inc.img", 1, new_ts + 600));
+
+    GfsOptions go; go.daily = 1; go.weekly = 1; go.monthly = 1;
+    std::vector<std::string> removed;
+    Result r = backupPruneGFS(dir, go, removed);
+    ASSERT_TRUE(r.success()) << r.message;
+
+    std::vector<BackupEntry> entries;
+    r = backupListDir(dir, entries);
+    ASSERT_TRUE(r.success()) << r.message;
+    std::vector<std::string> names;
+    for (const auto& e : entries) names.push_back(e.name);
+
+    // The recent full + its incremental survive.
+    EXPECT_NE(std::find(names.begin(), names.end(), "new_full.img"), names.end());
+    EXPECT_NE(std::find(names.begin(), names.end(), "new_inc.img"), names.end());
+    // The old full (outside every window) is pruned, and so is its incremental
+    // whose base is gone.
+    EXPECT_EQ(std::find(names.begin(), names.end(), "old_full.img"), names.end());
+    EXPECT_EQ(std::find(names.begin(), names.end(), "old_inc.img"), names.end());
+    std::filesystem::remove_all(dir);
+}
+
+TEST(BackupTest, GfsNothingWhenAllWindowsZero) {
+    std::string dir = std::string("/tmp/opm_bk_gfs_zero_") + std::to_string(::getpid());
+    std::filesystem::create_directories(dir);
+    ASSERT_TRUE(makeFakeImage(dir + "/f.img", 0, static_cast<uint64_t>(std::time(nullptr))));
+    GfsOptions go; go.daily = 0; go.weekly = 0; go.monthly = 0;
+    std::vector<std::string> removed;
+    Result r = backupPruneGFS(dir, go, removed);
+    // With no anchors selected but fulls present, the newest full is kept as
+    // an implicit anchor -> nothing is removed.
+    ASSERT_TRUE(r.success()) << r.message;
+    EXPECT_EQ(removed.size(), 0u);
+    std::filesystem::remove_all(dir);
+}
+

@@ -6,6 +6,7 @@
 #include <ctime>
 #include <algorithm>
 #include <filesystem>
+#include <set>
 #include <system_error>
 
 namespace opm {
@@ -680,7 +681,177 @@ Result backupPrune(const std::string& dir,
         }
     }
 
-    // Deduplicate (an image can match both policies) and delete
+// Deduplicate (an image can match both policies) and delete
+    std::sort(removed.begin(), removed.end());
+    removed.erase(std::unique(removed.begin(), removed.end()), removed.end());
+    size_t failed = 0;
+    for (const auto& p : removed) {
+        if (std::remove(p.c_str()) != 0) failed++;
+    }
+    if (failed > 0)
+        return Result::error(std::to_string(failed) + " of " +
+                             std::to_string(removed.size()) + " images could not be removed");
+    return Result::ok();
+}
+
+// ---------------------------------------------------------------------------
+// Grandfather-Father-Son (GFS) retention
+// ---------------------------------------------------------------------------
+
+namespace {
+
+// Civil calendar helpers (days-from-civil / civil-from-days, Hinnant).
+int64_t daysFromCivil(int y, int m, int d) {
+    y -= m <= 2;
+    int64_t era = (y >= 0 ? y : y - 399) / 400;
+    int64_t yoe = y - era * 400;
+    int64_t doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+    int64_t doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    return era * 146097 + doe - 719468;
+}
+
+void civilFromDays(int64_t z, int& y, int& m, int& d) {
+    z += 719468;
+    int64_t era = (z >= 0 ? z : z - 146096) / 146097;
+    int64_t doe = z - era * 146097;
+    int64_t yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    int64_t yy = yoe + era * 400;
+    int64_t doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    int64_t mp = (5 * doy + 2) / 153;
+    d = static_cast<int>(doy - (153 * mp + 2) / 5 + 1);
+    m = static_cast<int>(mp < 10 ? mp + 3 : mp - 9);
+    y = static_cast<int>(yy + (m <= 2));
+}
+
+// Day-of-week: Monday=0 .. Sunday=6 (ISO).
+int isoWeekday(int64_t days_since_epoch) {
+    // 1970-01-01 was a Thursday. days_from_civil(1970,1,1) = 0.
+    int wd = static_cast<int>((days_since_epoch + 3) % 7);
+    if (wd < 0) wd += 7;
+    return wd;  // 0=Mon ... 6=Sun
+}
+
+// ISO week number (1..53) + ISO year.
+void isoWeek(int64_t days_since_epoch, int& year, int& week) {
+    int y, m, d;
+    civilFromDays(days_since_epoch, y, m, d);
+    int wd = isoWeekday(days_since_epoch);
+    // Thursday of the current ISO week
+    int64_t thursday = days_since_epoch - wd + 3;
+    civilFromDays(thursday, y, m, d);
+    year = y;
+    int64_t jan1 = daysFromCivil(year, 1, 1);
+    week = static_cast<int>((thursday - jan1) / 7 + 1);
+}
+
+int64_t monthKey(int64_t days_since_epoch) {
+    int y, m, d;
+    civilFromDays(days_since_epoch, y, m, d);
+    return int64_t(y) * 12 + (m - 1);
+}
+
+} // anonymous namespace
+
+Result backupPruneGFS(const std::string& dir,
+                      const GfsOptions& options,
+                      std::vector<std::string>& removed) {
+    std::vector<BackupEntry> entries;
+    Result r = backupListDir(dir, entries);
+    if (r.failed()) return r;
+    removed.clear();
+    if (entries.empty()) return Result::ok();
+
+    // Entries are newest-first. Walk them once to collect the newest FULL
+    // backup of each day / week / month bucket within the retention window.
+    const int64_t now = static_cast<int64_t>(std::time(nullptr));
+    const int64_t today = now / 86400;
+
+    std::vector<bool> keep(entries.size(), false);
+    std::set<int64_t> kept_days, kept_weeks, kept_months;
+
+    // Pass 1 (newest first): pick anchors — newest full in each bucket.
+    for (size_t i = 0; i < entries.size(); i++) {
+        const BackupEntry& e = entries[i];
+        if (e.info.mode != BackupMode::Full) continue;
+        int64_t day = static_cast<int64_t>(e.info.created_at) / 86400;
+        int w_year = 0, w_num = 0;
+        isoWeek(day, w_year, w_num);
+        int64_t week = static_cast<int64_t>(w_year) * 100 + w_num;
+        int64_t month = monthKey(day);
+
+        bool want = false;
+        if (options.daily > 0 && today - day < static_cast<int64_t>(options.daily) &&
+            !kept_days.count(day)) {
+            kept_days.insert(day);
+            want = true;
+        }
+        if (options.weekly > 0) {
+            // weeks are counted from the current week backwards
+            int cur_year = 0, cur_num = 0;
+            isoWeek(today, cur_year, cur_num);
+            int64_t cur_week = static_cast<int64_t>(cur_year) * 100 + cur_num;
+            if (cur_week - week < static_cast<int64_t>(options.weekly) &&
+                cur_week >= week && !kept_weeks.count(week)) {
+                kept_weeks.insert(week);
+                want = true;
+            }
+        }
+        if (options.monthly > 0 && monthKey(today) - month <
+            static_cast<int64_t>(options.monthly) && month <= monthKey(today) &&
+            !kept_months.count(month)) {
+            kept_months.insert(month);
+            want = true;
+        }
+        if (want) keep[i] = true;
+    }
+
+    // Pass 2: chain safety. Retain a non-full image only when the most recent
+    // FULL backup older than it is itself retained (restore needs that exact
+    // base image on the target). A younger retained full does NOT serve as a
+    // base for an older incremental, so we must find the immediately-preceding
+    // full in the whole timeline and require it be kept.
+    std::set<std::string> kept_paths;
+    for (size_t i = 0; i < entries.size(); i++) {
+        if (keep[i]) kept_paths.insert(entries[i].path);
+    }
+
+    // Build, per full, whether it is kept (by its created_at, newest first).
+    std::vector<int64_t> full_ts_desc;      // all full timestamps, descending
+    std::set<int64_t> kept_full_ts;         // retained full timestamps
+    for (size_t i = 0; i < entries.size(); i++) {
+        if (entries[i].info.mode == BackupMode::Full) {
+            full_ts_desc.push_back(entries[i].info.created_at);
+            if (keep[i]) kept_full_ts.insert(entries[i].info.created_at);
+        }
+    }
+    // If no full anchors were selected but fulls exist, keep the newest full
+    // as an implicit anchor so its incrementals survive (matches keep-full=0
+    // semantics: never delete the newest full).
+    if (kept_full_ts.empty() && !full_ts_desc.empty()) {
+        kept_full_ts.insert(full_ts_desc.front());
+        for (size_t i = 0; i < entries.size(); i++) {
+            if (entries[i].info.mode == BackupMode::Full &&
+                entries[i].info.created_at == full_ts_desc.front())
+                keep[i] = true;
+        }
+    }
+
+    for (size_t i = 0; i < entries.size(); i++) {
+        if (keep[i]) continue;
+        const BackupEntry& e = entries[i];
+        if (e.info.mode == BackupMode::Full) continue;  // non-anchor full -> prune
+        // Find the most recent full older than this image.
+        int64_t base_ts = 0;
+        for (int64_t ts : full_ts_desc) {
+            if (ts <= e.info.created_at) { base_ts = ts; break; }
+        }
+        if (base_ts != 0 && kept_full_ts.count(base_ts)) keep[i] = true;
+    }
+
+    // Collect removals.
+    for (size_t i = 0; i < entries.size(); i++) {
+        if (!keep[i]) removed.push_back(entries[i].path);
+    }
     std::sort(removed.begin(), removed.end());
     removed.erase(std::unique(removed.begin(), removed.end()), removed.end());
     size_t failed = 0;

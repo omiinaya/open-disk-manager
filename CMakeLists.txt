@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(OpenPartitionManager VERSION 0.4.2 LANGUAGES CXX C)
+project(OpenPartitionManager VERSION 0.4.3 LANGUAGES CXX C)
 
 # C++ Standard
 set(CMAKE_CXX_STANDARD 17)

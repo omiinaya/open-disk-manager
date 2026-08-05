@@ -92,6 +92,16 @@ struct PruneOptions {
     uint64_t older_than_days = 0;// delete any image older than this many days; 0=off
 };
 
+// Grandfather-Father-Son retention: keeps the newest FULL backup of each of
+// the last N days (son), the last N ISO weeks (father), and the last N
+// calendar months (grandfather). Incremental/differential images are kept
+// only while their base full backup survives (chain-safe).
+struct GfsOptions {
+    uint64_t daily = 7;     // son: newest full of each of the last N days
+    uint64_t weekly = 4;    // father: newest full of each of the last N weeks
+    uint64_t monthly = 12;  // grandfather: newest full of each of the last N months
+};
+
 // Scan a directory for OPMIMG images, sorted by created_at (newest first).
 // Non-image files are ignored.
 Result backupListDir(const std::string& dir, std::vector<BackupEntry>& entries);
@@ -102,5 +112,11 @@ Result backupListDir(const std::string& dir, std::vector<BackupEntry>& entries);
 Result backupPrune(const std::string& dir,
                    const PruneOptions& options,
                    std::vector<std::string>& removed);
+
+// Apply a Grandfather-Father-Son retention policy. Filled 'removed' receives
+// the absolute paths that were deleted.
+Result backupPruneGFS(const std::string& dir,
+                      const GfsOptions& options,
+                      std::vector<std::string>& removed);
 
 } // namespace opm

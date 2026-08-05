@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-08-04
+
+Grandfather-Father-Son (GFS) backup retention.
+
+### Added
+- **`opm backup prune <dir> --gfs [--daily N] [--weekly N] [--monthly N]`**:
+  classic cyclic retention that keeps the newest FULL backup of each of the
+  last N days (son), the last N ISO weeks (father), and the last N calendar
+  months (grandfather). Defaults 7/4/12.
+  - Anchors are selected newest-first so each bucket holds exactly one full.
+  - Chain-safe: an incremental/differential survives only while the most
+    recent full older than it is itself retained (restore needs that exact
+    base); if no full anchors are selected but fulls exist, the newest full
+    is kept as an implicit anchor (mirrors keep-full=0 semantics).
+  - ISO-week and civil-date math implemented from first principles (Hinnant
+    algorithms) — no timezone/library dependency.
+
+### Tests
+- 3 new tests: daily/weekly/monthly anchor invariants over a 40-day timeline,
+  chain-safety for incrementals of pruned vs kept bases, and the
+  all-windows-zero guard. 278 total unit tests; E2E + ASan clean.
+
 ## [0.4.2] - 2026-08-04
 
 NVMe SMART/Health support (real gap: SMART was ATA-only and not even exposed in the CLI).

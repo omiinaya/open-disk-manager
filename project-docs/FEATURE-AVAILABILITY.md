@@ -77,7 +77,7 @@
 | **`backup create/incremental/differential/restore/info/verify`** | ✅ | Image backup (OPMIMG) + `--compress` |
 | **`backup files/listfiles/extract`** | ✅ | File-level backup (ustar tar, hard links + device nodes) |
 | **`backup schedule add/list/remove/show/run`** | ✅ | Cron + systemd-timer generation |
-| **`backup list` / `backup prune`** | ✅ | Backup-set listing + retention (`--keep-full`, `--older-than`) |
+| **`backup list` / `backup prune`** | ✅ | Backup-set listing + retention (`--keep-full`, `--older-than`, **`--gfs`**) |
 | Progress indicators / scripting | ✅ | embedded progress; `--json` on list/info/backup info/backup list |
 
 ### GUI (Qt, `-DBUILD_GUI=ON`)
@@ -150,7 +150,7 @@
 | **Restore** | ✅ | `opm backup restore` — full + incremental apply on top of base |
 | **Verify** | ✅ | `opm backup verify` — re-hash stored blocks, detect corruption |
 | **Compression** | ✅ | `opm backup create ... --compress` — sparse ZERO + RLE per-block, no external deps |
-| **Retention** | ✅ | `opm backup list/prune` — keep N fulls or drop by age; chain-safe |
+| **Retention** | ✅ | `opm backup list/prune` — keep N fulls or drop by age; **`--gfs` Grandfather-Father-Son** (newest full per day/week/month, chain-safe) |
 | **File-level backup** | ✅ | `opm backup files` — self-contained ustar tar (GNU-tar interop verified) |
 | **Hard links / device nodes** | ✅ | `backup files` preserves hard links (dedup) + char/block nodes (mknod on restore) |
 | **File extract** | ✅ | `opm backup extract` — path-traversal guard |

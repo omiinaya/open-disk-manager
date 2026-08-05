@@ -1901,9 +1901,14 @@ int cmdBackup(const std::vector<std::string>& args) {
     }
     if (sub == "prune") {
         if (args.size() < 2) {
-            std::cerr << "Usage: opm backup prune <dir> --keep-full N [--older-than DAYS]\n";
+            std::cerr << "Usage: opm backup prune <dir> --keep-full N [--older-than DAYS]\n"
+                      << "                        [--gfs [--daily N] [--weekly N] [--monthly N]]\n";
             return 1;
         }
+        // GFS (Grandfather-Father-Son) mode: keep the newest full of each of
+        // the last N days/weeks/months.
+        GfsOptions gfs;
+        bool use_gfs = false;
         PruneOptions po;
         size_t i = 2;
         while (i < args.size()) {
@@ -1913,17 +1918,34 @@ int cmdBackup(const std::vector<std::string>& args) {
             } else if (i + 1 < args.size() && args[i] == "--older-than") {
                 po.older_than_days = std::strtoull(args[i + 1].c_str(), nullptr, 10);
                 i += 2;
+            } else if (args[i] == "--gfs") {
+                use_gfs = true;
+                i += 1;
+            } else if (i + 1 < args.size() && args[i] == "--daily") {
+                gfs.daily = std::strtoull(args[i + 1].c_str(), nullptr, 10);
+                use_gfs = true;
+                i += 2;
+            } else if (i + 1 < args.size() && args[i] == "--weekly") {
+                gfs.weekly = std::strtoull(args[i + 1].c_str(), nullptr, 10);
+                use_gfs = true;
+                i += 2;
+            } else if (i + 1 < args.size() && args[i] == "--monthly") {
+                gfs.monthly = std::strtoull(args[i + 1].c_str(), nullptr, 10);
+                use_gfs = true;
+                i += 2;
             } else {
                 std::cerr << "Unknown option: " << args[i] << "\n";
                 return 1;
             }
         }
-        if (po.keep_full == 0 && po.older_than_days == 0) {
-            std::cerr << "Nothing to do: specify --keep-full N and/or --older-than DAYS\n";
+        if (!use_gfs && po.keep_full == 0 && po.older_than_days == 0) {
+            std::cerr << "Nothing to do: specify --keep-full N and/or --older-than DAYS\n"
+                         "(or use --gfs for Grandfather-Father-Son retention)\n";
             return 1;
         }
         std::vector<std::string> removed;
-        Result r = backupPrune(args[1], po, removed);
+        Result r = use_gfs ? backupPruneGFS(args[1], gfs, removed)
+                           : backupPrune(args[1], po, removed);
         if (r.failed()) { std::cerr << "Error: " << r.message << "\n"; return 1; }
         std::cout << "Removed " << removed.size() << " image(s)\n";
         for (const auto& p : removed) std::cout << "  - " << p << "\n";
