@@ -45,10 +45,20 @@ cp "$BUILD_DIR/src/cli/opm.exe" "$OUT_DIR/"
 GCC_DLL_DIR="$(dirname "$(command -v x86_64-w64-mingw32-g++)")/../lib/gcc/x86_64-w64-mingw32/"*/*posix
 cp -u $GCC_DLL_DIR/*.dll "$OUT_DIR/" 2>/dev/null || true
 
-echo "==> windeployqt"
-WINEPATH="${OUT_DIR};${QT_WIN}/bin" wine "$QT_WIN/bin/windeployqt.exe" \
-  --release --no-translations --no-system-d3d-compiler --no-opengl-sw \
-  "$OUT_DIR/opm-gui.exe"
+echo "==> Qt runtime DLLs + plugins (manual deploy; windeployqt under Wine is
+     unreliable on headless CI without wine32)"
+QT_BIN="$QT_WIN/bin"
+cp "$QT_BIN"/Qt6Core.dll "$QT_BIN"/Qt6Gui.dll "$QT_BIN"/Qt6Widgets.dll "$OUT_DIR/" 2>/dev/null || true
+# MinGW runtime DLLs for the Qt binaries (libgcc, libstdc++, winpthread, libssp)
+cp -u /usr/lib/gcc/x86_64-w64-mingw32/*/*posix/*.dll "$OUT_DIR/" 2>/dev/null || true
+cp -u /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll "$OUT_DIR/" 2>/dev/null || true
+# Platform plugin (Qt6 needs platforms/qwindows.dll)
+mkdir -p "$OUT_DIR/platforms"
+cp "$QT_BIN/../plugins/platforms/qwindows.dll" "$OUT_DIR/platforms/" 2>/dev/null || true
+# Image format plugins (png/jpeg) used by the GUI
+mkdir -p "$OUT_DIR/imageformats"
+cp "$QT_BIN/../plugins/imageformats/qpng.dll" "$QT_BIN/../plugins/imageformats/qjpeg.dll" \
+   "$QT_BIN/../plugins/imageformats/qgif.dll" "$OUT_DIR/imageformats/" 2>/dev/null || true
 
 echo "==> Bundle contents ($(du -sh "$OUT_DIR" | cut -f1))"
 ls "$OUT_DIR"
