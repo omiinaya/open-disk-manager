@@ -5,6 +5,52 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-04
+
+On-disk filesystem conversion + a real NTFS writer + a run-list-aware NTFS fsck.
+
+### Added
+- **Data-preserving FAT32 → NTFS conversion**: `opm convert-fs <device> <partition> ntfs`
+  (and `convertFAT32ToNTFS` / `convertPartitionToNTFS` in the core library). The NTFS
+  cluster size is chosen to match the FAT32's, so every FAT data cluster maps 1:1 to an
+  NTFS LCN — **file contents are never moved**, only metadata is rewritten into the freed
+  reserved+FAT region (falling back to the largest contiguous free run on fuller volumes).
+  Spec vault:
+  - Real MFT records with `$STANDARD_INFORMATION`, `$FILE_NAME`, non-resident `$DATA`
+    run lists that reuse the original cluster chains, and `$INDEX_ROOT` /
+    `$INDEX_ALLOCATION` (`INDX` fixup buffers) directory trees.
+  - Fixup/update-sequence numbers applied to every 1024-byte MFT record.
+  - Correct system files: `$MFT`, `$MFTMirr`, `$LogFile` (RSTR), `$Volume` (label carried
+    over from the FAT32 volume label), `$AttrDef`, `$Bitmap`, `$Boot`, `$BadClus`,
+    `$Secure`, `$UpCase`, `$Extend`.
+  - Never partial: the whole plan validates (free space, alignment, tree build) before
+    any sector is written; foreign filesystems are rejected up front instead of being
+    misread as a corrupt FAT32.
+- **Run-list-aware NTFS fsck (`checkNTFS`)**: `$Bitmap` and `$LogFile` locations are now
+  resolved from the MFT records' `$DATA` run lists when present (the real NTFS
+  behaviour), falling back to the fixed geometry used by `formatNTFS`. Previously the
+  checker could only validate the format's exact layout; it now also validates converted
+  volumes and correctly checks that every system file's clusters are marked used in
+  `$Bitmap`.
+
+### Fixed
+- **GPT header sector overflow (`gpt.cpp`)**: `writePrimaryGPT`/`writeBackupGPT` wrote a
+  512-byte sector from a 92-byte packed `GPTHeaderRaw` stack struct, over-reading 420
+  bytes of adjacent stack memory. Now zero-pads to a full 512-byte buffer. (Caught by
+  ASan during converter testing.)
+- **NTFS format `$Bitmap` (incomplete)**: `createBitmap` only marked the first ~10
+  clusters used; it did not mark the clusters claimed by `$Bitmap` itself, `$LogFile`,
+  `$UpCase`, or the MFT mirror. The checker now requires those, and the format marks
+  them all — matching real NTFS allocation semantics.
+
+### Tests
+- New `tests/test_convert_fs.cpp` (5 tests): data-preservation check (file bytes
+  identical at the same physical offset after conversion), independent MFT-walk
+  verification of the resulting `$FILE_NAME`/`$DATA` run lists, label propagation,
+  partition-table front end, foreign-FS rejection, and refusal to re-convert.
+- E2E CLI: `convert-fs` block added to `cli_e2e.sh` (convert, post-convert fsck,
+  re-convert refusal, unsupported-target refusal).
+
 ## [0.3.1] - 2026-08-04
 
 Backup polish + Windows GUI packaging.

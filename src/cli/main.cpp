@@ -30,6 +30,7 @@ int cmdCryptInfo(const std::vector<std::string>& args);
 int cmdAlign(const std::vector<std::string>& args);
 int cmdI18n(const std::vector<std::string>& args);
 int cmdConvert(const std::vector<std::string>& args);
+int cmdConvertFS(const std::vector<std::string>& args);
 int cmdSetActive(const std::vector<std::string>& args);
 int cmdHideUnhide(const std::vector<std::string>& args, bool hide);
 int cmdLabel(const std::vector<std::string>& args);
@@ -64,6 +65,8 @@ void printUsage(const char* program) {
               << "  merge <device> <numA> <numB>      Merge adjacent partitions (data move\n"
               << "                         for FAT32, table grow for empty)\n"
               << "  convert <device> <mbr|gpt>        Convert the partition table in place\n"
+              << "  convert-fs <device> <n> <ntfs>    Convert partition n's filesystem\n"
+              << "                         in place (FAT32 -> NTFS, data-preserving)\n"
               << "  set-active <device> <n> [on|off]  Toggle the MBR bootable flag\n"
               << "  hide/unhide <device> <n>          Hide/unhide a FAT-family partition\n"
               << "\nFilesystem commands:\n"
@@ -403,6 +406,8 @@ int main(int argc, char* argv[]) {
         return cli::cmdI18n(args);
     } else if (command == "convert") {
         return cli::cmdConvert(args);
+    } else if (command == "convert-fs") {
+        return cli::cmdConvertFS(args);
     } else if (command == "set-active" || command == "active" || command == "bootable") {
         return cli::cmdSetActive(args);
     } else if (command == "hide") {

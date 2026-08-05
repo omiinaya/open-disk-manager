@@ -40,6 +40,7 @@ set(TEST_SOURCES
     test_schedule.cpp
     test_tar.cpp
     test_merge.cpp
+    test_convert_fs.cpp
     test_wipe.cpp
     test_json.cpp
 )

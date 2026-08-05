@@ -42,7 +42,7 @@
 | ext4 | ✅ | ✅ | ✅ | Superblock+GDT+journal, GDT CRC16, backup superblocks |
 | exFAT | ✅ | ✅ | ✅ | Boot checksum, allocation bitmap, upcase table |
 | swap | ✅ | ✅ | — | SWAPSPACE2 v1, detection fixed (spans 4K page) |
-| FS conversion (FAT32↔NTFS etc.) | 📋 | 📋 | 📋 | Planned (table conversion is ✅ — see below) |
+| FS conversion (FAT32→NTFS) | ✅ | `opm convert-fs <dev> <n> ntfs` — data-preserving, never moves file contents |
 
 ### Disk Operations
 
@@ -65,6 +65,7 @@
 | `create` / `delete` / `resize` / `move` | ✅ (all with `--dry-run`) |
 | `merge <dev> <numA> <numB>` | ✅ | Empty-right grow + FAT32→FAT32 data move |
 | `convert <mbr\|gpt>` | ✅ | `set-active`, `hide`, `unhide` | ✅ |
+| **`convert-fs <dev> <n> <ntfs>`** | ✅ | **FAT32 → NTFS, data-preserving** (file data never moved; metadata rebuilt into freed FAT region) |
 | `format <fat32\|ntfs\|ext4\|exfat\|swap>` | ✅ |
 | `check` / `fsinfo` / `label` | ✅ |
 | `recover [--rebuild]` | ✅ | `undelete [--restore]` | ✅ |

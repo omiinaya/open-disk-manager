@@ -1,10 +1,104 @@
 #include "opm/ntfs_impl.hpp"
 #include "opm/disk_io.hpp"
+#include <algorithm>
 #include <cstring>
 #include <sstream>
 
 namespace opm {
 namespace ntfs {
+
+namespace {
+
+uint16_t rd16(const uint8_t* p) { return p[0] | (p[1] << 8); }
+uint32_t rd32(const uint8_t* p) {
+    return p[0] | (p[1] << 8) | (p[2] << 16) | (uint32_t(p[3]) << 24);
+}
+uint64_t rd64(const uint8_t* p) {
+    uint64_t v = 0;
+    for (int i = 0; i < 8; i++) v |= uint64_t(p[i]) << (8 * i);
+    return v;
+}
+
+// Parse a non-resident attribute's run list from a raw MFT record.
+// Returns the first LCN and the total length in clusters when a run list of
+// the given attribute type exists and is non-resident.
+bool readFirstRun(const std::vector<uint8_t>& rec, uint32_t attr_type,
+                  uint64_t& first_lcn, uint64_t& total_clusters) {
+    if (rec.size() < 56) return false;
+    if (rd32(rec.data()) != MFT_RECORD_MAGIC) return false;
+    uint16_t attr_off = rd16(rec.data() + 20);
+    if (attr_off == 0 || attr_off >= rec.size()) return false;
+    size_t off = attr_off;
+    while (off + 8 <= rec.size()) {
+        uint32_t t = rd32(rec.data() + off);
+        if (t == 0xFFFFFFFFu) break;
+        uint32_t len = rd32(rec.data() + off + 4);
+        if (len == 0 || off + len > rec.size()) break;
+        const uint8_t* h = rec.data() + off;
+        // candidate attribute name (for $Bitmap/$LogFile matching by attr id)
+        if (t == attr_type && (h[8] & 1) && len > 64) {
+            uint16_t runoff = rd16(h + 32);
+            if (runoff + 1 <= len) {
+                size_t p = off + runoff;
+                int64_t prev = 0;
+                if (p < rec.size()) {
+                    uint8_t hdr = rec[p++];
+                    if (hdr) {
+                        int llen = hdr >> 4, olen = hdr & 0x0F;
+                        if (llen > 0 && p + llen + olen <= rec.size()) {
+                            uint64_t run_len = 0;
+                            for (int i = 0; i < llen; i++)
+                                run_len |= uint64_t(rec[p + i]) << (8 * i);
+                            int64_t offs = 0;
+                            for (int i = 0; i < olen; i++)
+                                offs |= int64_t(rec[p + llen + i]) << (8 * i);
+                            if (olen && (rec[p + llen + olen - 1] & 0x80))
+                                for (int i = olen; i < 8; i++)
+                                    offs |= int64_t(-1) << (8 * i);
+                            prev = offs;
+                            first_lcn = uint64_t(prev);
+                            total_clusters = run_len;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        off += len;
+    }
+    return false;
+}
+
+// Read one MFT record's raw bytes.
+std::vector<uint8_t> resolveMFTRecord(std::shared_ptr<DiskIO> disk,
+                                      uint64_t start_sector,
+                                      const NTFSLayout& layout,
+                                      uint64_t record_num) {
+    uint64_t rec_bytes = (start_sector + layout.mft_lcn * layout.sectors_per_cluster) *
+                         layout.bytes_per_sector + record_num * layout.mft_record_size;
+    std::vector<uint8_t> rec(layout.mft_record_size, 0);
+    if (disk->read(rec.data(), rec_bytes, layout.mft_record_size).failed()) {
+        rec.clear();
+    }
+    return rec;
+}
+
+// Resolve where a system file lives: from its MFT record's $DATA run list
+// when present (the real NTFS behaviour), else from the fixed-geometry
+// helpers used by the format path (records have no run lists yet).
+uint64_t resolveSystemLcn(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
+                          const NTFSLayout& layout, uint64_t record_num,
+                          uint64_t fallback_cluster) {
+    std::vector<uint8_t> rec =
+        resolveMFTRecord(disk, start_sector, layout, record_num);
+    uint64_t first_lcn = 0, total_cl = 0;
+    if (readFirstRun(rec, ATTR_DATA, first_lcn, total_cl)) {
+        return first_lcn;
+    }
+    return fallback_cluster;
+}
+
+} // anonymous namespace
 
 // ============================================================================
 // NTFS Check Operations - Phase 3.4.7
@@ -296,8 +390,11 @@ Result checkMFT(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 
 Result checkBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                    const NTFSLayout& layout, bool repair, std::vector<std::string>* errors) {
-    // Calculate expected bitmap location (shared with the format path)
-    uint64_t bitmap_cluster = getBitmapCluster(layout);
+    // Resolve $Bitmap location from the MFT record's $DATA run list (real
+    // NTFS behaviour) when present; fall back to the fixed geometry used by
+    // the format path (whose system records carry no run lists yet).
+    uint64_t bitmap_cluster = resolveSystemLcn(disk, start_sector, layout,
+                                               MFT_BITMAP, getBitmapCluster(layout));
     uint64_t bitmap_sector = start_sector + bitmap_cluster * layout.sectors_per_cluster;
     uint64_t bitmap_offset = bitmap_sector * layout.bytes_per_sector;
     
@@ -311,32 +408,107 @@ Result checkBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
         return Result::error("Cannot read bitmap");
     }
 
-    // Check that system clusters are marked as used
-    uint64_t used_clusters = layout.mft_lcn + 
-        (16 * layout.mft_record_size / layout.bytes_per_cluster);
-    used_clusters = std::max(used_clusters, static_cast<uint64_t>(10));
-    
+    // Verify the clusters actually claimed by the system files are marked
+    // used. This works for both layouts: the format path (fixed geometry,
+    // contiguous prefix) and the conversion path (system files may sit in the
+    // middle of the volume, leaving the old FAT region legitimately free).
+    auto isSet = [&](uint64_t c) {
+        uint64_t byte_idx = c / 8;
+        uint64_t bit_idx = c % 8;
+        if (byte_idx >= bitmap.size()) return true;  // beyond volume = n/a
+        return (bitmap[byte_idx] & (1 << bit_idx)) != 0;
+    };
+
     bool bitmap_ok = true;
-    for (uint64_t i = 0; i < used_clusters && i < layout.total_clusters; i++) {
-        uint64_t byte_idx = i / 8;
-        uint64_t bit_idx = i % 8;
-        
-        if (byte_idx < bitmap_size) {
-            if (!(bitmap[byte_idx] & (1 << bit_idx))) {
-                if (errors) {
-                    errors->push_back("Cluster " + std::to_string(i) + 
-                                    " should be marked as used but is free");
-                }
-                bitmap_ok = false;
-                
-                if (repair) {
-                    bitmap[byte_idx] |= (1 << bit_idx);
+    std::vector<uint64_t> must_be_used;
+
+    // Boot region: first 16 sectors hold the boot sector + boot code.
+    uint64_t boot_clusters = 16 / layout.sectors_per_cluster;
+    if (boot_clusters < 1) boot_clusters = 1;
+    for (uint64_t c = 0; c < boot_clusters && c < layout.total_clusters; c++) {
+        must_be_used.push_back(c);
+    }
+    // MFT itself: from run list when present, else fixed prefix.
+    {
+        uint64_t mft_lcn = 0, mft_cl = 0;
+        std::vector<uint8_t> rec =
+            resolveMFTRecord(disk, start_sector, layout, MFT_MFT);
+        if (readFirstRun(rec, ATTR_DATA, mft_lcn, mft_cl)) {
+            for (uint64_t c = mft_lcn; c < mft_lcn + mft_cl && c < layout.total_clusters; c++) {
+                must_be_used.push_back(c);
+            }
+        } else {
+            uint64_t used = layout.mft_lcn +
+                (16 * layout.mft_record_size / layout.bytes_per_cluster);
+            for (uint64_t c = layout.mft_lcn; c < used && c < layout.total_clusters; c++) {
+                must_be_used.push_back(c);
+            }
+        }
+    }
+    // $Bitmap itself
+    {
+        uint64_t bmp_bytes = (layout.total_clusters + 7) / 8;
+        uint64_t bmp_cl = (bmp_bytes + layout.bytes_per_cluster - 1) / layout.bytes_per_cluster;
+        if (bmp_cl < 1) bmp_cl = 1;
+        for (uint64_t c = bitmap_cluster; c < bitmap_cluster + bmp_cl && c < layout.total_clusters; c++) {
+            must_be_used.push_back(c);
+        }
+    }
+    // $LogFile
+    {
+        uint64_t log_lcn = 0, log_cl = 0;
+        std::vector<uint8_t> rec =
+            resolveMFTRecord(disk, start_sector, layout, MFT_LOGFILE);
+        if (readFirstRun(rec, ATTR_DATA, log_lcn, log_cl)) {
+            for (uint64_t c = log_lcn; c < log_lcn + log_cl && c < layout.total_clusters; c++) {
+                must_be_used.push_back(c);
+            }
+        }
+    }
+    // $UpCase
+    {
+        uint64_t uc_lcn = 0, uc_cl = 0;
+        std::vector<uint8_t> rec =
+            resolveMFTRecord(disk, start_sector, layout, MFT_UPCASE);
+        if (readFirstRun(rec, ATTR_DATA, uc_lcn, uc_cl)) {
+            for (uint64_t c = uc_lcn; c < uc_lcn + uc_cl && c < layout.total_clusters; c++) {
+                must_be_used.push_back(c);
+            }
+        }
+    }
+    // MFT mirror
+    {
+        uint64_t mirr_cl = (4 * layout.mft_record_size + layout.bytes_per_cluster - 1) /
+                           layout.bytes_per_cluster;
+        if (mirr_cl < 1) mirr_cl = 1;
+        for (uint64_t c = layout.mft_mirr_lcn; c < layout.mft_mirr_lcn + mirr_cl &&
+             c < layout.total_clusters; c++) {
+            must_be_used.push_back(c);
+        }
+    }
+
+    // Deduplicate and verify.
+    std::sort(must_be_used.begin(), must_be_used.end());
+    must_be_used.erase(std::unique(must_be_used.begin(), must_be_used.end()),
+                       must_be_used.end());
+    for (uint64_t c : must_be_used) {
+        if (!isSet(c)) {
+            if (errors) {
+                errors->push_back("Cluster " + std::to_string(c) +
+                                " should be marked as used but is free");
+            }
+            bitmap_ok = false;
+            if (repair) {
+                uint64_t byte_idx = c / 8;
+                uint64_t bit_idx = c % 8;
+                if (byte_idx < bitmap.size()) {
+                    bitmap[byte_idx] |= static_cast<uint8_t>(1 << bit_idx);
                 }
             }
         }
     }
 
-    // Verify bitmap is not all zeros (would indicate corruption)
+    // Verify bitmap is not entirely empty (would indicate corruption).
     bool all_zero = true;
     for (uint64_t i = 0; i < bitmap_size && i < 1024; i++) {
         if (bitmap[i] != 0) {
@@ -367,10 +539,11 @@ Result checkBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
 
 Result checkLogFile(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
                     const NTFSLayout& layout, bool repair, std::vector<std::string>* errors) {
-    // Log file is typically at MFT record 2
-    // Calculate expected log file location
-    uint64_t log_cluster = layout.mft_lcn + 
-        (16 * layout.mft_record_size / layout.bytes_per_cluster) + 2;
+    // Log file is at MFT record 2. Resolve from the run list when present
+    // (converted volumes), else the fixed position used by the format path.
+    uint64_t log_cluster = resolveSystemLcn(disk, start_sector, layout,
+                                            MFT_LOGFILE,
+                                            getLogFileCluster(layout));
     uint64_t log_sector = start_sector + log_cluster * layout.sectors_per_cluster;
     uint64_t log_offset = log_sector * layout.bytes_per_sector;
     

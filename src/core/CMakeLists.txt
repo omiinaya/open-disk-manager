@@ -52,6 +52,7 @@ set(CORE_SOURCES
     schedule.cpp
     tar.cpp
     merge.cpp
+    convert_fs.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
@@ -73,6 +74,7 @@ set(CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/opm/ext4_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/ntfs_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/exfat_impl.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/convert_fs.hpp
 )
 
 add_library(opm-core STATIC ${CORE_SOURCES})

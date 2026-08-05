@@ -670,8 +670,11 @@ Result GPTTable::writePrimaryGPT() {
     std::memcpy(header_bytes.data(), &header, sizeof(header));
     *reinterpret_cast<uint32_t*>(&header_bytes[16]) = 0;
     header.header_crc32 = utils::crc32(header_bytes.data(), header.header_size);
+    std::memcpy(header_bytes.data(), &header, sizeof(header));
 
-    Result r = disk_->writeSector(&header, 1);
+    // Write a full 512-byte sector (zero-padded past the 92-byte header).
+    header_bytes.resize(512, 0);
+    Result r = disk_->writeSector(header_bytes.data(), 1);
     if (r.failed()) {
         return Result::error("Failed to write primary GPT header: " + r.message);
     }
@@ -776,8 +779,10 @@ Result GPTTable::writeBackupGPT() {
     std::memcpy(header_bytes.data(), &header, sizeof(header));
     *reinterpret_cast<uint32_t*>(&header_bytes[16]) = 0;
     header.header_crc32 = utils::crc32(header_bytes.data(), header.header_size);
+    std::memcpy(header_bytes.data(), &header, sizeof(header));
 
-    Result r = disk_->writeSector(&header, last_lba);
+    header_bytes.resize(512, 0);
+    Result r = disk_->writeSector(header_bytes.data(), last_lba);
     if (r.failed()) {
         return Result::error("Failed to write backup GPT header: " + r.message);
     }

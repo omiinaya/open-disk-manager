@@ -15,6 +15,8 @@
 #include "opm/ntfs_impl.hpp"
 #include "opm/ext4_impl.hpp"
 #include "opm/exfat_impl.hpp"
+#include "opm/convert_fs.hpp"
+#include "opm/filesystem.hpp"
 #include "opm/encryption.hpp"
 #include "opm/lvm.hpp"
 #include "opm/raid.hpp"
@@ -998,6 +1000,70 @@ int cmdConvert(const std::vector<std::string>& args) {
                   << " partition(s).\n";
     } else {
         std::cout << "Converted successfully.\n";
+    }
+    return 0;
+}
+
+// ---------------------------------------------------------------------------
+// convert-fs <device> <partition> <ntfs> - convert a partition's filesystem
+// ---------------------------------------------------------------------------
+int cmdConvertFS(const std::vector<std::string>& args) {
+    if (args.size() < 3) {
+        std::cerr << "Usage: opm convert-fs <device> <partition_number> <ntfs>\n"
+                  << "       <ntfs>  convert the filesystem to NTFS (FAT32 -> NTFS,\n"
+                  << "               data-preserving; file data is never moved)\n";
+        return 1;
+    }
+    uint64_t number = 0;
+    if (!parseU64(args[1], number) || number == 0) {
+        std::cerr << "Error: invalid partition number: " << args[1] << "\n";
+        return 1;
+    }
+    const std::string target = args[2];
+    if (target != "ntfs") {
+        std::cerr << "Error: unsupported target filesystem '" << target
+                  << "' (currently only 'ntfs')\n";
+        return 1;
+    }
+
+    std::string err;
+    std::shared_ptr<DiskIO> disk;
+    if (!openReadWrite(args[0], disk, err)) { std::cerr << err << "\n"; return 1; }
+
+    try {
+        auto table = PartitionTable::load(disk);
+        if (!table) {
+            std::cerr << "Error: no partition table found on " << args[0] << "\n";
+            return 1;
+        }
+        auto p = table->getPartition(static_cast<int>(number));
+        if (!p) {
+            std::cerr << "Error: partition " << number << " does not exist\n";
+            return 1;
+        }
+        FileSystemType fs = detectFilesystemAt(disk, p->startSector());
+        if (fs != FileSystemType::FAT32) {
+            std::cerr << "Error: partition " << number << " is not FAT32 (found "
+                      << getFilesystemName(fs) << ")\n";
+            return 1;
+        }
+        std::cout << "Converting partition " << number << " (FAT32) to NTFS ...\n";
+        std::cout << "  (data-preserving: file contents stay at their current "
+                     "physical offsets)\n";
+        std::string label;
+        Result r = convertPartitionToNTFS(disk, static_cast<int>(number), &label);
+        if (r.failed()) {
+            std::cerr << "Error: " << r.message << "\n";
+            return 1;
+        }
+        std::cout << "Converted successfully.";
+        if (!label.empty()) {
+            std::cout << " Volume label: " << label;
+        }
+        std::cout << "\n";
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
     }
     return 0;
 }

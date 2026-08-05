@@ -168,18 +168,60 @@ Result createBitmap(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     // Create bitmap buffer
     std::vector<uint8_t> bitmap(bitmap_size, 0);
     
-    // Mark system clusters as used
-    // Boot sector (cluster 0), MFT clusters, etc.
-    uint64_t used_clusters = layout.mft_lcn + (16 * layout.mft_record_size / layout.bytes_per_cluster);
-    used_clusters = std::max(used_clusters, static_cast<uint64_t>(10));
-    
-    for (uint64_t i = 0; i < used_clusters && i < layout.total_clusters; i++) {
-        uint64_t byte_idx = i / 8;
-        uint64_t bit_idx = i % 8;
-        if (byte_idx < bitmap_size) {
-            bitmap[byte_idx] |= (1 << bit_idx);
+    // Mark system clusters as used: boot region, MFT, $Bitmap itself,
+    // $LogFile, $UpCase, and the MFT mirror. (This mirrors the geometry the
+    // checker validates — a real NTFS marks every cluster claimed by a
+    // system file.)
+    auto bitSet = [&](uint64_t c) {
+        if (c < layout.total_clusters) {
+            bitmap[c / 8] |= static_cast<uint8_t>(1 << (c % 8));
         }
+    };
+    // Boot region: first 16 sectors
+    {
+        uint64_t boot_clusters = 16 / layout.sectors_per_cluster;
+        if (boot_clusters < 1) boot_clusters = 1;
+        for (uint64_t c = 0; c < boot_clusters; c++) bitSet(c);
     }
+    // MFT (16 system records)
+    {
+        uint64_t mft_clusters = (16ULL * layout.mft_record_size +
+                                 layout.bytes_per_cluster - 1) /
+                                layout.bytes_per_cluster;
+        for (uint64_t c = layout.mft_lcn;
+             c < layout.mft_lcn + mft_clusters; c++) bitSet(c);
+    }
+    // $Bitmap itself
+    {
+        uint64_t bitmap_cluster = getBitmapCluster(layout);
+        uint64_t bmp_cl = (bitmap_size + layout.bytes_per_cluster - 1) /
+                          layout.bytes_per_cluster;
+        if (bmp_cl < 1) bmp_cl = 1;
+        for (uint64_t c = bitmap_cluster; c < bitmap_cluster + bmp_cl; c++) bitSet(c);
+    }
+    // $LogFile
+    {
+        uint64_t log_cluster = getLogFileCluster(layout);
+        for (uint64_t c = log_cluster; c < log_cluster + getLogFileClusters(layout); c++) bitSet(c);
+    }
+    // $UpCase
+    {
+        uint64_t upcase_cluster = getUpCaseCluster(layout);
+        uint64_t up_cl = (65536ULL * 2 + layout.bytes_per_cluster - 1) /
+                         layout.bytes_per_cluster;
+        if (up_cl < 1) up_cl = 1;
+        for (uint64_t c = upcase_cluster; c < upcase_cluster + up_cl; c++) bitSet(c);
+    }
+    // MFT mirror
+    {
+        uint64_t mirr_cl = (4ULL * layout.mft_record_size +
+                            layout.bytes_per_cluster - 1) /
+                           layout.bytes_per_cluster;
+        if (mirr_cl < 1) mirr_cl = 1;
+        for (uint64_t c = layout.mft_mirr_lcn; c < layout.mft_mirr_lcn + mirr_cl; c++) bitSet(c);
+    }
+    // Backwards compatibility: ensure at least the first few clusters are set
+    // even on the fixed-layout path (boot sector cluster 0 is included above).
     
     // Allocate bitmap right after the MFT records
     uint64_t bitmap_cluster = getBitmapCluster(layout);

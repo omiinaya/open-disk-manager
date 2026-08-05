@@ -65,6 +65,16 @@ expect_fail "bad size suffix"  "$OPM" create "$IMG" 2048 10Z linux
 expect_fail "unknown fs"       "$OPM" format "$IMG" btrfs 2048 10M
 expect_fail "fs on empty"      "$OPM" check "$IMG" 400000
 
+# --- filesystem conversion (FAT32 -> NTFS, data-preserving) ---
+check "mklabel gpt (convert)"  "$OPM" mklabel "$IMG" gpt
+check "create conv p1"         "$OPM" create "$IMG" 2048 60M fat32 p1
+check "format conv fat32"      "$OPM" format "$IMG" fat32 2048 60M CONVLABEL
+check "convert-fs p1 -> ntfs"  "$OPM" convert-fs "$IMG" 1 ntfs
+check "fsinfo after convert"   sh -c "\"$OPM\" fsinfo \"$IMG\" 2048 | grep -q NTFS"
+check "check ntfs after conv"  "$OPM" check "$IMG" 2048
+expect_fail "convert again"    "$OPM" convert-fs "$IMG" 1 ntfs
+expect_fail "convert to ext4"  "$OPM" convert-fs "$IMG" 1 ext4
+
 # --- JSON output mode ---
 BKDIR="$(mktemp -d /tmp/opm-e2e-bk-XXXXXX)"
 check "json list" sh -c "\"$OPM\" list --json | python3 -c 'import json,sys; json.load(sys.stdin)'"

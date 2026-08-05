@@ -6,10 +6,10 @@ sidebar_position: 2
 
 ## Current Status
 
-**Version**: 0.3.1
+**Version**: 0.4.0
 **Completed**: All roadmap phases implemented (August 2026)
 **Core + CLI + GUI + Tests**: ~25,000 lines
-**Tests**: 258 unit tests + CLI E2E, passing on Linux and Windows (MinGW) including the GUI
+**Tests**: 266 unit tests + CLI E2E, passing on Linux and Windows (MinGW) including the GUI
 
 ---
 
@@ -30,6 +30,13 @@ sidebar_position: 2
 | **NTFS** | ✅ | ✅ | ✅ | ✅ | — | Complete |
 | **exFAT** | ✅ | ✅ | ✅ | ✅ | — | Complete |
 | **swap** | ✅ | ✅ | — | ✅ | — | Complete |
+
+### Filesystem Conversion ✅
+- **FAT32 → NTFS** (`opm convert-fs <dev> <partition> ntfs`): data-preserving in-place
+  conversion. Cluster sizes match, so every FAT data cluster maps 1:1 to an NTFS LCN —
+  file contents stay at their exact physical offsets; only metadata is rewritten. Real
+  MFT records with run lists, directory indexes, fixup USNs, and label carry-over.
+  (NTFS → FAT32 and FAT32 → exFAT are future work.)
 
 ### Advanced Operations ✅
 - Disk cloning (sector + verify, resize-aware)
