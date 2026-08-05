@@ -74,6 +74,7 @@ check "fsinfo after convert"   sh -c "\"$OPM\" fsinfo \"$IMG\" 2048 | grep -q NT
 check "check ntfs after conv"  "$OPM" check "$IMG" 2048
 expect_fail "convert again"    "$OPM" convert-fs "$IMG" 1 ntfs
 expect_fail "convert to ext4"  "$OPM" convert-fs "$IMG" 1 ext4
+check "undelete ntfs scan"     sh -c "\"$OPM\" undelete \"$IMG\" 2048 | grep -q 'Found 0 deleted file(s)'"
 
 # --- JSON output mode ---
 BKDIR="$(mktemp -d /tmp/opm-e2e-bk-XXXXXX)"

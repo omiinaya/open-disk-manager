@@ -41,6 +41,7 @@ set(TEST_SOURCES
     test_tar.cpp
     test_merge.cpp
     test_convert_fs.cpp
+    test_ntfs_undelete.cpp
     test_wipe.cpp
     test_json.cpp
 )

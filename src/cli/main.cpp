@@ -80,7 +80,7 @@ void printUsage(const char* program) {
               << "  align <device>                    Report 4K partition alignment\n"
               << "System commands:\n"
               << "  recover <device> [--rebuild]     Scan for lost partitions\n"
-              << "  undelete <dev> <start> [--restore <i>]  Recover deleted FAT files\n"
+              << "  undelete <dev> <start> [--restore <i>] [--export <dir>]  Recover deleted FAT/NTFS files\n"
               << "  luks open|close|status             LUKS volume management (cryptsetup)\n"
               << "  bitlocker unlock <dev> [mount]     Unlock BitLocker (dislocker)\n"
               << "  boot-repair --uefi                 List/add UEFI boot entries (efibootmgr)\n"

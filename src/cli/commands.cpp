@@ -24,6 +24,7 @@
 #include "opm/swap.hpp"
 #include "opm/recovery.hpp"
 #include "opm/undelete.hpp"
+#include "opm/ntfs_undelete.hpp"
 #include "opm/security.hpp"
 #include "opm/i18n.hpp"
 #include "opm/backup.hpp"
@@ -1254,12 +1255,19 @@ int cmdRecover(const std::vector<std::string>& args) {
 
 // ---------------------------------------------------------------------------
 // undelete <device> <start_sector> [--restore <index>] [--name-char <c>]
-// Scans a FAT32 volume for deleted files; with --restore, recovers one.
+//                           [--export <dir>]
+// Scans a FAT32 or NTFS volume for deleted files; with --restore, recovers
+// one in place (NTFS: resident-index parents only), or --export writes its
+// data out to a directory.
 // ---------------------------------------------------------------------------
 int cmdUndelete(const std::vector<std::string>& args) {
     if (args.size() < 2) {
         std::cerr << "Usage: opm undelete <device> <start_sector> "
-                     "[--restore <index>] [--name-char <c>]\n";
+                     "[--restore <index>] [--name-char <c>] [--export <dir>]\n"
+                  << "       FAT32: scan deleted 0xE5 entries; --restore re-creates the entry.\n"
+                  << "       NTFS:  scan MFT records with in-use flag clear; --restore re-links\n"
+                  << "              into the parent dir (resident index), --export writes the\n"
+                  << "              data runs out to <dir>.\n";
         return 1;
     }
     uint64_t start = 0;
@@ -1269,6 +1277,7 @@ int cmdUndelete(const std::vector<std::string>& args) {
     }
     int restore_index = -1;
     char name_char = '_';
+    std::string export_dir;
     for (size_t i = 2; i < args.size(); i++) {
         if (args[i] == "--restore" && i + 1 < args.size()) {
             if (!parseU64(args[i + 1], (uint64_t&)restore_index)) {
@@ -1276,9 +1285,11 @@ int cmdUndelete(const std::vector<std::string>& args) {
                 return 1;
             }
             restore_index = static_cast<int>(restore_index) - 1;  // 0-based
-        }
-        if (args[i] == "--name-char" && i + 1 < args.size()) {
+        } else if (args[i] == "--name-char" && i + 1 < args.size()) {
             name_char = args[i + 1].empty() ? '_' : args[i + 1][0];
+        } else if (args[i] == "--export" && i + 1 < args.size()) {
+            export_dir = args[i + 1];
+            ++i;
         }
     }
 
@@ -1288,12 +1299,60 @@ int cmdUndelete(const std::vector<std::string>& args) {
 
     FileSystemType fs = disk->detectFilesystem(start);
     if (fs != FileSystemType::FAT32 && fs != FileSystemType::FAT16 &&
-        fs != FileSystemType::FAT12) {
-        std::cerr << "Error: undelete requires a FAT volume (found "
+        fs != FileSystemType::FAT12 && fs != FileSystemType::NTFS) {
+        std::cerr << "Error: undelete requires a FAT32 or NTFS volume (found "
                   << fsTypeName(fs) << ")\n";
         return 1;
     }
 
+    if (fs == FileSystemType::NTFS) {
+        auto files = ntfs::scanDeletedNTFS(disk, start);
+        std::cout << "Found " << files.size() << " deleted file(s):\n";
+        for (size_t i = 0; i < files.size(); i++) {
+            const auto& f = files[i];
+            std::cout << "  [" << (i + 1) << "] " << f.name
+                      << " size=" << utils::formatBytes(f.data_size)
+                      << " record=" << f.mft_record
+                      << " parent_rec=" << f.parent_record
+                      << (f.is_dir ? " (dir)" : "") << " runs=" << f.runs.size()
+                      << "\n";
+        }
+        if (files.empty()) {
+            std::cout << "Nothing to restore. Data may have been overwritten or\n"
+                         "the record purged by Windows.\n";
+            return 1;
+        }
+        if (restore_index < 0 && export_dir.empty()) {
+            std::cout << "Run 'opm undelete <device> <start> --restore <index>' or\n"
+                         "'--export <dir>' to recover a file.\n";
+            return 0;
+        }
+        if (restore_index >= static_cast<int>(files.size()) && restore_index >= 0) {
+            std::cerr << "Error: restore index out of range\n";
+            return 1;
+        }
+        if (!export_dir.empty()) {
+            const auto& f = files[restore_index >= 0 ? restore_index : 0];
+            Result r = ntfs::exportDeletedNTFS(disk, start, f, export_dir);
+            if (r.failed()) {
+                std::cerr << "Error: " << r.message << "\n";
+                return 1;
+            }
+            std::cout << "Exported '" << f.name << "' to " << export_dir << ".\n";
+            return 0;
+        }
+        const auto& f = files[restore_index];
+        Result r = ntfs::restoreDeletedNTFS(disk, start, f);
+        if (r.failed()) {
+            std::cerr << "Error: " << r.message << "\n";
+            return 1;
+        }
+        std::cout << "Restored '" << f.name << "' (record " << f.mft_record
+                  << ") into its parent directory.\n";
+        return 0;
+    }
+
+    // Legacy FAT path.
     auto files = fat32::scanDeletedFiles(disk, start);
     std::cout << "Found " << files.size() << " deleted file(s):\n";
     for (size_t i = 0; i < files.size(); i++) {
@@ -1313,7 +1372,7 @@ int cmdUndelete(const std::vector<std::string>& args) {
                      "to recover a file.\n";
         return 0;
     }
-    if (restore_index >= static_cast<int>(files.size())) {
+    if (restore_index >= static_cast<int>(files.size()) || restore_index < 0) {
         std::cerr << "Error: restore index out of range\n";
         return 1;
     }

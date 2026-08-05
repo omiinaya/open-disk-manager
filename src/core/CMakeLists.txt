@@ -53,6 +53,7 @@ set(CORE_SOURCES
     tar.cpp
     merge.cpp
     convert_fs.cpp
+    ntfs_undelete.cpp
 )
 
 # Headers are automatically found, just add them for IDE support
@@ -75,6 +76,7 @@ set(CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/opm/ntfs_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/exfat_impl.hpp
     ${CMAKE_SOURCE_DIR}/include/opm/convert_fs.hpp
+    ${CMAKE_SOURCE_DIR}/include/opm/ntfs_undelete.hpp
 )
 
 add_library(opm-core STATIC ${CORE_SOURCES})

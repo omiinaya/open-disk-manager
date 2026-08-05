@@ -5,6 +5,35 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-08-04
+
+NTFS file-undelete (MFT scan + in-place restore + data export).
+
+### Added
+- **NTFS undelete**: `opm undelete <device> <start>` now works on NTFS volumes in
+  addition to FAT32. It scans the MFT for records whose IN_USE flag is clear and
+  extracts `$FILE_NAME` (name, size, parent) + the non-resident `$DATA` run list:
+  - `opm undelete <dev> <start>` — list deleted files (live records are excluded),
+  - `opm undelete <dev> <start> --restore <i>` — in-place restore: verifies all the
+    file's clusters are still free in `$Bitmap` (refuses if the data was overwritten),
+    marks them used, sets IN_USE back, and re-inserts the `$FILE_NAME` index entry
+    into the parent directory's `$INDEX_ROOT` (resident index), then keeps the volume
+    fsck-clean,
+  - `opm undelete <dev> <start> --export <dir>` — writes the reconstructed cluster
+    runs out to a host directory (`<record>_<name>`); the reliable recovery path for
+    any volume, including large/non-resident parent indexes.
+
+### Fixed
+- (none — new feature only)
+
+### Tests
+- New `tests/test_ntfs_undelete.cpp` (3 tests): scan finds a deleted record while live
+  ones are excluded + export recovers data verbatim; in-place restore re-links the
+  record and the volume still passes `checkNTFS`; refuses restore when the cluster
+  data was overwritten (reformatted volume no longer reports the record).
+- E2E CLI: `undelete ntfs scan` block added (post-conversion NTFS volume reports 0
+  deleted files). 270 total unit tests.
+
 ## [0.4.0] - 2026-08-04
 
 On-disk filesystem conversion + a real NTFS writer + a run-list-aware NTFS fsck.

@@ -108,7 +108,7 @@
 | ISO creation | ✅ | via xorriso/genisoimage/mkisofs |
 | USB device detection | ✅ | sysfs scan, vendor/model/size/FS/label |
 | Password reset (Windows via chntpw / Linux native shadow) | ✅ |
-| Undelete files (FAT) | ✅ | (`opm undelete`; NTFS planned) |
+| Undelete files (FAT + NTFS) | ✅ | (`opm undelete` — FAT32 0xE5 entries; NTFS MFT scan + `--restore`/`--export`) |
 | Partition recovery / rebuild | ✅ | (`opm recover` — signature scan + MBR rebuild) |
 
 ### Encryption
