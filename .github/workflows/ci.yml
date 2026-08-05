@@ -115,7 +115,9 @@ jobs:
 
       - name: Install Qt (Windows kit + Linux host kit)
         run: |
-          pip install aqtinstall
+          # Pin aqtinstall to 3.2.1: 3.3.0 regressed parsing Qt's online
+          # repository XML ("The packages ['qt_base'] were not found").
+          pip install 'aqtinstall==3.2.1'
           python3 -m aqt install-qt windows desktop 6.9.3 win64_mingw -O /opt/qt
           python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt
 
