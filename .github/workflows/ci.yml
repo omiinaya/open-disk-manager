@@ -114,12 +114,21 @@ jobs:
           sudo apt-get install -y cmake ninja-build g++-mingw-w64-x86-64-posix wine64
 
       - name: Install Qt (Windows kit + Linux host kit)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.3'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          dir: '/opt/qt'
+          install-deps: 'true'
+          set-env: 'true'
+
+      - name: Install Qt Linux host kit (moc/uic for AUTOMOC)
         run: |
-          # Pin aqtinstall to 3.2.1: 3.3.0 regressed parsing Qt's online
-          # repository XML ("The packages ['qt_base'] were not found").
-          pip install 'aqtinstall==3.2.1'
-          python3 -m aqt install-qt windows desktop 6.9.3 win64_mingw -O /opt/qt
-          python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt
+          python3 -m pip install --user 'aqtinstall==3.2.1'
+          python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt || \
+            python3 -m aqt install-qt linux desktop 6.9.3 gcc_64 -O /opt/qt --base https://download.qt.io/online/qtsdkrepository
 
       - name: Build Windows bundle
         run: |
