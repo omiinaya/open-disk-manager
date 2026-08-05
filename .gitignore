@@ -12,6 +12,7 @@ cmake_install.cmake
 CTestTestfile.cmake
 *.cmake
 !cmake/Modules/*.cmake
+!cmake/mingw-toolchain.cmake
 install_manifest.txt
 
 # --- Compiler / IDE ---
