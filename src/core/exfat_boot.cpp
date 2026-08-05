@@ -269,7 +269,8 @@ Result createExFATRootDirectory(std::shared_ptr<DiskIO> disk, uint64_t start_sec
         volume_label.entry_type = EXFAT_ENTRY_VOLUME_LABEL;
         
         // Convert label to UTF-16LE (simplified - just ASCII)
-        volume_label.character_count = static_cast<uint8_t>(std::min(label.length(), size_t(11)));
+        volume_label.character_count = static_cast<uint8_t>(
+            std::min<size_t>(label.length(), static_cast<size_t>(11)));
         for (size_t i = 0; i < volume_label.character_count; i++) {
             volume_label.volume_label[i] = static_cast<char16_t>(label[i]);
         }
