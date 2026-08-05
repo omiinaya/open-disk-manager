@@ -8,6 +8,9 @@
 #include <set>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 
 namespace opm {
 namespace ntfs {
@@ -462,11 +465,13 @@ Result exportDeletedNTFS(std::shared_ptr<DiskIO> disk, uint64_t start_sector,
     std::string path = out_dir + "/" + buf + "_" + safe;
 
     // Create the output directory if needed.
-    std::string mkdir_cmd = "mkdir -p " + out_dir;  // via shell in CLI; here direct:
-    (void)mkdir_cmd;
     struct stat st;
     if (stat(out_dir.c_str(), &st) != 0 || !S_ISDIR(st.st_mode)) {
+#ifdef _WIN32
+        if (_mkdir(out_dir.c_str()) != 0 && errno != EEXIST) {
+#else
         if (mkdir(out_dir.c_str(), 0755) != 0 && errno != EEXIST) {
+#endif
             return Result::error("Cannot create output directory " + out_dir);
         }
     }

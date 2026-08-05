@@ -1,5 +1,6 @@
 #include "opm/exfat_impl.hpp"
 #include "opm/disk_io.hpp"
+#include <algorithm>
 #include <cstring>
 
 namespace opm {

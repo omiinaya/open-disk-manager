@@ -103,22 +103,30 @@ TEST(SecurityTest, ResetLinuxPasswordMissingFileFails) {
 // The external tool wrappers must produce honest, actionable errors when the
 // tool is not installed (none of cryptsetup/dislocker/efibootmgr/chntpw are
 // present on this test box).
+// The wrappers must always return a failure that names the tool they tried to
+// use — either "not installed; install it" (tool absent) or "failed" (tool
+// present but the operation couldn't complete). This is environment-agnostic,
+// so it holds whether or not cryptsetup/dislocker/efibootmgr/chntpw are
+// installed on the host (e.g. the GitHub Ubuntu runner ships several of them).
 TEST(SecurityTest, ToolWrappersReportMissingToolHonestly) {
     std::string out;
     Result r = luksOpen("/dev/null", "test");
     EXPECT_TRUE(r.failed());
-    EXPECT_NE(r.message.find("cryptsetup"), std::string::npos);
-    EXPECT_NE(r.message.find("install"), std::string::npos);
+    EXPECT_NE(r.message.find("cryptsetup"), std::string::npos)
+        << "message must name cryptsetup: " << r.message;
 
     r = bitlockerUnlock("/dev/null", "/mnt/x");
     EXPECT_TRUE(r.failed());
-    EXPECT_NE(r.message.find("dislocker"), std::string::npos);
+    EXPECT_NE(r.message.find("dislocker"), std::string::npos)
+        << "message must name dislocker: " << r.message;
 
     r = uefiListEntries(out);
     EXPECT_TRUE(r.failed());
-    EXPECT_NE(r.message.find("efibootmgr"), std::string::npos);
+    EXPECT_NE(r.message.find("efibootmgr"), std::string::npos)
+        << "message must name efibootmgr: " << r.message;
 
     r = windowsResetPassword("/tmp/sam", "Administrator");
     EXPECT_TRUE(r.failed());
-    EXPECT_NE(r.message.find("chntpw"), std::string::npos);
+    EXPECT_NE(r.message.find("chntpw"), std::string::npos)
+        << "message must name chntpw: " << r.message;
 }
