@@ -9,8 +9,10 @@
 
 #ifndef _WIN32
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <unistd.h>
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
 #endif
 #include "test_util.hpp"
 

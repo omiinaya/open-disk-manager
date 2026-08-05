@@ -10,9 +10,13 @@
 
 #ifndef _WIN32
 #include <sys/stat.h>
-#include <sys/sysmacros.h>
 #include <dirent.h>
 #include <unistd.h>
+// major()/minor() live in <sys/sysmacros.h> on glibc (Linux) and in
+// <sys/types.h> on BSD/macOS.
+#if defined(__linux__)
+#include <sys/sysmacros.h>
+#endif
 #endif
 #include <map>
 
